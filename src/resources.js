@@ -3,18 +3,18 @@ function initResources() {
 
   resourceCards.forEach(card => {
     card.addEventListener('click', (e) => {
-      const portalName = card.querySelector('h4').innerText;
+      e.preventDefault();
       const targetUrl = card.getAttribute('href');
 
-      // If using Electron, open external URLs in the user's default browser
-      if (window.require) {
-        e.preventDefault();
-        const { shell } = window.require('electron');
-        if (targetUrl && targetUrl !== '#') {
+      if (targetUrl && targetUrl !== '#') {
+        if (window.require) {
+          const { shell } = window.require('electron');
           shell.openExternal(targetUrl);
         } else {
-          alert(`Opening portal: ${portalName}`);
+          window.open(targetUrl, '_blank');
         }
+      } else {
+        alert("Pautan portal sedia ada akan dibuka di pelayar laman web anda.");
       }
     });
   });

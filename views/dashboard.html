@@ -1,9 +1,9 @@
 <div class="dashboard-container">
-  <!-- Top Welcome & Quote Bar -->
+  <!-- Header -->
   <div class="dashboard-header">
     <div class="greeting-box">
       <h1>Hello, JANN! 👋</h1>
-      <p>Good afternoon! Stay productive and don't forget your goals today!</p>
+      <p id="buddy-speech-text">Good afternoon! Stay productive and don't forget your goals today!</p>
     </div>
     <div class="quote-card">
       <i class="fa-solid fa-quote-left quote-icon"></i>
@@ -14,16 +14,13 @@
     </div>
   </div>
 
-  <!-- Main Grid Layout -->
+  <!-- Main Grid -->
   <div class="dashboard-grid">
-    <!-- Left Column: Mascot & Quick Access -->
     <div class="grid-column left-col">
-      <!-- Mascot Container -->
       <div class="mascot-card">
         <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="mascot-img">
       </div>
 
-      <!-- Quick Access Links -->
       <div class="card quick-access-card">
         <h3>Quick Access</h3>
         <div class="portal-grid">
@@ -31,15 +28,15 @@
             <i class="fa-solid fa-graduation-cap"></i>
             <span>UCAM</span>
           </a>
-          <a href="https://www.openlearning.com/" target="_blank" class="portal-btn openlearning">
+          <a href="#" class="portal-btn openlearning">
             <i class="fa-solid fa-book-open"></i>
             <span>Open Learning</span>
           </a>
-          <a href="https://accounts.google.com/InteractiveLogin?emr=1&ltmpl=default&nojavascript=1&rm=false&service=mail&ss=1" target="_blank" class="portal-btn email">
+          <a href="#" class="portal-btn email">
             <i class="fa-solid fa-envelope"></i>
             <span>Email</span>
           </a>
-          <a href="https://lms.uptm.edu.my/0826/login/index.php" target="_blank" class="portal-btn elearning">
+          <a href="#" class="portal-btn elearning">
             <i class="fa-solid fa-globe"></i>
             <span>eLearning Portal</span>
           </a>
@@ -47,9 +44,7 @@
       </div>
     </div>
 
-    <!-- Right Column: Today's Schedule & Upcoming Tasks -->
     <div class="grid-column right-col">
-      <!-- Today's Schedule Widget -->
       <div class="card schedule-card">
         <div class="card-header">
           <h3>Today's Schedule</h3>
@@ -64,56 +59,16 @@
             </div>
             <span class="room-tag">DK2-03</span>
           </li>
-          <li class="schedule-item">
-            <span class="status-indicator red"></span>
-            <div class="schedule-details">
-              <strong>Database System</strong>
-              <small>11:30 AM - 1:30 PM</small>
-            </div>
-            <span class="room-tag">DK2-05</span>
-          </li>
-          <li class="schedule-item">
-            <span class="status-indicator green"></span>
-            <div class="schedule-details">
-              <strong>Digital Entrepreneurship</strong>
-              <small>2:30 PM - 4:30 PM</small>
-            </div>
-            <span class="room-tag">DK2-01</span>
-          </li>
         </ul>
       </div>
 
-      <!-- Upcoming Tasks Widget -->
       <div class="card tasks-card">
         <div class="card-header">
           <h3>Upcoming Tasks</h3>
           <a href="#" class="view-all">View All</a>
         </div>
         <ul class="task-list">
-          <li class="task-item">
-            <label class="checkbox-container">
-              <input type="checkbox">
-              <span class="checkmark"></span>
-              <span class="task-title">Database Assignment</span>
-            </label>
-            <span class="badge due-soon">2 days left</span>
-          </li>
-          <li class="task-item">
-            <label class="checkbox-container">
-              <input type="checkbox">
-              <span class="checkmark"></span>
-              <span class="task-title">Web Programming Lab</span>
-            </label>
-            <span class="badge due-medium">5 days left</span>
-          </li>
-          <li class="task-item">
-            <label class="checkbox-container">
-              <input type="checkbox">
-              <span class="checkmark"></span>
-              <span class="task-title">UCS2103 Report</span>
-            </label>
-            <span class="badge due-normal">10 days left</span>
-          </li>
+          <!-- Widget tasks akan di-render di sini oleh JavaScript -->
         </ul>
       </div>
     </div>

@@ -2,58 +2,42 @@ function initSettings() {
   const notificationToggle = document.getElementById('toggle-notifications');
   const animationToggle = document.getElementById('toggle-animations');
   const darkModeToggle = document.getElementById('toggle-darkmode');
-  const reminderToast = document.getElementById('reminder-toast');
 
-  // Load saved preferences from localStorage
-  if (localStorage.getItem('theme') === 'light') {
+  // Sync initial switch position based on stored setting
+  const isLightMode = localStorage.getItem('theme') === 'light';
+  if (isLightMode) {
     document.body.classList.add('light-theme');
     if (darkModeToggle) darkModeToggle.checked = false;
   } else {
+    document.body.classList.remove('light-theme');
     if (darkModeToggle) darkModeToggle.checked = true;
   }
 
-  if (localStorage.getItem('showNotifications') === 'false') {
-    if (notificationToggle) notificationToggle.checked = false;
-  }
-
-  if (localStorage.getItem('playAnimations') === 'false') {
-    if (animationToggle) animationToggle.checked = false;
-  }
-
-  // 1. Dark / Light Mode Toggle
+  // Dark/Light Mode Event Handler
   if (darkModeToggle) {
-    darkModeToggle.addEventListener('change', (e) => {
-      if (!e.target.checked) {
+    darkModeToggle.onclick = function() {
+      if (!darkModeToggle.checked) {
         document.body.classList.add('light-theme');
         localStorage.setItem('theme', 'light');
       } else {
         document.body.classList.remove('light-theme');
         localStorage.setItem('theme', 'dark');
       }
-    });
+    };
   }
 
-  // 2. Notifications Toggle
+  // Notifications Toggle Handler
   if (notificationToggle) {
-    notificationToggle.addEventListener('change', (e) => {
-      const isEnabled = e.target.checked;
-      localStorage.setItem('showNotifications', isEnabled);
-      if (reminderToast) {
-        reminderToast.style.display = isEnabled ? 'block' : 'none';
-      }
-    });
+    notificationToggle.onchange = function() {
+      localStorage.setItem('showNotifications', notificationToggle.checked);
+    };
   }
 
-  // 3. Animations Toggle
+  // Animations Toggle Handler
   if (animationToggle) {
-    animationToggle.addEventListener('change', (e) => {
-      const isEnabled = e.target.checked;
-      localStorage.setItem('playAnimations', isEnabled);
-      const mascot = document.querySelector('.mascot-img');
-      if (mascot) {
-        mascot.style.transition = isEnabled ? 'transform 0.3s ease' : 'none';
-      }
-    });
+    animationToggle.onchange = function() {
+      localStorage.setItem('playAnimations', animationToggle.checked);
+    };
   }
 }
 

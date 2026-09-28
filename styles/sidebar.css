@@ -1,44 +1,65 @@
 :root {
-  --bg-dark: #121824;
-  --bg-card: #1e2738;
-  --primary-blue: #2563eb;
-  --primary-hover: #3b82f6;
-  --text-main: #ffffff;
-  --text-muted: #94a3b8;
-  --border-color: #2e3a52;
+  /* Sleek Modern Palette */
+  --bg-main: #0b0f17;
+  --bg-sidebar: #111726;
+  --bg-card: #182032;
+  --primary-glow: #3b82f6;
+  --primary-accent: #2563eb;
+  --text-main: #f8fafc;
+  --text-muted: #64748b;
+  --border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Light Mode Overrides */
+body.light-theme {
+  --bg-main: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #f1f5f9;
+  --primary-glow: #2563eb;
+  --primary-accent: #1d4ed8;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-body {
-  background-color: var(--bg-dark);
+html, body {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-main);
   color: var(--text-main);
+}
+
+/* Master Layout */
+.app-container {
+  display: flex;
+  width: 100vw;
   height: 100vh;
   overflow: hidden;
 }
 
-.app-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-}
-
-/* Sidebar Styles */
+/* Sleek Floating Sidebar */
 .sidebar {
-  width: 240px;
-  background-color: #171f2e;
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 20px 15px;
+  padding: 24px 18px;
+  user-select: none;
+  flex-shrink: 0;
 }
 
+/* Brand Header */
 .brand {
   display: flex;
   align-items: center;
@@ -48,96 +69,158 @@ body {
 }
 
 .brand .logo {
-  width: 36px;
-  height: auto;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .brand h2 {
   font-size: 1.1rem;
   font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-main);
 }
 
 .brand h2 span {
-  color: var(--primary-blue);
+  color: var(--primary-glow);
 }
 
-/* Navigation Menu */
+/* Navigation Links */
 .nav-menu {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin-top: 20px;
   flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* Hide scrollbar for nav menu */
+.nav-menu::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 12px 16px;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  transition: all 0.18s ease-in-out;
+  position: relative;
 }
 
 .nav-item i {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   width: 20px;
+  text-align: center;
+  transition: transform 0.18s ease;
 }
 
+/* Hover State */
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
+.nav-item:hover i {
+  transform: translateX(2px);
+  color: var(--primary-glow);
+}
+
+/* Active Pill State */
 .nav-item.active {
-  background-color: var(--primary-blue);
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-glow) 0%, var(--primary-accent) 100%);
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.nav-item.active i {
   color: #ffffff;
 }
 
-/* User Profile Section */
+/* Click Press Effect */
+.nav-item:active {
+  transform: scale(0.97);
+}
+
+/* Student Profile Footer */
 .user-profile {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 14px;
   background-color: var(--bg-card);
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
+  margin-top: auto;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.user-profile:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
 }
 
 .avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background-color: var(--primary-blue);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-glow) 0%, var(--primary-accent) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  color: #ffffff;
+  flex-shrink: 0;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .user-name {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
 }
 
 .student-id {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
-/* Main Content Area Placeholder */
+/* Main Content Wrapper (Strict Overflow Lock) */
 .content-area {
   flex-grow: 1;
-  padding: 30px;
+  height: 100vh;
+  padding: 28px 32px;
   overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--bg-main);
+}
+
+/* Custom Sleek Scrollbar */
+.content-area::-webkit-scrollbar {
+  width: 5px;
+}
+
+.content-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content-area::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+.content-area::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
