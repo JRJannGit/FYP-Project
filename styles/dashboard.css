@@ -1,0 +1,214 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header & Quote Bar */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-card);
+  padding: 20px 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.greeting-box h1 {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+}
+
+.greeting-box p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.quote-card {
+  background-color: #162032;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border-left: 4px solid var(--primary-blue);
+  text-align: right;
+  position: relative;
+}
+
+.quote-icon {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  color: rgba(255, 255, 255, 0.1);
+  font-size: 1.5rem;
+}
+
+.quote-text {
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.time-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* Layout Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+}
+
+.grid-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Common Card Style */
+.card {
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.card-header h3 {
+  font-size: 1.05rem;
+}
+
+.view-all {
+  color: var(--primary-hover);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+/* Mascot Section */
+.mascot-card {
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  min-height: 220px;
+}
+
+.mascot-img {
+  max-height: 180px;
+  object-fit: contain;
+}
+
+/* Quick Access */
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.portal-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 10px;
+  background-color: #172030;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.portal-btn:hover {
+  transform: translateY(-2px);
+  background-color: #232f45;
+}
+
+.portal-btn i {
+  font-size: 1.2rem;
+  color: var(--primary-hover);
+}
+
+/* Schedule & Tasks */
+.schedule-list, .task-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background-color: #172030;
+  border-radius: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-indicator.blue { background-color: #3b82f6; }
+.status-indicator.red { background-color: #ef4444; }
+.status-indicator.green { background-color: #10b981; }
+
+.schedule-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.schedule-details small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.room-tag {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #172030;
+  border-radius: 8px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+.due-soon { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+.due-medium { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.due-normal { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }

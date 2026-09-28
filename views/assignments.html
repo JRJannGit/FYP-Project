@@ -1,0 +1,92 @@
+<div class="assignments-container">
+  <!-- Top Controls & Action Bar -->
+  <div class="assignments-header">
+    <div class="filter-tabs">
+      <button class="tab-btn active" data-filter="all">All</button>
+      <button class="tab-btn" data-filter="upcoming">Upcoming</button>
+      <button class="tab-btn" data-filter="completed">Completed</button>
+    </div>
+    <button class="add-task-btn" id="open-add-modal">
+      <i class="fa-solid fa-plus"></i> Add New
+    </button>
+  </div>
+
+  <!-- Assignments & Exams List -->
+  <div class="task-cards-list">
+    <!-- Item 1 -->
+    <div class="assignment-card upcoming">
+      <div class="card-left">
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="task-1">
+        </div>
+        <div class="assignment-info">
+          <h4>Database Assignment</h4>
+          <p>Submission of ERD and Report</p>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="due-info">
+          <span class="due-date">22 Aug 2026</span>
+          <span class="badge due-soon">2 days left</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="assignment-card upcoming">
+      <div class="card-left">
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="task-2">
+        </div>
+        <div class="assignment-info">
+          <h4>Web Programming Lab</h4>
+          <p>Practical Task 3</p>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="due-info">
+          <span class="due-date">25 Aug 2026</span>
+          <span class="badge due-medium">5 days left</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="assignment-card upcoming">
+      <div class="card-left">
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="task-3">
+        </div>
+        <div class="assignment-info">
+          <h4>Digital Entrepreneurship</h4>
+          <p>Group Report</p>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="due-info">
+          <span class="due-date">30 Aug 2026</span>
+          <span class="badge due-normal">10 days left</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item 4 (Exam Tagged) -->
+    <div class="assignment-card upcoming exam-item">
+      <div class="card-left">
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="task-4">
+        </div>
+        <div class="assignment-info">
+          <h4>OOP Quiz <span class="exam-tag">EXAM</span></h4>
+          <p>Chapter 4 - 6</p>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="due-info">
+          <span class="due-date">1 Sept 2026</span>
+          <span class="badge due-normal">12 days left</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

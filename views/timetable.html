@@ -1,0 +1,117 @@
+<div class="timetable-container">
+  <!-- Top Navigation & Controls Bar -->
+  <div class="timetable-header">
+    <div class="week-selector">
+      <button class="icon-btn" id="prev-week"><i class="fa-solid fa-chevron-left"></i></button>
+      <span class="current-week">Week 3</span>
+      <button class="icon-btn" id="next-week"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="view-toggle">
+      <button class="toggle-btn active">Week</button>
+      <button class="toggle-btn">Month</button>
+    </div>
+  </div>
+
+  <!-- Weekly Timetable Grid -->
+  <div class="timetable-grid">
+    <!-- Time Column Header -->
+    <div class="grid-header time-col-header">Time</div>
+    <div class="grid-header">Mon</div>
+    <div class="grid-header">Tue</div>
+    <div class="grid-header">Wed</div>
+    <div class="grid-header">Thu</div>
+    <div class="grid-header">Fri</div>
+
+    <!-- Time Row: 8:00 AM -->
+    <div class="time-slot">8:00 AM</div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+
+    <!-- Time Row: 9:00 AM -->
+    <div class="time-slot">9:00 AM</div>
+    <div class="day-slot span-2">
+      <div class="class-card blue">
+        <strong>Web Programming</strong>
+        <small>DK2-03</small>
+      </div>
+    </div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot">
+      <div class="class-card purple">
+        <strong>OOP</strong>
+        <small>DK2-02</small>
+      </div>
+    </div>
+
+    <!-- Time Row: 10:00 AM -->
+    <div class="time-slot">10:00 AM</div>
+    <div class="day-slot empty-spanned"></div> <!-- Covered by 9 AM Web Prog -->
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+
+    <!-- Time Row: 11:00 AM -->
+    <div class="time-slot">11:00 AM</div>
+    <div class="day-slot"></div>
+    <div class="day-slot span-2">
+      <div class="class-card red">
+        <strong>Database System</strong>
+        <small>DK2-05</small>
+      </div>
+    </div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+
+    <!-- Time Row: 12:00 PM -->
+    <div class="time-slot">12:00 PM</div>
+    <div class="day-slot"></div>
+    <div class="day-slot empty-spanned"></div> <!-- Covered by 11 AM Database -->
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+
+    <!-- Time Row: 1:00 PM -->
+    <div class="time-slot">1:00 PM</div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot span-2">
+      <div class="class-card green">
+        <strong>Digital Entrepreneurship</strong>
+        <small>DK2-01</small>
+      </div>
+    </div>
+    <div class="day-slot"></div>
+
+    <!-- Time Row: 2:00 PM -->
+    <div class="time-slot">2:00 PM</div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot empty-spanned"></div> <!-- Covered by 1 PM Entrepreneurship -->
+    <div class="day-slot"></div>
+
+    <!-- Time Row: 3:00 PM -->
+    <div class="time-slot">3:00 PM</div>
+    <div class="day-slot">
+      <div class="class-card yellow">
+        <strong>Study Time</strong>
+      </div>
+    </div>
+    <div class="day-slot"></div>
+    <div class="day-slot"></div>
+    <div class="day-slot">
+      <div class="class-card yellow">
+        <strong>Study Time</strong>
+      </div>
+    </div>
+    <div class="day-slot"></div>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="notes-container">
+  <!-- Left Column: Notes List Sidebar -->
+  <div class="notes-sidebar">
+    <div class="sidebar-header">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search notes..." id="search-notes">
+      </div>
+      <button class="new-note-btn">
+        <i class="fa-solid fa-plus"></i> New Note
+      </button>
+    </div>
+
+    <div class="notes-list">
+      <div class="note-item active">
+        <h5>Lecture Notes (Web Programming)</h5>
+        <span class="note-date">20 Aug 2026</span>
+      </div>
+      <div class="note-item">
+        <h5>Database Notes (SQL Basics)</h5>
+        <span class="note-date">18 Aug 2026</span>
+      </div>
+      <div class="note-item">
+        <h5>Entrepreneurship Ideas</h5>
+        <span class="note-date">15 Aug 2026</span>
+      </div>
+      <div class="note-item">
+        <h5>Exam Revision (Important)</h5>
+        <span class="note-date">12 Aug 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Rich Text Editor Workspace -->
+  <div class="notes-editor">
+    <!-- Active Note Title -->
+    <div class="editor-header">
+      <input type="text" class="note-title-input" value="Lecture Notes (Web Programming)">
+    </div>
+
+    <!-- Formatting Toolbar -->
+    <div class="editor-toolbar">
+      <button class="tool-btn"><i class="fa-solid fa-bold"></i></button>
+      <button class="tool-btn"><i class="fa-solid fa-italic"></i></button>
+      <button class="tool-btn"><i class="fa-solid fa-underline"></i></button>
+      <button class="tool-btn"><i class="fa-solid fa-strikethrough"></i></button>
+      <div class="divider"></div>
+      <button class="tool-btn"><i class="fa-solid fa-list-ul"></i></button>
+      <button class="tool-btn"><i class="fa-solid fa-list-ol"></i></button>
+      <div class="divider"></div>
+      <button class="tool-btn"><i class="fa-solid fa-code"></i></button>
+      <button class="tool-btn"><i class="fa-solid fa-link"></i></button>
+    </div>
+
+    <!-- Editable Content Area -->
+    <div class="editor-content" contenteditable="true">
+      <p><strong>Important Points:</strong></p>
+      <ul>
+        <li>HTML - Structure</li>
+        <li>CSS - Styling</li>
+        <li>JS - Functionality</li>
+      </ul>
+      <br>
+      <!-- Code Snippet Box Display -->
+      <div class="code-snippet-box">
+        <div class="code-header">
+          <span>JavaScript Example</span>
+          <i class="fa-regular fa-copy"></i>
+        </div>
+        <pre><code>function calculateGrade(score) {
+          return score >= 80 ? 'A' : 'B';
+        }
+</code></pre>
+      </div>
+    </div>
+  </div>
+</div>

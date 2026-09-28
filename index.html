@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPTM Buddy</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/sidebar.css">
+  <link rel="stylesheet" href="styles/dashboard.css">
+  <link rel="stylesheet" href="styles/timetable.css">
+  <link rel="stylesheet" href="styles/assignments.css">
+  <link rel="stylesheet" href="styles/calendar.css">
+  <link rel="stylesheet" href="styles/notes.css">
+  <link rel="stylesheet" href="styles/notifications.css">
+  <link rel="stylesheet" href="styles/settings.css">
+  <link rel="stylesheet" href="styles/reminders.css">
+  <link rel="stylesheet" href="styles/resources.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/uptm-logo.png" alt="UPTM Logo" class="logo">
+        <h2>UPTM <span>Buddy</span></h2>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-view="dashboard">
+          <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-view="timetable">
+          <i class="fa-regular fa-calendar-days"></i> Timetable
+        </a>
+        <a href="#" class="nav-item" data-view="assignments">
+          <i class="fa-solid fa-pen-to-square"></i> Assignments
+        </a>
+        <a href="#" class="nav-item" data-view="calendar">
+          <i class="fa-solid fa-calendar-check"></i> Calendar
+        </a>
+        <a href="#" class="nav-item" data-view="notes">
+          <i class="fa-regular fa-note-sticky"></i> Notes
+        </a>
+        <a href="#" class="nav-item" data-view="reminders">
+          <i class="fa-regular fa-bell"></i> Reminders
+        </a>
+        <a href="#" class="nav-item" data-view="resources">
+          <i class="fa-solid fa-cubes"></i> Resources
+        </a>
+        <a href="#" class="nav-item" data-view="settings">
+          <i class="fa-solid fa-gear"></i> Settings
+        </a>
+      </nav>
+
+      <!-- Student Profile Card -->
+      <div class="user-profile">
+        <div class="avatar">
+          <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="user-info">
+          <span class="user-name">USER</span>
+          <span class="student-id">Student ID: AM0123456789</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Dynamic Content Container -->
+    <main id="main-content" class="content-area"></main>
+  </div>
+
+  <!-- Core Storage -->
+  <script src="src/storage.js"></script>
+
+  <!-- Feature Controllers -->
+  <script src="src/dashboard.js"></script>
+  <script src="src/timetable.js"></script>
+  <script src="src/assignments.js"></script>
+  <script src="src/calendar.js"></script>
+  <script src="src/notes.js"></script>
+  <script src="src/reminders.js"></script>
+  <script src="src/resources.js"></script>
+  <script src="src/notifications.js"></script>
+  <script src="src/settings.js"></script>
+  
+  <!-- Navigation Handler -->
+  <script src="src/navigation.js"></script>
+</body>
+</html>
