@@ -33,12 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (viewName === 'reminders' && typeof initReminders === 'function') initReminders();
       if (viewName === 'resources' && typeof initResources === 'function') initResources();
       if (viewName === 'settings' && typeof initSettings === 'function') initSettings();
+      if (viewName === 'profile' && typeof initProfile === 'function') initProfile(); 
 
     } catch (error) {
       console.error(error);
       mainContent.innerHTML = `
         <div style="padding: 40px; text-align: center; color: #ef4444;">
-          <h2>Ralat Memuatkan Paparan: ${viewName}</h2>
+          <h2>Error: ${viewName}</h2>
           <p style="color: #94a3b8; margin-top: 10px;">${error.message}</p>
         </div>
       `;
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   navItems.forEach(item => {
     item.addEventListener('click', (e) => {
-      e.preventDefault(); // Menghentikan kelakuan laluan href biasa
+      e.preventDefault();
       navItems.forEach(nav => nav.classList.remove('active'));
       item.classList.add('active');
 
@@ -72,6 +73,21 @@ if (viewName === 'profile' && typeof initProfile === 'function') {
   initProfile();
 }
 
-  // Muat paparan dashboard secara automatik
-  loadView('dashboard');
-});
+async function loadView(viewName) {
+  const mainContent = document.getElementById('main-content');
+  try {
+    const response = await fetch(`views/${viewName}.html`);
+    const html = await response.text();
+    mainContent.innerHTML = html;
+
+    // Panggil semula skrip modul mengikut paparan
+    if (viewName === 'dashboard' && typeof initDashboard === 'function') {
+      initDashboard();
+    } else if (viewName === 'profile' && typeof initProfile === 'function') {
+      initProfile();
+    }
+  } catch (err) {
+    console.error('Error loading view:', err);
+  }
+}
+})

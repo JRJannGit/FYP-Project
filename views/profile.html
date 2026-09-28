@@ -20,7 +20,7 @@
       <button type="submit" class="btn-submit">Log In</button>
     </form>
 
-    <!-- Sign Up Form -->
+    <!-- Sign Up Form (Disembunyikan Secara Lalai) -->
     <form id="signup-form" class="auth-form" style="display: none;">
       <div class="form-group">
         <label class="form-label">Student ID</label>
@@ -51,8 +51,14 @@
     <p id="profile-id" class="profile-id">Student ID</p>
     
     <div class="profile-details">
-      <p class="profile-detail-item"><strong>Email:</strong> <span id="profile-email">-</span></p>
-      <p class="profile-detail-item"><strong>Status:</strong> <span class="status-active">Active UPTM Student</span></p>
+      <div class="profile-detail-item">
+        <strong>Email:</strong>
+        <span id="profile-email">-</span>
+      </div>
+      <div class="profile-detail-item">
+        <strong>Status:</strong>
+        <span class="status-badge"><i class="fa-solid fa-circle" style="font-size: 6px;"></i> Active Student</span>
+      </div>
     </div>
 
     <button id="btn-logout" type="button" class="btn-logout">Log Out</button>
