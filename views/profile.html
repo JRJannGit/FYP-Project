@@ -1,0 +1,60 @@
+<div class="profile-container">
+  <!-- Auth Section (Login & Sign Up) -->
+  <div id="auth-section" class="auth-card">
+    <!-- Tab Switchers -->
+    <div class="auth-tabs">
+      <button id="tab-login-btn" type="button" class="tab-btn active">Login</button>
+      <button id="tab-signup-btn" type="button" class="tab-btn inactive">Sign Up</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form">
+      <div class="form-group">
+        <label class="form-label">Student ID</label>
+        <input type="text" id="login-student-id" class="form-input" placeholder="e.g. AM1234567890" required>
+      </div>
+      <div class="form-group last">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-submit">Log In</button>
+    </form>
+
+    <!-- Sign Up Form -->
+    <form id="signup-form" class="auth-form" style="display: none;">
+      <div class="form-group">
+        <label class="form-label">Student ID</label>
+        <input type="text" id="signup-student-id" class="form-input" placeholder="e.g. AM1234567890" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="signup-full-name" class="form-input" placeholder="Junior Jann Jacqim" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="signup-email" class="form-input" placeholder="student@uptm.edu.my" required>
+      </div>
+      <div class="form-group last">
+        <label class="form-label">Password</label>
+        <input type="password" id="signup-password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-submit">Create Account</button>
+    </form>
+  </div>
+
+  <!-- Profile Card (Logged-In State) -->
+  <div id="profile-section" class="profile-card" style="display: none;">
+    <div class="profile-avatar">
+      <i class="fa-solid fa-user"></i>
+    </div>
+    <h2 id="profile-name" class="profile-name">User Name</h2>
+    <p id="profile-id" class="profile-id">Student ID</p>
+    
+    <div class="profile-details">
+      <p class="profile-detail-item"><strong>Email:</strong> <span id="profile-email">-</span></p>
+      <p class="profile-detail-item"><strong>Status:</strong> <span class="status-active">Active UPTM Student</span></p>
+    </div>
+
+    <button id="btn-logout" type="button" class="btn-logout">Log Out</button>
+  </div>
+</div>

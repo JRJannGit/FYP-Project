@@ -58,6 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Add profile click trigger inside src/navigation.js
+const userProfileCard = document.querySelector('.user-profile');
+if (userProfileCard) {
+  userProfileCard.style.cursor = 'pointer';
+  userProfileCard.onclick = () => {
+    loadView('profile');
+  };
+}
+
+// Ensure initProfile is registered inside loadView(viewName)
+if (viewName === 'profile' && typeof initProfile === 'function') {
+  initProfile();
+}
+
   // Muat paparan dashboard secara automatik
   loadView('dashboard');
 });

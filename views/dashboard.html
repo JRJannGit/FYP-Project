@@ -1,21 +1,21 @@
 <div class="dashboard-container">
-  <!-- Header -->
   <div class="dashboard-header">
-    <div class="greeting-box">
-      <h1>Hello, JANN! 👋</h1>
-      <p id="buddy-speech-text">Good afternoon! Stay productive and don't forget your goals today!</p>
-    </div>
+  <div class="greeting-box">
+    <h1>Hey, <span id="user-greeting-name">Guest</span>! 👋</h1>
+    <p id="buddy-speech-text">Loading information from database...</p>
+  </div>
     <div class="quote-card">
       <i class="fa-solid fa-quote-left quote-icon"></i>
-      <p class="quote-text">"Small progress every day leads to big results."</p>
+      <p class="quote-text">"Loading quote..."</p>
       <div class="time-badge">
-        <i class="fa-regular fa-clock"></i> 20 August 2026 | 12:45 PM
+        <i class="fa-regular fa-clock"></i> <span id="current-date-text">Loading date...</span>
       </div>
     </div>
   </div>
 
-  <!-- Main Grid -->
+  <!-- Main Grid Layout -->
   <div class="dashboard-grid">
+    <!-- Left Column: Mascot & Quick Access -->
     <div class="grid-column left-col">
       <div class="mascot-card">
         <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="mascot-img">
@@ -28,47 +28,41 @@
             <i class="fa-solid fa-graduation-cap"></i>
             <span>UCAM</span>
           </a>
-          <a href="#" class="portal-btn openlearning">
+          <a href="https://www.openlearning.com" target="_blank" class="portal-btn openlearning">
             <i class="fa-solid fa-book-open"></i>
             <span>Open Learning</span>
           </a>
-          <a href="#" class="portal-btn email">
+          <a href="https://mail.google.com" target="_blank" class="portal-btn email">
             <i class="fa-solid fa-envelope"></i>
             <span>Email</span>
           </a>
-          <a href="#" class="portal-btn elearning">
+          <a href="https://www.uptm.edu.my/" target="_blank" class="portal-btn UPTM">
             <i class="fa-solid fa-globe"></i>
-            <span>eLearning Portal</span>
+            <span>UPTM Portal</span>
           </a>
         </div>
       </div>
     </div>
 
+    <!-- Right Column: Today's Schedule & Upcoming Tasks -->
     <div class="grid-column right-col">
       <div class="card schedule-card">
         <div class="card-header">
           <h3>Today's Schedule</h3>
-          <a href="#" class="view-all">View All</a>
+          <a href="#" class="view-all nav-item" data-view="timetable">View All</a>
         </div>
         <ul class="schedule-list">
-          <li class="schedule-item">
-            <span class="status-indicator blue"></span>
-            <div class="schedule-details">
-              <strong>Web Programming</strong>
-              <small>9:00 AM - 11:00 AM</small>
-            </div>
-            <span class="room-tag">DK2-03</span>
-          </li>
+          <!-- Schedule items rendered dynamically from MySQL -->
         </ul>
       </div>
 
       <div class="card tasks-card">
         <div class="card-header">
           <h3>Upcoming Tasks</h3>
-          <a href="#" class="view-all">View All</a>
+          <a href="#" class="view-all nav-item" data-view="assignments">View All</a>
         </div>
         <ul class="task-list">
-          <!-- Widget tasks akan di-render di sini oleh JavaScript -->
+          <!-- Task widgets rendered dynamically from MySQL -->
         </ul>
       </div>
     </div>
