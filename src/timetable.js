@@ -1,71 +1,104 @@
+function showTimetable(dataUrl) {
+  const uploadView = document.getElementById('timetable-upload-view');
+  const displayView = document.getElementById('timetable-display-view');
+  const imgPreview = document.getElementById('timetable-img-preview');
+  const pdfPreview = document.getElementById('timetable-pdf-preview');
+
+  if (uploadView) uploadView.style.display = 'none';
+  if (displayView) displayView.style.display = 'flex';
+
+  if (dataUrl.startsWith('data:application/pdf')) {
+    if (pdfPreview) {
+      pdfPreview.src = dataUrl;
+      pdfPreview.style.display = 'block';
+    }
+    if (imgPreview) imgPreview.style.display = 'none';
+  } else {
+    if (imgPreview) {
+      imgPreview.src = dataUrl;
+      imgPreview.style.display = 'block';
+    }
+    if (pdfPreview) pdfPreview.style.display = 'none';
+  }
+}
+
+function showUploadScreen() {
+  const uploadView = document.getElementById('timetable-upload-view');
+  const displayView = document.getElementById('timetable-display-view');
+  const imgPreview = document.getElementById('timetable-img-preview');
+  const pdfPreview = document.getElementById('timetable-pdf-preview');
+  const fileInput = document.getElementById('timetable-file-input');
+
+  if (uploadView) uploadView.style.display = 'flex';
+  if (displayView) displayView.style.display = 'none';
+  if (imgPreview) imgPreview.src = '';
+  if (pdfPreview) pdfPreview.src = '';
+  if (fileInput) fileInput.value = '';
+}
+
 function initTimetable() {
-  if (!localStorage.getItem('uptm_buddy_timetable')) {
-    AppStorage.set('timetable', [
-      { day: 'Mon', time: '9:00 AM', subject: 'Web Programming', room: 'DK2-03', color: 'blue' },
-      { day: 'Tue', time: '11:00 AM', subject: 'Database System', room: 'DK2-05', color: 'red' },
-      { day: 'Thu', time: '1:00 PM', subject: 'Digital Entrepreneurship', room: 'DK2-01', color: 'green' }
-    ]);
-  }
-
-  renderTimetable();
-
-  // Buka dialog Tambah Kelas Baru
-  const header = document.querySelector('.timetable-header');
-  if (header && !document.getElementById('add-class-btn')) {
-    const addBtn = document.createElement('button');
-    addBtn.id = 'add-class-btn';
-    addBtn.className = 'icon-btn';
-    addBtn.style.cssText = 'background:var(--primary-blue); color:#fff; font-weight:600; padding:8px 14px;';
-    addBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Tambah Kelas';
-    addBtn.onclick = addNewClass;
-    header.appendChild(addBtn);
+  // Semak jika jadual sedia ada disimpan dalam localStorage
+  const savedTimetable = localStorage.getItem('uptm_timetable_file');
+  if (savedTimetable) {
+    showTimetable(savedTimetable);
+  } else {
+    showUploadScreen();
   }
 }
 
-function renderTimetable() {
-  const classes = AppStorage.get('timetable');
-  const grid = document.querySelector('.timetable-grid');
-  if (!grid) return;
-
-  // Render semula kad kelas pada grid
-  document.querySelectorAll('.class-card').forEach(c => c.parentElement.innerHTML = '');
-
-  classes.forEach(c => {
-    // Cari slot berdasarkan waktu dan hari
-    const slots = document.querySelectorAll('.day-slot');
-    slots.forEach(slot => {
-      if (slot.dataset.day === c.day && slot.dataset.time === c.time) {
-        slot.innerHTML = `
-          <div class="class-card ${c.color}">
-            <strong>${c.subject}</strong>
-            <small>${c.room}</small>
-            <i class="fa-solid fa-xmark delete-class" onclick="deleteClass('${c.subject}')" style="position:absolute; top:4px; right:6px; cursor:pointer;"></i>
-          </div>
-        `;
-      }
-    });
-  });
-}
-
-function addNewClass() {
-  const subject = prompt("Nama Subjek:");
-  const room = prompt("Bilik / Makmal (cth: DK2-03):");
-  const day = prompt("Hari (Mon / Tue / Wed / Thu / Fri):");
-  const time = prompt("Masa (cth: 9:00 AM / 11:00 AM / 1:00 PM):");
-
-  if (subject && day && time) {
-    const classes = AppStorage.get('timetable');
-    classes.push({ day, time, subject, room: room || 'DK2-01', color: 'blue' });
-    AppStorage.set('timetable', classes);
-    renderTimetable();
+// Global Event Listener (Penyelesaian Utama untuk SPA Electron)
+document.addEventListener('click', (e) => {
+  // 1. Klik pada Kad Upload Timetable
+  const uploadBtn = e.target.closest('#btn-upload-timetable');
+  if (uploadBtn) {
+    const fileInput = document.getElementById('timetable-file-input');
+    if (fileInput) fileInput.click();
+    return;
   }
-}
 
-function deleteClass(subject) {
-  let classes = AppStorage.get('timetable');
-  classes = classes.filter(c => c.subject !== subject);
-  AppStorage.set('timetable', classes);
-  renderTimetable();
-}
+  // 2. Klik pada Ikon Tong Sampah (Open Modal)
+  const deleteBtn = e.target.closest('#btn-delete-timetable');
+  if (deleteBtn) {
+    const deleteModal = document.getElementById('delete-modal');
+    if (deleteModal) deleteModal.style.display = 'flex';
+    return;
+  }
 
+  // 3. Klik Batal pada Modal (NO)
+  const cancelBtn = e.target.closest('#btn-cancel-delete');
+  if (cancelBtn) {
+    const deleteModal = document.getElementById('delete-modal');
+    if (deleteModal) deleteModal.style.display = 'none';
+    return;
+  }
+
+  // 4. Klik Sahkan Padam pada Modal (YES)
+  const confirmBtn = e.target.closest('#btn-confirm-delete');
+  if (confirmBtn) {
+    localStorage.removeItem('uptm_timetable_file');
+    const deleteModal = document.getElementById('delete-modal');
+    if (deleteModal) deleteModal.style.display = 'none';
+    showUploadScreen();
+    return;
+  }
+});
+
+// Event Listener untuk Pilihan Fail (File Input Change)
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'timetable-file-input') {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const fileData = event.target.result;
+        localStorage.setItem('uptm_timetable_file', fileData);
+        showTimetable(fileData);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+});
+
+// Dedahkan fungsi kepada tetingkap global
+window.initTimetable = initTimetable;
 document.addEventListener('DOMContentLoaded', initTimetable);

@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 // Tetapan sambungan ke XAMPP / Laragon MySQL
 const db = mysql.createPool({
   host: 'localhost',
+  port: '3307',
   user: 'root',      // Pengguna lalai XAMPP/Laragon
   password: '',      // Kata laluan lalai (biasanya kosong)
   database: 'uptm_buddy',

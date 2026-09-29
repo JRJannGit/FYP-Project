@@ -89,5 +89,26 @@ async function loadView(viewName) {
   } catch (err) {
     console.error('Error loading view:', err);
   }
+
+  async function loadView(viewName) {
+  const mainContent = document.getElementById('main-content');
+  try {
+    const response = await fetch(`views/${viewName}.html`);
+    const html = await response.text();
+    mainContent.innerHTML = html;
+
+    // Jalankan skrip mengikut modul yang dimuatkan
+    if (viewName === 'dashboard' && typeof initDashboard === 'function') {
+      initDashboard();
+    } else if (viewName === 'profile' && typeof initProfile === 'function') {
+      initProfile();
+    } else if (viewName === 'timetable' && typeof initTimetable === 'function') {
+      initTimetable(); // <--- PASTIKAN BARIS INI WUJUD
+    }
+  } catch (err) {
+    console.error('Error loading view:', err);
+  }
+  
+}
 }
 })
