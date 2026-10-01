@@ -1,44 +1,41 @@
+// =========================================
+// src/settings.js
+// =========================================
+
 function initSettings() {
-  const notificationToggle = document.getElementById('toggle-notifications');
-  const animationToggle = document.getElementById('toggle-animations');
-  const darkModeToggle = document.getElementById('toggle-darkmode');
+  const notifToggle = document.getElementById('toggle-notifications');
+  const animToggle = document.getElementById('toggle-animations');
+  const darkToggle = document.getElementById('toggle-darkmode');
 
-  // Sync initial switch position based on stored setting
-  const isLightMode = localStorage.getItem('theme') === 'light';
-  if (isLightMode) {
-    document.body.classList.add('light-theme');
-    if (darkModeToggle) darkModeToggle.checked = false;
-  } else {
-    document.body.classList.remove('light-theme');
-    if (darkModeToggle) darkModeToggle.checked = true;
-  }
+  // Load saved states
+  const isLight = localStorage.getItem('theme') === 'light';
+  if (isLight) document.body.classList.add('light-theme');
+  if (darkToggle) darkToggle.checked = !isLight;
 
-  // Dark/Light Mode Event Handler
-  if (darkModeToggle) {
-    darkModeToggle.onclick = function() {
-      if (!darkModeToggle.checked) {
-        document.body.classList.add('light-theme');
-        localStorage.setItem('theme', 'light');
-      } else {
+  if (notifToggle) notifToggle.checked = localStorage.getItem('showNotifications') !== 'false';
+  if (animToggle)  animToggle.checked  = localStorage.getItem('playAnimations')   !== 'false';
+
+  if (darkToggle) {
+    darkToggle.onclick = () => {
+      if (darkToggle.checked) {
         document.body.classList.remove('light-theme');
         localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.add('light-theme');
+        localStorage.setItem('theme', 'light');
       }
     };
   }
 
-  // Notifications Toggle Handler
-  if (notificationToggle) {
-    notificationToggle.onchange = function() {
-      localStorage.setItem('showNotifications', notificationToggle.checked);
-    };
+  if (notifToggle) {
+    notifToggle.onchange = () => localStorage.setItem('showNotifications', notifToggle.checked);
   }
-
-  // Animations Toggle Handler
-  if (animationToggle) {
-    animationToggle.onchange = function() {
-      localStorage.setItem('playAnimations', animationToggle.checked);
+  if (animToggle) {
+    animToggle.onchange = () => {
+      localStorage.setItem('playAnimations', animToggle.checked);
+      document.body.classList.toggle('no-buddy-anim', !animToggle.checked);
     };
   }
 }
 
-document.addEventListener('DOMContentLoaded', initSettings);
+window.initSettings = initSettings;

@@ -1,77 +1,135 @@
 <div class="notes-container">
-  <!-- Left Column: Notes List Sidebar -->
+
+  <!-- ============ LEFT: Notes List ============ -->
   <div class="notes-sidebar">
     <div class="sidebar-header">
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Search notes..." id="search-notes">
+        <input type="text" id="search-notes" placeholder="Search Notes...">
       </div>
-      <button class="new-note-btn">
-        <i class="fa-solid fa-plus"></i> New Note
-      </button>
     </div>
 
-    <div class="notes-list">
-      <div class="note-item active">
-        <h5>Lecture Notes (Web Programming)</h5>
-        <span class="note-date">20 Aug 2026</span>
-      </div>
-      <div class="note-item">
-        <h5>Database Notes (SQL Basics)</h5>
-        <span class="note-date">18 Aug 2026</span>
-      </div>
-      <div class="note-item">
-        <h5>Entrepreneurship Ideas</h5>
-        <span class="note-date">15 Aug 2026</span>
-      </div>
-      <div class="note-item">
-        <h5>Exam Revision (Important)</h5>
-        <span class="note-date">12 Aug 2026</span>
-      </div>
+    <div class="notes-list" id="notes-list">
+      <!-- rendered by JS -->
     </div>
   </div>
 
-  <!-- Right Column: Rich Text Editor Workspace -->
-  <div class="notes-editor">
-    <!-- Active Note Title -->
-    <div class="editor-header">
-      <input type="text" class="note-title-input" value="Lecture Notes (Web Programming)">
-    </div>
-
-    <!-- Formatting Toolbar -->
-    <div class="editor-toolbar">
-      <button class="tool-btn"><i class="fa-solid fa-bold"></i></button>
-      <button class="tool-btn"><i class="fa-solid fa-italic"></i></button>
-      <button class="tool-btn"><i class="fa-solid fa-underline"></i></button>
-      <button class="tool-btn"><i class="fa-solid fa-strikethrough"></i></button>
-      <div class="divider"></div>
-      <button class="tool-btn"><i class="fa-solid fa-list-ul"></i></button>
-      <button class="tool-btn"><i class="fa-solid fa-list-ol"></i></button>
-      <div class="divider"></div>
-      <button class="tool-btn"><i class="fa-solid fa-code"></i></button>
-      <button class="tool-btn"><i class="fa-solid fa-link"></i></button>
-    </div>
-
-    <!-- Editable Content Area -->
-    <div class="editor-content" contenteditable="true">
-      <p><strong>Important Points:</strong></p>
-      <ul>
-        <li>HTML - Structure</li>
-        <li>CSS - Styling</li>
-        <li>JS - Functionality</li>
-      </ul>
-      <br>
-      <!-- Code Snippet Box Display -->
-      <div class="code-snippet-box">
-        <div class="code-header">
-          <span>JavaScript Example</span>
-          <i class="fa-regular fa-copy"></i>
-        </div>
-        <pre><code>function calculateGrade(score) {
-          return score >= 80 ? 'A' : 'B';
-        }
-</code></pre>
+  <!-- ============ RIGHT: Empty state ============ -->
+  <div class="notes-editor notes-editor--empty" id="notes-quick-panel">
+    <div class="quick-empty">
+      <div class="quick-empty__icon">
+        <i class="fa-regular fa-note-sticky"></i>
       </div>
+      <h3>Select a note</h3>
+      <p>Click any note on the left to open it, or create a new one.</p>
+      <button class="btn-new-note" id="btn-new-note">
+        <i class="fa-solid fa-plus"></i> Add Note
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- =========================================
+     NOTE MODAL
+     ========================================= -->
+<div class="modal-overlay note-modal-overlay" id="note-modal" style="display:none;">
+  <div class="note-modal">
+
+    <!-- Close button -->
+    <button class="modal-close-btn" id="modal-close-btn" title="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <!-- Topic header -->
+    <div class="note-modal__header">
+      <input
+        type="text"
+        class="note-modal__title"
+        id="modal-title-input"
+        placeholder="Topic..."
+        maxlength="120"
+        readonly>
+    </div>
+
+    <!-- Toolbar (only in edit mode) -->
+    <div class="note-modal__toolbar" id="modal-toolbar" style="display:none;">
+      <button class="tool-btn" data-cmd="bold" title="Bold"><i class="fa-solid fa-bold"></i></button>
+      <button class="tool-btn" data-cmd="italic" title="Italic"><i class="fa-solid fa-italic"></i></button>
+      <button class="tool-btn" data-cmd="underline" title="Underline"><i class="fa-solid fa-underline"></i></button>
+      <div class="divider"></div>
+      <button class="tool-btn" data-cmd="insertUnorderedList" title="Bullet list"><i class="fa-solid fa-list-ul"></i></button>
+      <button class="tool-btn" data-cmd="insertOrderedList" title="Numbered list"><i class="fa-solid fa-list-ol"></i></button>
+      <div class="divider"></div>
+      <label class="tool-btn tool-btn--file" title="Attach file">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+        <input type="file" id="modal-file-input" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" hidden>
+      </label>
+    </div>
+
+    <!-- Zoom controls (always visible) -->
+    <div class="note-modal__zoom">
+      <button class="zoom-btn" id="zoom-out-btn" title="Zoom out">
+        <i class="fa-solid fa-magnifying-glass-minus"></i>
+      </button>
+      <button class="zoom-value" id="zoom-value-btn" title="Reset zoom">100%</button>
+      <button class="zoom-btn" id="zoom-in-btn" title="Zoom in">
+        <i class="fa-solid fa-magnifying-glass-plus"></i>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div
+      class="note-modal__content"
+      id="modal-content"
+      data-placeholder="Text or/and image..."></div>
+
+    <!-- Footer: Edit | Discard | Delete -->
+    <div class="note-modal__footer">
+      <div class="footer-left">
+        <button class="btn-footer btn-edit" id="modal-btn-edit">
+          <i class="fa-solid fa-pen"></i> Edit
+        </button>
+        <button class="btn-footer btn-discard" id="modal-btn-discard">
+          <i class="fa-solid fa-rotate-left"></i> Discard
+        </button>
+      </div>
+      <div class="footer-right">
+        <button class="btn-footer btn-delete" id="modal-btn-delete">
+          <i class="fa-solid fa-trash"></i> Delete
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ DISCARD CONFIRM MODAL ============ -->
+<div class="modal-overlay" id="discard-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Discard Changes?</h3>
+      <button class="modal-close" id="discard-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="modal-text">Your unsaved changes will be lost.</p>
+    <div class="modal-actions--center">
+      <button type="button" class="btn-danger" id="discard-yes">DISCARD</button>
+      <button type="button" class="btn-cancel" id="discard-no">KEEP EDITING</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DELETE CONFIRM MODAL ============ -->
+<div class="modal-overlay" id="delete-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Delete Note?</h3>
+      <button class="modal-close" id="delete-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="modal-text" id="delete-note-name">This note will be permanently deleted.</p>
+    <div class="modal-actions--center">
+      <button type="button" class="btn-danger" id="delete-yes">DELETE</button>
+      <button type="button" class="btn-cancel" id="delete-no">CANCEL</button>
     </div>
   </div>
 </div>

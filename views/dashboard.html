@@ -1,9 +1,9 @@
 <div class="dashboard-container">
   <div class="dashboard-header">
-  <div class="greeting-box">
-    <h1>Hey, <span id="user-greeting-name">Guest</span>! 👋</h1>
-    <p id="buddy-speech-text">Loading information from database...</p>
-  </div>
+    <div class="greeting-box">
+      <h1>Hey, <span id="user-greeting-name">Guest</span>! 👋</h1>
+      <p id="buddy-speech-text">Loading information from database...</p>
+    </div>
     <div class="quote-card">
       <i class="fa-solid fa-quote-left quote-icon"></i>
       <p class="quote-text">"Loading quote..."</p>
@@ -17,8 +17,14 @@
   <div class="dashboard-grid">
     <!-- Left Column: Mascot & Quick Access -->
     <div class="grid-column left-col">
+
+      <!-- ✅ Mascot card restored, buddy-wrap inside it -->
       <div class="mascot-card">
-        <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="mascot-img">
+        <div class="buddy-wrap">
+          <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="mascot-img buddy buddy--dashboard">
+          <span class="buddy-eye buddy-eye--left"></span>
+          <span class="buddy-eye buddy-eye--right"></span>
+        </div>
       </div>
 
       <div class="card quick-access-card">

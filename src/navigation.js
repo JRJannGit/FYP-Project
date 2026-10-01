@@ -1,46 +1,49 @@
-const fs = require('fs');
-const path = require('path');
+// =========================================
+// src/navigation.js — SPA router + zoom fix
+// =========================================
 
-document.addEventListener('DOMContentLoaded', () => {
+(function () {
   const navItems = document.querySelectorAll('.nav-item');
   const mainContent = document.getElementById('main-content');
 
-  function loadView(viewName) {
-    try {
-      // Memastikan laluan menunjukkan ke folder 'views'
-      const viewPath = path.join(__dirname, '..', 'views', `${viewName}.html`);
-      
-      if (!fs.existsSync(viewPath)) {
-        // Fallback jika fail dipanggil dari root
-        const altPath = path.join(__dirname, 'views', `${viewName}.html`);
-        if (fs.existsSync(altPath)) {
-          var html = fs.readFileSync(altPath, 'utf8');
-        } else {
-          throw new Error(`Fail tidak ditemui di: ${viewPath}`);
-        }
-      } else {
-        var html = fs.readFileSync(viewPath, 'utf8');
-      }
+  const INIT_MAP = {
+    dashboard:     'initDashboard',
+    timetable:     'initTimetable',
+    assignments:   'initAssignments',
+    calendar:      'initCalendar',
+    notes:         'initNotes',
+    reminders:     'initReminders',
+    resources:     'initResources',
+    settings:      'initSettings',
+    profile:       'initProfile',
+    notifications: 'initNotifications'
+  };
 
+  async function loadView(viewName) {
+    if (!mainContent) return;
+
+    try {
+      const res = await fetch(`views/${viewName}.html`);
+      if (!res.ok) throw new Error(`View "${viewName}" not found (${res.status})`);
+      const html = await res.text();
       mainContent.innerHTML = html;
 
-      // Jalankan fungsi penginisialisasi mengikut paparan
-      if (viewName === 'dashboard' && typeof initDashboard === 'function') initDashboard();
-      if (viewName === 'timetable' && typeof initTimetable === 'function') initTimetable();
-      if (viewName === 'assignments' && typeof initAssignments === 'function') initAssignments();
-      if (viewName === 'calendar' && typeof initCalendar === 'function') initCalendar();
-      if (viewName === 'notes' && typeof initNotes === 'function') initNotes();
-      if (viewName === 'reminders' && typeof initReminders === 'function') initReminders();
-      if (viewName === 'resources' && typeof initResources === 'function') initResources();
-      if (viewName === 'settings' && typeof initSettings === 'function') initSettings();
-      if (viewName === 'profile' && typeof initProfile === 'function') initProfile(); 
-
-    } catch (error) {
-      console.error(error);
+      const fnName = INIT_MAP[viewName];
+      if (fnName && typeof window[fnName] === 'function') {
+        try {
+          window[fnName]();
+        } catch (e) {
+          console.error(`init ${viewName} threw:`, e);
+        }
+      } else {
+        console.warn(`No init function for "${viewName}" (looked for ${fnName})`);
+      }
+    } catch (err) {
+      console.error(`loadView(${viewName}) failed:`, err);
       mainContent.innerHTML = `
-        <div style="padding: 40px; text-align: center; color: #ef4444;">
-          <h2>Error: ${viewName}</h2>
-          <p style="color: #94a3b8; margin-top: 10px;">${error.message}</p>
+        <div style="padding:40px;text-align:center;color:#ef4444;">
+          <h2>Error loading "${viewName}"</h2>
+          <p style="color:#94a3b8;margin-top:10px;">${err.message}</p>
         </div>
       `;
     }
@@ -49,66 +52,63 @@ document.addEventListener('DOMContentLoaded', () => {
   navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
-      navItems.forEach(nav => nav.classList.remove('active'));
+      const view = item.getAttribute('data-view');
+      if (!view) return;
+      navItems.forEach(n => n.classList.remove('active'));
       item.classList.add('active');
-
-      const selectedView = item.getAttribute('data-view');
-      if (selectedView) {
-        loadView(selectedView);
-      }
+      loadView(view);
     });
   });
 
-  // Add profile click trigger inside src/navigation.js
-const userProfileCard = document.querySelector('.user-profile');
-if (userProfileCard) {
-  userProfileCard.style.cursor = 'pointer';
-  userProfileCard.onclick = () => {
-    loadView('profile');
-  };
-}
-
-// Ensure initProfile is registered inside loadView(viewName)
-if (viewName === 'profile' && typeof initProfile === 'function') {
-  initProfile();
-}
-
-async function loadView(viewName) {
-  const mainContent = document.getElementById('main-content');
-  try {
-    const response = await fetch(`views/${viewName}.html`);
-    const html = await response.text();
-    mainContent.innerHTML = html;
-
-    // Panggil semula skrip modul mengikut paparan
-    if (viewName === 'dashboard' && typeof initDashboard === 'function') {
-      initDashboard();
-    } else if (viewName === 'profile' && typeof initProfile === 'function') {
-      initProfile();
-    }
-  } catch (err) {
-    console.error('Error loading view:', err);
+  const userProfile = document.querySelector('.user-profile');
+  if (userProfile) {
+    userProfile.style.cursor = 'pointer';
+    userProfile.addEventListener('click', () => {
+      navItems.forEach(n => n.classList.remove('active'));
+      loadView('profile');
+    });
   }
 
-  async function loadView(viewName) {
-  const mainContent = document.getElementById('main-content');
-  try {
-    const response = await fetch(`views/${viewName}.html`);
-    const html = await response.text();
-    mainContent.innerHTML = html;
+  window.loadView = loadView;
 
-    // Jalankan skrip mengikut modul yang dimuatkan
-    if (viewName === 'dashboard' && typeof initDashboard === 'function') {
-      initDashboard();
-    } else if (viewName === 'profile' && typeof initProfile === 'function') {
-      initProfile();
-    } else if (viewName === 'timetable' && typeof initTimetable === 'function') {
-      initTimetable(); // <--- PASTIKAN BARIS INI WUJUD
+  document.addEventListener('DOMContentLoaded', () => {
+    loadView('dashboard');
+  });
+
+  // =========================================
+  // ZOOM FIX
+  // =========================================
+  if (window.require) {
+    try {
+      const { ipcRenderer, webFrame } = window.require('electron');
+
+      // Force zoom = 1 on initial load
+      webFrame.setZoomLevel(0);
+      webFrame.setZoomFactor(1);
+
+      // Reset zoom when window resizes / restores
+      ipcRenderer.on('window-resized', () => {
+        webFrame.setZoomLevel(0);
+        webFrame.setZoomFactor(1);
+      });
+
+      // Global Ctrl+/-/0 block (defensive)
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && ['+', '-', '=', '0'].includes(e.key)) {
+          e.preventDefault();
+        }
+      });
+
+      // Block Ctrl+Scroll (mouse wheel zoom)
+      document.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) e.preventDefault();
+      }, { passive: false });
+
+      // Block pinch zoom (trackpad)
+      document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+    } catch (err) {
+      console.warn('Zoom fix unavailable:', err);
     }
-  } catch (err) {
-    console.error('Error loading view:', err);
   }
-  
-}
-}
-})
+})();

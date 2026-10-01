@@ -1,0 +1,116 @@
+/* =========================================
+   UPTM Buddy — Mascot Animation
+   Applies to any <img class="buddy ...">
+   ========================================= */
+
+.buddy {
+    width: 160px;
+    height: auto;
+    object-fit: contain;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+
+    animation: buddy-idle 2.5s ease-in-out infinite;
+    transform-origin: center center;
+    transition: filter 0.2s ease;
+}
+
+.buddy:hover {
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.15));
+}
+
+/* Idle: gentle float + breathe */
+@keyframes buddy-idle {
+    0%   { transform: translateY(0)     rotate(0deg) scale(1);    }
+    50%  { transform: translateY(-8px)  rotate(1deg) scale(1.02); }
+    100% { transform: translateY(0)     rotate(0deg) scale(1);    }
+}
+
+/* Click reaction */
+.buddy.happy {
+    animation: buddy-happy 0.6s ease-in-out;
+}
+
+@keyframes buddy-happy {
+    0%   { transform: scale(1)    rotate(0deg);  }
+    30%  { transform: scale(1.12) rotate(-4deg); }
+    60%  { transform: scale(1.12) rotate(4deg);  }
+    100% { transform: scale(1)    rotate(0deg);  }
+}
+
+/* Size variants */
+.buddy--dashboard    { width: 180px; }
+.buddy--settings     { width: 150px; }
+.buddy--notification { width: 120px; }
+
+/* Respect "Play Buddy Animations" toggle */
+body.no-buddy-anim .buddy,
+body.no-buddy-anim .buddy-eye {
+    animation: none !important;
+}
+
+/* =========================================
+   Blink animation — eyelid overlay
+   ========================================= */
+
+.buddy-wrap {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+    vertical-align: middle;
+}
+
+/* Toast variant — still inline-block, just centered with margins */
+.toast-mascot {
+    display: inline-block;
+    margin: 0 auto 8px;
+}
+
+.toast-body {
+    text-align: center;   /* centers the inline-block wrapper */
+}
+
+/* Eyelid = white oval matching face color */
+.buddy-eye {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: scaleY(0);
+    transform-origin: center center;
+    animation: buddy-blink 5s ease-in-out infinite;
+}
+
+/* Left eye */
+.buddy-eye--left {
+    top: 37.5%;
+    left: 29%;
+    width: 9%;
+    height: 11%;
+}
+
+/* Right eye */
+.buddy-eye--right {
+    top: 37.5%;
+    left: 57%;
+    width: 9%;
+    height: 11%;
+    animation-delay: 0.04s;
+}
+
+/* Blink: closed briefly every ~4.4s */
+@keyframes buddy-blink {
+    0%, 90%, 100% { transform: scaleY(0); }
+    93%, 96%      { transform: scaleY(1); }
+}
+
+/* =========================================
+   Calibration helper — turns eyelids red
+   Enable with: document.body.classList.add("calibrate")
+   ========================================= */
+body.calibrate .buddy-eye {
+    background: rgba(255, 0, 0, 0.6) !important;
+    transform: scaleY(1) !important;
+    animation: none !important;
+}

@@ -1,167 +1,182 @@
-const db = require('./db.js');
+// =========================================
+// src/profile.js
+// =========================================
 
-// 1. Kemaskini kad profil di sidebar bawah
 function updateSidebarProfile(user) {
-  const sidebarName = document.querySelector('.user-name');
-  const sidebarId = document.querySelector('.student-id');
-
-  if (sidebarName && sidebarId) {
-    if (user) {
-      sidebarName.innerText = user.full_name;
-      sidebarId.innerText = `Student ID: ${user.student_id}`;
-    } else {
-      sidebarName.innerText = 'Guest User';
-      sidebarId.innerText = 'Click to Login';
-    }
-  }
-}
-
-// 2. Fungsi Tukar Tab (Login vs Sign Up)
-function switchTab(targetTab) {
-  const loginForm = document.getElementById('login-form');
-  const signupForm = document.getElementById('signup-form');
-  const tabLoginBtn = document.getElementById('tab-login-btn');
-  const tabSignupBtn = document.getElementById('tab-signup-btn');
-
-  if (!loginForm || !signupForm || !tabLoginBtn || !tabSignupBtn) return;
-
-  if (targetTab === 'signup') {
-    loginForm.style.display = 'none';
-    signupForm.style.display = 'block';
-    tabSignupBtn.className = 'tab-btn active';
-    tabLoginBtn.className = 'tab-btn inactive';
+  const name = document.querySelector('.user-name');
+  const sid  = document.querySelector('.student-id');
+  if (!name || !sid) return;
+  if (user) {
+    name.innerText = user.full_name;
+    sid.innerText  = `Student ID: ${user.student_id}`;
   } else {
-    loginForm.style.display = 'block';
-    signupForm.style.display = 'none';
-    tabLoginBtn.className = 'tab-btn active';
-    tabSignupBtn.className = 'tab-btn inactive';
+    name.innerText = 'Guest User';
+    sid.innerText  = 'Click to Login';
   }
 }
 
-// 3. Inisialisasi Utama Profil & Auth
-async function initProfile() {
-  const authSection = document.getElementById('auth-section');
+function switchTab(tab) {
+  const login  = document.getElementById('login-form');
+  const signup = document.getElementById('signup-form');
+  const btnLogin  = document.getElementById('tab-login-btn');
+  const btnSignup = document.getElementById('tab-signup-btn');
+  if (!login || !signup) return;
+  if (tab === 'signup') {
+    login.style.display = 'none'; signup.style.display = 'block';
+    btnSignup.className = 'tab-btn active'; btnLogin.className = 'tab-btn inactive';
+  } else {
+    login.style.display = 'block'; signup.style.display = 'none';
+    btnLogin.className = 'tab-btn active'; btnSignup.className = 'tab-btn inactive';
+  }
+  clearBanner(login); clearBanner(signup);
+}
+
+function showBanner(formEl, message, type = 'error') {
+  if (!formEl) return;
+  clearBanner(formEl);
+  const banner = document.createElement('div');
+  banner.className = `form-banner form-banner--${type}`;
+  banner.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${message}</span>`;
+  formEl.insertBefore(banner, formEl.firstChild);
+  if (type === 'success') setTimeout(() => banner.remove(), 3000);
+}
+
+function clearBanner(formEl) {
+  if (!formEl) return;
+  const b = formEl.querySelector('.form-banner');
+  if (b) b.remove();
+}
+
+function setLoading(btn, loading, text = 'Loading...') {
+  if (!btn) return;
+  if (loading) {
+    btn.dataset.original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${text}`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn.dataset.original || btn.innerHTML;
+  }
+}
+
+function initProfile() {
+  const authSection    = document.getElementById('auth-section');
   const profileSection = document.getElementById('profile-section');
+  const user           = AppStorage.getUser();
 
-  // Semak sesi pengguna semasa
-  let activeUser = null;
-  try {
-    activeUser = JSON.parse(localStorage.getItem('uptm_user'));
-  } catch (e) {
-    console.error('Error reading localStorage:', e);
-  }
-
-  // Tunjukkan skrin berdasarkan status Login
-  if (activeUser) {
-    if (authSection) authSection.style.display = 'none';
+  if (user) {
+    if (authSection)    authSection.style.display    = 'none';
     if (profileSection) profileSection.style.display = 'block';
-
-    const profileName = document.getElementById('profile-name');
-    const profileId = document.getElementById('profile-id');
-    const profileEmail = document.getElementById('profile-email');
-
-    if (profileName) profileName.innerText = activeUser.full_name;
-    if (profileId) profileId.innerText = `Student ID: ${activeUser.student_id}`;
-    if (profileEmail) profileEmail.innerText = activeUser.email || '-';
+    const n = document.getElementById('profile-name');
+    const i = document.getElementById('profile-id');
+    const e = document.getElementById('profile-email');
+    if (n) n.innerText = user.full_name;
+    if (i) i.innerText = `Student ID: ${user.student_id}`;
+    if (e) e.innerText = user.email || '-';
   } else {
-    if (authSection) authSection.style.display = 'block';
+    if (authSection)    authSection.style.display    = 'block';
     if (profileSection) profileSection.style.display = 'none';
-    switchTab('login'); // Set tab lalai ke Login
+    switchTab('login');
   }
 
-  // Attach Form Submit Handlers
   setupFormEvents();
 }
 
 function setupFormEvents() {
-  const loginForm = document.getElementById('login-form');
+  const loginForm  = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
-  const btnLogout = document.getElementById('btn-logout');
+  const btnLogout  = document.getElementById('btn-logout');
 
-  // Handle Login Submission
   if (loginForm) {
     loginForm.onsubmit = async (e) => {
       e.preventDefault();
-      const studentId = document.getElementById('login-student-id').value.trim();
-      const password = document.getElementById('login-password').value.trim();
-
-      try {
-        const [rows] = await db.query(
-          'SELECT * FROM student_users WHERE student_id = ? AND password = ?',
-          [studentId, password]
-        );
-
-        if (rows.length > 0) {
-          const user = rows[0];
-          localStorage.setItem('uptm_user', JSON.stringify(user));
-          updateSidebarProfile(user);
-          initProfile();
-        } else {
-          alert('Invalid Student ID or Password.');
-        }
-      } catch (err) {
-        console.error('Login Error:', err);
-        alert('Database connection error. Ensure MySQL is running in XAMPP/Laragon.');
+      clearBanner(loginForm);
+      const sidEl = document.getElementById('login-student-id');
+      const pwEl  = document.getElementById('login-password');
+      const btn   = loginForm.querySelector('button[type="submit"]');
+      const sid = sidEl.value.trim();
+      const pw  = pwEl.value.trim();
+      if (!sid) { showBanner(loginForm, 'Please enter your Student ID'); sidEl.focus(); return; }
+      if (!pw)  { showBanner(loginForm, 'Please enter your password');   pwEl.focus();  return; }
+      setLoading(btn, true, 'Logging in...');
+      const res = await API.loginStudent(sid, pw);
+      setLoading(btn, false);
+      if (!res.success) {
+        let msg = res.error || 'Login failed';
+        if (/invalid|credentials/i.test(msg)) msg = 'Invalid Student ID or Password. Please try again.';
+        showBanner(loginForm, msg, 'error');
+        return;
       }
+      AppStorage.setUser(res.data);
+      updateSidebarProfile(res.data);
+      showBanner(loginForm, `Welcome, ${res.data.full_name}!`, 'success');
+      setTimeout(() => {
+        initProfile();
+        if (window.loadView) window.loadView('dashboard');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelector('[data-view="dashboard"]')?.classList.add('active');
+      }, 700);
     };
   }
 
-  // Handle Sign Up Submission
   if (signupForm) {
     signupForm.onsubmit = async (e) => {
       e.preventDefault();
-      const studentId = document.getElementById('signup-student-id').value.trim();
-      const fullName = document.getElementById('signup-full-name').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value.trim();
-
-      try {
-        await db.query(
-          'INSERT INTO student_users (student_id, full_name, email, password) VALUES (?, ?, ?, ?)',
-          [studentId, fullName, email, password]
-        );
-
-        const newUser = { student_id: studentId, full_name: fullName, email: email };
-        localStorage.setItem('uptm_user', JSON.stringify(newUser));
-        updateSidebarProfile(newUser);
-        alert('Account created successfully!');
-        initProfile();
-      } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          alert('Student ID already registered. Please login.');
-        } else {
-          console.error('Sign Up Error:', err);
-          alert('Failed to register account in database.');
-        }
+      clearBanner(signupForm);
+      const sidEl   = document.getElementById('signup-student-id');
+      const nameEl  = document.getElementById('signup-full-name');
+      const emailEl = document.getElementById('signup-email');
+      const pwEl    = document.getElementById('signup-password');
+      const btn     = signupForm.querySelector('button[type="submit"]');
+      const data = {
+        student_id: sidEl.value.trim(),
+        full_name:  nameEl.value.trim(),
+        email:      emailEl.value.trim(),
+        password:   pwEl.value.trim()
+      };
+      if (!data.student_id) { showBanner(signupForm, 'Please enter a Student ID');  sidEl.focus();   return; }
+      if (!data.full_name)  { showBanner(signupForm, 'Please enter your full name'); nameEl.focus();  return; }
+      if (!data.email || !data.email.includes('@')) { showBanner(signupForm, 'Please enter a valid email'); emailEl.focus(); return; }
+      if (data.password.length < 6) { showBanner(signupForm, 'Password must be at least 6 characters'); pwEl.focus(); return; }
+      setLoading(btn, true, 'Creating account...');
+      const res = await API.signupStudent(data);
+      setLoading(btn, false);
+      if (!res.success) {
+        let msg = res.error || 'Sign up failed';
+        if (/duplicate|already exists/i.test(msg)) msg = 'This Student ID is already registered. Try logging in.';
+        showBanner(signupForm, msg, 'error');
+        return;
       }
+      AppStorage.setUser(res.data);
+      updateSidebarProfile(res.data);
+      showBanner(signupForm, 'Account created! Welcome.', 'success');
+      setTimeout(() => {
+        initProfile();
+        if (window.loadView) window.loadView('dashboard');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelector('[data-view="dashboard"]')?.classList.add('active');
+      }, 800);
     };
   }
 
-  // Handle Log Out
   if (btnLogout) {
     btnLogout.onclick = () => {
-      localStorage.removeItem('uptm_user');
+      if (!confirm('Log out?')) return;
+      AppStorage.clearUser();
       updateSidebarProfile(null);
       initProfile();
     };
   }
 }
 
-// 4. Global Event Listener untuk Tab Switching (Penyelesaian Utama)
 document.addEventListener('click', (e) => {
-  if (e.target && e.target.id === 'tab-login-btn') {
-    switchTab('login');
-  } else if (e.target && e.target.id === 'tab-signup-btn') {
-    switchTab('signup');
-  }
+  if (e.target.id === 'tab-login-btn')  switchTab('login');
+  if (e.target.id === 'tab-signup-btn') switchTab('signup');
 });
 
-// Sync profil pada pembukaan pertama
 document.addEventListener('DOMContentLoaded', () => {
-  const savedUser = JSON.parse(localStorage.getItem('uptm_user'));
-  updateSidebarProfile(savedUser);
-  initProfile();
+  updateSidebarProfile(AppStorage.getUser());
 });
 
-// Didedahkan untuk dipanggil oleh navigation.js
 window.initProfile = initProfile;
+window.switchTab   = switchTab;

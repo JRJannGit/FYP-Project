@@ -11,82 +11,56 @@
     </button>
   </div>
 
-  <!-- Assignments & Exams List -->
-  <div class="task-cards-list">
-    <!-- Item 1 -->
-    <div class="assignment-card upcoming">
-      <div class="card-left">
-        <div class="checkbox-wrapper">
-          <input type="checkbox" id="task-1">
-        </div>
-        <div class="assignment-info">
-          <h4>Database Assignment</h4>
-          <p>Submission of ERD and Report</p>
-        </div>
-      </div>
-      <div class="card-right">
-        <div class="due-info">
-          <span class="due-date">22 Aug 2026</span>
-          <span class="badge due-soon">2 days left</span>
-        </div>
-      </div>
+  <!-- Assignments List -->
+  <div class="task-cards-list" id="assignments-list">
+    <!-- rendered by JS -->
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="assignments-empty" style="display:none;">
+    <i class="fa-regular fa-folder-open"></i>
+    <h4>No assignments yet</h4>
+    <p>Click "Add New" to create your first assignment.</p>
+  </div>
+</div>
+
+<!-- ============= ADD / EDIT MODAL ============= -->
+<div class="modal-overlay" id="assignment-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="assignment-modal-title">Add Assignment</h3>
+      <button class="modal-close" id="assignment-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
 
-    <!-- Item 2 -->
-    <div class="assignment-card upcoming">
-      <div class="card-left">
-        <div class="checkbox-wrapper">
-          <input type="checkbox" id="task-2">
-        </div>
-        <div class="assignment-info">
-          <h4>Web Programming Lab</h4>
-          <p>Practical Task 3</p>
-        </div>
-      </div>
-      <div class="card-right">
-        <div class="due-info">
-          <span class="due-date">25 Aug 2026</span>
-          <span class="badge due-medium">5 days left</span>
-        </div>
-      </div>
-    </div>
+    <form id="assignment-form" class="modal-form">
+      <input type="hidden" id="assignment-id">
 
-    <!-- Item 3 -->
-    <div class="assignment-card upcoming">
-      <div class="card-left">
-        <div class="checkbox-wrapper">
-          <input type="checkbox" id="task-3">
-        </div>
-        <div class="assignment-info">
-          <h4>Digital Entrepreneurship</h4>
-          <p>Group Report</p>
-        </div>
+      <div class="form-group">
+        <label for="assignment-subject">Subject / Title</label>
+        <input type="text" id="assignment-subject" required placeholder="e.g. Database Assignment">
       </div>
-      <div class="card-right">
-        <div class="due-info">
-          <span class="due-date">30 Aug 2026</span>
-          <span class="badge due-normal">10 days left</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Item 4 (Exam Tagged) -->
-    <div class="assignment-card upcoming exam-item">
-      <div class="card-left">
-        <div class="checkbox-wrapper">
-          <input type="checkbox" id="task-4">
-        </div>
-        <div class="assignment-info">
-          <h4>OOP Quiz <span class="exam-tag">EXAM</span></h4>
-          <p>Chapter 4 - 6</p>
-        </div>
+      <div class="form-group">
+        <label for="assignment-desc">Description</label>
+        <textarea id="assignment-desc" rows="3" placeholder="e.g. Submission of ERD and Report"></textarea>
       </div>
-      <div class="card-right">
-        <div class="due-info">
-          <span class="due-date">1 Sept 2026</span>
-          <span class="badge due-normal">12 days left</span>
-        </div>
+
+      <div class="form-group">
+        <label for="assignment-due">Due Date</label>
+        <input type="date" id="assignment-due" required>
       </div>
-    </div>
+
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="assignment-exam">
+        <label for="assignment-exam">Mark as exam</label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="assignment-modal-cancel">Cancel</button>
+        <button type="submit" class="btn-save" id="assignment-modal-save">Save</button>
+      </div>
+    </form>
   </div>
 </div>

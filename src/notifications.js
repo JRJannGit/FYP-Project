@@ -1,26 +1,21 @@
+// =========================================
+// src/notifications.js
+// =========================================
+
 function initNotifications() {
   const toast = document.getElementById('reminder-toast');
   const closeBtn = document.getElementById('close-toast');
   const dismissBtn = document.getElementById('toast-dismiss-btn');
   const viewBtn = document.getElementById('toast-view-btn');
 
-  function hideToast() {
-    if (toast) {
-      toast.style.display = 'none';
-    }
-  }
+  function hide() { if (toast) toast.style.display = 'none'; }
 
-  if (closeBtn) closeBtn.addEventListener('click', hideToast);
-  if (dismissBtn) dismissBtn.addEventListener('click', hideToast);
-  
-  if (viewBtn) {
-    viewBtn.addEventListener('click', () => {
-      hideToast();
-      // Trigger navigation to assignments module
-      const assignmentNav = document.querySelector('[data-view="assignments"]');
-      if (assignmentNav) assignmentNav.click();
-    });
-  }
+  if (closeBtn) closeBtn.onclick = hide;
+  if (dismissBtn) dismissBtn.onclick = hide;
+  if (viewBtn) viewBtn.onclick = () => {
+    hide();
+    document.querySelector('[data-view="assignments"]')?.click();
+  };
 }
 
-document.addEventListener('DOMContentLoaded', initNotifications);
+window.initNotifications = initNotifications;

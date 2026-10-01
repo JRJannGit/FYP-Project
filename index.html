@@ -7,6 +7,7 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <link rel="stylesheet" href="styles/buddy.css">
   <link rel="stylesheet" href="styles/sidebar.css">
   <link rel="stylesheet" href="styles/dashboard.css">
   <link rel="stylesheet" href="styles/timetable.css">
@@ -21,7 +22,6 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="brand">
         <img src="assets/uptm-logo.png" alt="UPTM Logo" class="logo">
@@ -29,49 +29,28 @@
       </div>
 
       <nav class="nav-menu">
-        <a href="#" class="nav-item active" data-view="dashboard">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-        <a href="#" class="nav-item" data-view="timetable">
-          <i class="fa-regular fa-calendar-days"></i> Timetable
-        </a>
-        <a href="#" class="nav-item" data-view="assignments">
-          <i class="fa-solid fa-pen-to-square"></i> Assignments
-        </a>
-        <a href="#" class="nav-item" data-view="calendar">
-          <i class="fa-solid fa-calendar-check"></i> Calendar
-        </a>
-        <a href="#" class="nav-item" data-view="notes">
-          <i class="fa-regular fa-note-sticky"></i> Notes
-        </a>
-        <a href="#" class="nav-item" data-view="reminders">
-          <i class="fa-regular fa-bell"></i> Reminders
-        </a>
-        <a href="#" class="nav-item" data-view="resources">
-          <i class="fa-solid fa-cubes"></i> Resources
-        </a>
-        <a href="#" class="nav-item" data-view="settings">
-          <i class="fa-solid fa-gear"></i> Settings
-        </a>
+        <a href="#" class="nav-item active" data-view="dashboard"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="#" class="nav-item" data-view="timetable"><i class="fa-regular fa-calendar-days"></i> Timetable</a>
+        <a href="#" class="nav-item" data-view="assignments"><i class="fa-solid fa-pen-to-square"></i> Assignments</a>
+        <a href="#" class="nav-item" data-view="calendar"><i class="fa-solid fa-calendar-check"></i> Calendar</a>
+        <a href="#" class="nav-item" data-view="notes"><i class="fa-regular fa-note-sticky"></i> Notes</a>
+        <a href="#" class="nav-item" data-view="reminders"><i class="fa-regular fa-bell"></i> Reminders</a>
+        <a href="#" class="nav-item" data-view="resources"><i class="fa-solid fa-cubes"></i> Resources</a>
+        <a href="#" class="nav-item" data-view="settings"><i class="fa-solid fa-gear"></i> Settings</a>
       </nav>
 
-      <!-- Student Profile Card -->
       <div class="user-profile">
-        <div class="avatar">
-          <i class="fa-solid fa-user"></i>
-        </div>
+        <div class="avatar"><i class="fa-solid fa-user"></i></div>
         <div class="user-info">
-          <span class="user-name">USER</span>
-          <span class="student-id">Student ID: AM1234567890</span>
+          <span class="user-name">Guest User</span>
+          <span class="student-id">Click to Login</span>
         </div>
       </div>
     </aside>
 
-    <!-- Main Dynamic Content Container -->
     <main id="main-content" class="content-area"></main>
   </div>
 
-  <!-- ===== GLOBAL TOAST OVERLAY (was notifications.html, never mounted) ===== -->
   <div class="toast-notification-overlay" id="reminder-toast" style="display:none;">
     <div class="toast-card">
       <div class="toast-header">
@@ -81,13 +60,16 @@
         </div>
         <button class="toast-close" id="close-toast"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <div class="toast-body">
+        <div class="buddy-wrap toast-mascot">
+          <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="buddy buddy--notification">
+          <span class="buddy-eye buddy-eye--left"></span>
+          <span class="buddy-eye buddy-eye--right"></span>
+        </div>
         <div class="toast-badge">Reminder</div>
         <span class="toast-time" id="toast-time"></span>
         <h4 class="toast-title" id="toast-title"></h4>
       </div>
-
       <div class="toast-footer">
         <button class="action-btn primary" id="toast-view-btn">View Now</button>
         <button class="action-btn secondary" id="toast-dismiss-btn">Dismiss</button>
@@ -95,23 +77,20 @@
     </div>
   </div>
 
-  <!-- Core Storage -->
   <script src="src/storage.js"></script>
-  <script src="src/db.js"></script>
+  <script src="src/api.js"></script>
 
-  <!-- Feature Controllers -->
   <script src="src/dashboard.js"></script>
-  <script src="src/timetable.js"></script>
   <script src="src/assignments.js"></script>
   <script src="src/calendar.js"></script>
   <script src="src/notes.js"></script>
   <script src="src/reminders.js"></script>
   <script src="src/resources.js"></script>
-  <script src="src/notifications.js"></script>
+  <script src="src/timetable.js"></script>
   <script src="src/settings.js"></script>
   <script src="src/profile.js"></script>
-
-  <!-- Navigation Handler (must load last) -->
+  <script src="src/notifications.js"></script>
+  <script src="src/buddy.js"></script>
   <script src="src/navigation.js"></script>
 </body>
 </html>

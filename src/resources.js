@@ -1,23 +1,44 @@
+// =========================================
+// src/resources.js
+// =========================================
+
 function initResources() {
-  const resourceCards = document.querySelectorAll('.resource-card');
+  const grid = document.querySelector('.resources-grid');
 
-  resourceCards.forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetUrl = card.getAttribute('href');
+  async function load() {
+    if (!grid) return;
+    const res = await API.get('/api/resources');
+    if (!res.success) {
+      grid.innerHTML = `<p style="color:#f87171;">Failed: ${res.error}</p>`;
+      return;
+    }
+    grid.innerHTML = res.data.map(r => `
+      <a href="${r.url}" class="resource-card" data-url="${r.url}">
+        <div class="card-brand"><i class="fa-solid ${r.icon || 'fa-link'}"></i></div>
+        <div class="card-info">
+          <h4>${r.title}</h4>
+          <p>${r.description || ''}</p>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
+      </a>
+    `).join('');
+  }
 
-      if (targetUrl && targetUrl !== '#') {
-        if (window.require) {
-          const { shell } = window.require('electron');
-          shell.openExternal(targetUrl);
-        } else {
-          window.open(targetUrl, '_blank');
-        }
-      } else {
-        alert("Pautan portal sedia ada akan dibuka di pelayar laman web anda.");
-      }
-    });
+  grid?.addEventListener('click', (e) => {
+    const card = e.target.closest('.resource-card');
+    if (!card) return;
+    e.preventDefault();
+    const url = card.dataset.url;
+    if (!url) return;
+    if (window.require) {
+      const { shell } = window.require('electron');
+      shell.openExternal(url);
+    } else {
+      window.open(url, '_blank');
+    }
   });
+
+  load();
 }
 
-document.addEventListener('DOMContentLoaded', initResources);
+window.initResources = initResources;
