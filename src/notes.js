@@ -1,5 +1,5 @@
 // =========================================
-// src/notes.js — modal viewer/editor with zoom
+// src/notes.js — modal viewer/editor with CSS zoom
 // =========================================
 
 function initNotes() {
@@ -7,7 +7,6 @@ function initNotes() {
   const searchInput = document.getElementById('search-notes');
   const newBtn      = document.getElementById('btn-new-note');
 
-  // Modal elements
   const noteModal   = document.getElementById('note-modal');
   const modalTitle  = document.getElementById('modal-title-input');
   const modalToolbar= document.getElementById('modal-toolbar');
@@ -19,12 +18,10 @@ function initNotes() {
   const btnDiscard  = document.getElementById('modal-btn-discard');
   const btnDelete   = document.getElementById('modal-btn-delete');
 
-  // Zoom
   const zoomOutBtn  = document.getElementById('zoom-out-btn');
   const zoomInBtn   = document.getElementById('zoom-in-btn');
   const zoomValueBtn= document.getElementById('zoom-value-btn');
 
-  // Sub-modals
   const discardModal = document.getElementById('discard-modal');
   const discardYes   = document.getElementById('discard-yes');
   const discardNo    = document.getElementById('discard-no');
@@ -39,7 +36,6 @@ function initNotes() {
   const studentId = AppStorage.getUser()?.student_id;
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-  // Zoom config
   const ZOOM_MIN = 50;
   const ZOOM_MAX = 200;
   const ZOOM_STEP = 10;
@@ -78,33 +74,44 @@ function initNotes() {
     }[kind] || 'fa-file';
   }
 
-  // ============ Zoom ============
+  function refreshEditorState() {
+    if (!modalContent) return;
+    if (isEditMode) modalContent.setAttribute('contenteditable', 'true');
+    else            modalContent.setAttribute('contenteditable', 'false');
+
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(modalContent);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (_) {}
+
+    if (isEditMode) modalContent.focus();
+  }
+
+  // ============ Zoom — use CSS `zoom` property ============
   function applyZoom() {
-    modalContent.style.transform = `scale(${currentZoom / 100})`;
-    modalContent.style.width = currentZoom > 100 ? `${10000 / currentZoom}%` : '100%';
+    // CSS `zoom` re-flows the layout:
+    //  - scrollbars appear automatically
+    //  - images stay inside the content box
+    //  - padding, borders and text all scale together
+    modalContent.style.zoom = (currentZoom / 100);
+
     zoomValueBtn.innerText = currentZoom + '%';
     zoomOutBtn.disabled = currentZoom <= ZOOM_MIN;
     zoomInBtn.disabled  = currentZoom >= ZOOM_MAX;
   }
 
-  function zoomIn() {
-    currentZoom = Math.min(ZOOM_MAX, currentZoom + ZOOM_STEP);
-    applyZoom();
-  }
-  function zoomOut() {
-    currentZoom = Math.max(ZOOM_MIN, currentZoom - ZOOM_STEP);
-    applyZoom();
-  }
-  function zoomReset() {
-    currentZoom = 100;
-    applyZoom();
-  }
+  function zoomIn()    { currentZoom = Math.min(ZOOM_MAX, currentZoom + ZOOM_STEP); applyZoom(); }
+  function zoomOut()   { currentZoom = Math.max(ZOOM_MIN, currentZoom - ZOOM_STEP); applyZoom(); }
+  function zoomReset() { currentZoom = 100; applyZoom(); }
 
   zoomInBtn.addEventListener('click', zoomIn);
   zoomOutBtn.addEventListener('click', zoomOut);
   zoomValueBtn.addEventListener('click', zoomReset);
 
-  // Ctrl+Scroll on content = zoom
   modalContent.addEventListener('wheel', (e) => {
     if (!e.ctrlKey) return;
     e.preventDefault();
@@ -112,7 +119,6 @@ function initNotes() {
     else zoomOut();
   }, { passive: false });
 
-  // Ctrl +/- shortcuts
   document.addEventListener('keydown', (e) => {
     if (!e.ctrlKey || noteModal.style.display !== 'flex') return;
     if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
@@ -139,6 +145,7 @@ function initNotes() {
     btnEdit.innerHTML = '<i class="fa-solid fa-check"></i> Save';
     btnEdit.classList.add('btn-save-mode');
     document.body.classList.add('notes-edit-mode');
+    refreshEditorState();
     modalTitle.focus();
   }
 
@@ -186,7 +193,6 @@ function initNotes() {
     }).join('');
   }
 
-  // ============ Open modal ============
   function openNoteModal(note) {
     activeId = note.id;
     originalTitle = note.title || '';
@@ -205,7 +211,6 @@ function initNotes() {
     document.body.classList.remove('notes-edit-mode');
   }
 
-  // ============ Save ============
   async function saveNow() {
     if (!activeId) return true;
     const note = notes.find(n => n.id === activeId);
@@ -233,7 +238,6 @@ function initNotes() {
     return false;
   }
 
-  // ============ List click ============
   notesList.addEventListener('click', (e) => {
     const item = e.target.closest('.note-item');
     if (!item) return;
@@ -246,7 +250,6 @@ function initNotes() {
     }
   });
 
-  // ============ Search ============
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       searchTerm = e.target.value.trim().toLowerCase();
@@ -254,17 +257,26 @@ function initNotes() {
     });
   }
 
-  // ============ Toolbar ============
   document.querySelectorAll('.tool-btn[data-cmd]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       if (!isEditMode) return;
-      document.execCommand(btn.dataset.cmd, false, null);
       modalContent.focus();
+
+      const sel = window.getSelection();
+      if (!sel.rangeCount || !modalContent.contains(sel.anchorNode)) {
+        const range = document.createRange();
+        range.selectNodeContents(modalContent);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      try { document.execCommand(btn.dataset.cmd, false, null); }
+      catch (err) { console.warn('execCommand failed:', err); }
     });
   });
 
-  // ============ File upload ============
   if (modalFile) {
     modalFile.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -326,7 +338,7 @@ function initNotes() {
   function insertAtCursor(node) {
     modalContent.focus();
     const sel = window.getSelection();
-    if (sel.rangeCount > 0) {
+    if (sel.rangeCount > 0 && modalContent.contains(sel.anchorNode)) {
       const range = sel.getRangeAt(0);
       range.deleteContents();
       range.insertNode(node);
@@ -340,7 +352,6 @@ function initNotes() {
     }
   }
 
-  // ============ Attachment actions ============
   modalContent.addEventListener('click', (e) => {
     const btn = e.target.closest('.note-attachment__btn');
     if (!btn) return;
@@ -358,13 +369,11 @@ function initNotes() {
     }
   });
 
-  // ============ Modal close ============
   modalClose.addEventListener('click', closeNoteModal);
   noteModal.addEventListener('click', (e) => {
     if (e.target === noteModal) closeNoteModal();
   });
 
-  // ============ Edit / Save ============
   btnEdit.addEventListener('click', async () => {
     if (!isEditMode) {
       enterEditMode();
@@ -375,11 +384,11 @@ function initNotes() {
     }
   });
 
-  // ============ Discard ============
   btnDiscard.addEventListener('click', () => {
     if (!isEditMode) {
       modalTitle.value = originalTitle;
       modalContent.innerHTML = originalContent;
+      refreshEditorState();
       return;
     }
     discardModal.style.display = 'flex';
@@ -390,14 +399,15 @@ function initNotes() {
     modalContent.innerHTML = originalContent;
     discardModal.style.display = 'none';
     enterViewMode();
+    refreshEditorState();
   });
+
   discardNo.addEventListener('click', () => { discardModal.style.display = 'none'; });
   discardClose.addEventListener('click', () => { discardModal.style.display = 'none'; });
   discardModal.addEventListener('click', (e) => {
     if (e.target === discardModal) discardModal.style.display = 'none';
   });
 
-  // ============ Delete ============
   btnDelete.addEventListener('click', () => {
     if (!activeId) return;
     const n = notes.find(x => x.id === activeId);
@@ -423,7 +433,6 @@ function initNotes() {
     if (e.target === deleteModal) deleteModal.style.display = 'none';
   });
 
-  // ============ New note ============
   if (newBtn) {
     newBtn.addEventListener('click', async () => {
       const res = await API.post('/api/notes', {
@@ -444,7 +453,6 @@ function initNotes() {
     });
   }
 
-  // ============ Escape ============
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (discardModal.style.display === 'flex') { discardModal.style.display = 'none'; return; }
@@ -452,7 +460,6 @@ function initNotes() {
     if (noteModal.style.display === 'flex')    closeNoteModal();
   });
 
-  // ============ Init ============
   applyZoom();
   load();
 }

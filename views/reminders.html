@@ -1,63 +1,89 @@
 <div class="reminders-container">
-  <!-- Top Action Bar -->
+
+  <!-- Header -->
   <div class="reminders-header">
     <div class="header-title">
       <h3>Active Reminders</h3>
       <p>Manage your custom alerts and exam countdowns</p>
     </div>
-    <button class="add-reminder-btn">
-      <i class="fa-solid fa-bell-plus"></i> Add Reminder
+    <button class="add-reminder-btn" id="btn-add-reminder">
+      <i class="fa-solid fa-plus"></i> Add Reminder
     </button>
   </div>
 
-  <!-- Reminders List -->
-  <div class="reminders-list">
-    <!-- Item 1 -->
-    <div class="reminder-card urgent">
-      <div class="reminder-icon">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </div>
-      <div class="reminder-details">
-        <h4>Database Assignment Due Date</h4>
-        <p>Submit final report and ERD model to eLearning portal</p>
-        <span class="reminder-time"><i class="fa-regular fa-clock"></i> 22 Aug 2026 at 11:59 PM</span>
-      </div>
-      <div class="reminder-actions">
-        <span class="status-tag red">2 days left</span>
-        <button class="icon-btn-danger"><i class="fa-solid fa-trash"></i></button>
-      </div>
+  <!-- List -->
+  <div class="reminders-list" id="reminders-list">
+    <!-- rendered by JS -->
+  </div>
+
+</div>
+
+<!-- =========================================
+     ADD/EDIT REMINDER MODAL
+     ========================================= -->
+<div class="modal-overlay" id="reminder-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="reminder-modal-title">Add Reminder</h3>
+      <button class="modal-close" id="reminder-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
 
-    <!-- Item 2 -->
-    <div class="reminder-card warning">
-      <div class="reminder-icon">
-        <i class="fa-solid fa-graduation-cap"></i>
-      </div>
-      <div class="reminder-details">
-        <h4>OOP Quiz Preparation</h4>
-        <p>Review Chapter 4 - 6 slides and practical code examples</p>
-        <span class="reminder-time"><i class="fa-regular fa-clock"></i> 1 Sept 2026 at 10:00 AM</span>
-      </div>
-      <div class="reminder-actions">
-        <span class="status-tag yellow">12 days left</span>
-        <button class="icon-btn-danger"><i class="fa-solid fa-trash"></i></button>
-      </div>
-    </div>
+    <form id="reminder-form" class="modal-form">
+      <input type="hidden" id="reminder-id">
 
-    <!-- Item 3 -->
-    <div class="reminder-card normal">
-      <div class="reminder-icon">
-        <i class="fa-solid fa-book-open"></i>
+      <div class="form-group">
+        <label for="reminder-title">Topic</label>
+        <input type="text" id="reminder-title" required placeholder="e.g. Final Report Due" maxlength="120">
       </div>
-      <div class="reminder-details">
-        <h4>UCS2103 Group Report Progress Meeting</h4>
-        <p>Meet team members at Library Discussion Room 2</p>
-        <span class="reminder-time"><i class="fa-regular fa-clock"></i> 28 Aug 2026 at 2:00 PM</span>
+
+      <div class="form-group">
+        <label for="reminder-desc">Caption / Description</label>
+        <textarea id="reminder-desc" rows="2" placeholder="e.g. Submit before Friday 11.59 PM"></textarea>
       </div>
-      <div class="reminder-actions">
-        <span class="status-tag blue">8 days left</span>
-        <button class="icon-btn-danger"><i class="fa-solid fa-trash"></i></button>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="reminder-date">Date</label>
+          <input type="date" id="reminder-date" required>
+        </div>
+        <div class="form-group">
+          <label for="reminder-time">Time</label>
+          <input type="time" id="reminder-time" value="09:00" required>
+        </div>
       </div>
+
+      <div class="form-group">
+        <label for="reminder-priority">Priority</label>
+        <select id="reminder-priority">
+          <option value="urgent">Urgent (red)</option>
+          <option value="warning">Warning (yellow)</option>
+          <option value="normal" selected>Normal (blue)</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="reminder-modal-cancel">Cancel</button>
+        <button type="submit" class="btn-save" id="reminder-modal-save">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================
+     DELETE CONFIRM MODAL
+     ========================================= -->
+<div class="modal-overlay" id="delete-reminder-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Delete Reminder?</h3>
+      <button class="modal-close" id="delete-reminder-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="modal-text" id="delete-reminder-name">This reminder will be permanently deleted.</p>
+    <div class="modal-actions modal-actions--center">
+      <button type="button" class="btn-danger" id="delete-reminder-yes">DELETE</button>
+      <button type="button" class="btn-cancel" id="delete-reminder-no">CANCEL</button>
     </div>
   </div>
 </div>

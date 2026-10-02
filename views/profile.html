@@ -1,13 +1,13 @@
 <div class="profile-container">
-  <!-- Auth Section (Login & Sign Up) -->
-  <div id="auth-section" class="auth-card">
-    <!-- Tab Switchers -->
+
+  <!-- ===================== AUTH SECTION (Login / Signup) ===================== -->
+  <div id="auth-section" class="auth-card" style="display:none;">
     <div class="auth-tabs">
       <button id="tab-login-btn" type="button" class="tab-btn active">Login</button>
       <button id="tab-signup-btn" type="button" class="tab-btn inactive">Sign Up</button>
     </div>
 
-    <!-- Login Form -->
+    <!-- LOGIN -->
     <form id="login-form" class="auth-form">
       <div class="form-group">
         <label class="form-label">Student ID</label>
@@ -20,8 +20,8 @@
       <button type="submit" class="btn-submit">Log In</button>
     </form>
 
-    <!-- Sign Up Form (Disembunyikan Secara Lalai) -->
-    <form id="signup-form" class="auth-form" style="display: none;">
+    <!-- SIGN UP -->
+    <form id="signup-form" class="auth-form" style="display:none;">
       <div class="form-group">
         <label class="form-label">Student ID</label>
         <input type="text" id="signup-student-id" class="form-input" placeholder="e.g. AM1234567890" required>
@@ -42,14 +42,16 @@
     </form>
   </div>
 
-  <!-- Profile Card (Logged-In State) -->
-  <div id="profile-section" class="profile-card" style="display: none;">
+  <!-- ===================== PROFILE SECTION (Logged In) ===================== -->
+  <div id="profile-section" class="profile-card" style="display:none;">
+
     <div class="profile-avatar">
       <i class="fa-solid fa-user"></i>
     </div>
+
     <h2 id="profile-name" class="profile-name">User Name</h2>
     <p id="profile-id" class="profile-id">Student ID</p>
-    
+
     <div class="profile-details">
       <div class="profile-detail-item">
         <strong>Email:</strong>
@@ -57,10 +59,15 @@
       </div>
       <div class="profile-detail-item">
         <strong>Status:</strong>
-        <span class="status-badge"><i class="fa-solid fa-circle" style="font-size: 6px;"></i> Active Student</span>
+        <span class="status-badge">
+          <i class="fa-solid fa-circle" style="font-size:6px;"></i> Active Student
+        </span>
       </div>
     </div>
 
-    <button id="btn-logout" type="button" class="btn-logout">Log Out</button>
+    <button id="btn-logout" type="button" class="btn-logout">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+    </button>
   </div>
+
 </div>

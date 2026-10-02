@@ -1,27 +1,29 @@
 <div class="dashboard-container">
+
+  <!-- Header -->
   <div class="dashboard-header">
     <div class="greeting-box">
       <h1>Hey, <span id="user-greeting-name">Guest</span>! 👋</h1>
-      <p id="buddy-speech-text">Loading information from database...</p>
+      <p id="buddy-speech-text">Loading information...</p>
     </div>
     <div class="quote-card">
       <i class="fa-solid fa-quote-left quote-icon"></i>
       <p class="quote-text">"Loading quote..."</p>
       <div class="time-badge">
-        <i class="fa-regular fa-clock"></i> <span id="current-date-text">Loading date...</span>
+        <i class="fa-regular fa-clock"></i> <span id="current-date-text">Loading...</span>
       </div>
     </div>
   </div>
 
-  <!-- Main Grid Layout -->
+  <!-- Grid -->
   <div class="dashboard-grid">
-    <!-- Left Column: Mascot & Quick Access -->
+
+    <!-- Left Column -->
     <div class="grid-column left-col">
 
-      <!-- ✅ Mascot card restored, buddy-wrap inside it -->
       <div class="mascot-card">
         <div class="buddy-wrap">
-          <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="mascot-img buddy buddy--dashboard">
+          <img src="assets/robot-mascot.png" alt="UPTM Buddy" class="mascot-img buddy buddy--dashboard">
           <span class="buddy-eye buddy-eye--left"></span>
           <span class="buddy-eye buddy-eye--right"></span>
         </div>
@@ -50,27 +52,64 @@
       </div>
     </div>
 
-    <!-- Right Column: Today's Schedule & Upcoming Tasks -->
+    <!-- Right Column -->
     <div class="grid-column right-col">
+
       <div class="card schedule-card">
         <div class="card-header">
           <h3>Today's Schedule</h3>
-          <a href="#" class="view-all nav-item" data-view="timetable">View All</a>
+          <button class="btn-view-all" data-modal="schedule">View All</button>
         </div>
-        <ul class="schedule-list">
-          <!-- Schedule items rendered dynamically from MySQL -->
+        <ul class="schedule-list" id="today-schedule-list">
+          <!-- rendered by JS -->
         </ul>
       </div>
 
       <div class="card tasks-card">
         <div class="card-header">
-          <h3>Upcoming Tasks</h3>
-          <a href="#" class="view-all nav-item" data-view="assignments">View All</a>
+          <h3>Upcoming Task</h3>
+          <button class="btn-view-all" data-modal="tasks">View All</button>
         </div>
-        <ul class="task-list">
-          <!-- Task widgets rendered dynamically from MySQL -->
+        <ul class="task-list" id="upcoming-tasks-list">
+          <!-- rendered by JS -->
         </ul>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     MODAL: Today's Schedule (full)
+     ========================================= -->
+<div class="modal-overlay dash-modal-overlay" id="schedule-modal" style="display:none;">
+  <div class="dash-modal">
+    <div class="dash-modal__header">
+      <h3><i class="fa-solid fa-calendar-day"></i> Today's Schedule</h3>
+      <p>Full class list for today</p>
+    </div>
+    <div class="dash-modal__content" id="schedule-modal-content">
+      <!-- rendered by JS -->
+    </div>
+    <div class="dash-modal__footer">
+      <button class="btn-close-modal" id="schedule-modal-close-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     MODAL: Upcoming Tasks (full)
+     ========================================= -->
+<div class="modal-overlay dash-modal-overlay" id="tasks-modal" style="display:none;">
+  <div class="dash-modal">
+    <div class="dash-modal__header">
+      <h3><i class="fa-solid fa-list-check"></i> Upcoming Tasks</h3>
+      <p>Assignments, reminders and events</p>
+    </div>
+    <div class="dash-modal__content" id="tasks-modal-content">
+      <!-- rendered by JS -->
+    </div>
+    <div class="dash-modal__footer">
+      <button class="btn-close-modal" id="tasks-modal-close-btn">Close</button>
     </div>
   </div>
 </div>

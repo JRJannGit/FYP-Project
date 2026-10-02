@@ -1,5 +1,5 @@
 // =========================================
-// src/dashboard.js
+// src/dashboard.js — with modals
 // =========================================
 
 const LOCAL_QUOTES = [
@@ -22,23 +22,65 @@ async function fetchOnlineQuote() {
   }
 }
 
+// ============ Format helpers ============
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${String(h12).padStart(2, '0')}.${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+}
+
+function badgeClass(days) {
+  if (days === null || days < 0) return 'due-soon';
+  if (days <= 2) return 'due-soon';
+  if (days <= 7) return 'due-medium';
+  return 'due-normal';
+}
+
+function badgeLabel(days) {
+  if (days === null) return '';
+  if (days < 0) return 'Overdue';
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Tomorrow';
+  return `${days} days`;
+}
+
+// ============ State ============
+let todayScheduleData = [];
+let upcomingItemsData = [];
+
+// ============ Main init ============
 async function initDashboard() {
   const buddySpeech = document.getElementById('buddy-speech-text');
   const quoteText   = document.querySelector('.quote-text');
   const timeBadge   = document.querySelector('.time-badge');
-  const greetingName = document.getElementById('user-greeting-name');
+  const greetingName= document.getElementById('user-greeting-name');
 
   const user = AppStorage.getUser();
   const userName = user ? user.full_name : 'Guest';
+  const studentId = user ? user.student_id : null;
 
   if (greetingName) greetingName.innerText = userName;
 
+  // Quote
   if (quoteText) {
     quoteText.innerText = '"Loading quote..."';
-    const quote = await fetchOnlineQuote();
-    quoteText.innerText = `"${quote}"`;
+    const q = await fetchOnlineQuote();
+    quoteText.innerText = `"${q}"`;
   }
 
+  // Time badge
   if (timeBadge) {
     const now = new Date();
     const opts = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -46,65 +88,183 @@ async function initDashboard() {
   }
 
   try {
-    const [tasksRes, ttRes, resRes] = await Promise.all([
-      API.get('/api/assignments'),
-      API.get('/api/events/' + (user ? user.student_id : 'none')),
-      API.get('/api/resources')
+    // Fetch all data in parallel
+    const [todayRes, upcomingRes] = await Promise.all([
+      API.get('/api/timetable-entries/today'),
+      API.get(`/api/dashboard/upcoming/${studentId || 'none'}`)
     ]);
 
-    const tasks     = tasksRes.success ? tasksRes.data : [];
-    const events    = ttRes.success    ? ttRes.data    : [];
-    const resources = resRes.success   ? resRes.data   : [];
+    todayScheduleData  = todayRes.success ? todayRes.data : [];
+    upcomingItemsData  = upcomingRes.success ? upcomingRes.data : [];
 
+    // Update speech
     if (buddySpeech) {
-      if (tasks.length > 0) {
-        const next = tasks[0];
-        const fmt  = next.due_date ? new Date(next.due_date).toLocaleDateString('en-GB') : 'soon';
-        buddySpeech.innerText = `Hai ${userName}! Anda ada ${tasks.length} tugasan. Terdekat: "${next.subject}" (${fmt}).`;
+      if (upcomingItemsData.length > 0) {
+        const next = upcomingItemsData[0];
+        buddySpeech.innerText = `Hai ${userName}! Anda ada ${upcomingItemsData.length} item akan datang. Terdekat: "${next.title}" (${fmtDate(next.date)}).`;
       } else {
-        buddySpeech.innerText = `Syabas ${userName}! Semua tugasan selesai.`;
+        buddySpeech.innerText = `Syabas ${userName}! Tiada tugasan mendesak.`;
       }
     }
 
-    renderTodaySchedule(events);
-    renderUpcomingTasks(tasks);
+    renderTodaySchedulePreview();
+    renderUpcomingTasksPreview();
+
   } catch (err) {
     console.error('Dashboard error:', err);
   }
+
+  setupModals();
 }
 
-function renderTodaySchedule(events) {
-  const list = document.querySelector('.schedule-list');
+// ============ Preview renders ============
+function renderTodaySchedulePreview() {
+  const list = document.getElementById('today-schedule-list');
   if (!list) return;
-  if (!events || events.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:10px 0;">Tiada kelas hari ini.</p>';
+
+  if (todayScheduleData.length === 0) {
+    list.innerHTML = '<li class="empty-msg">No classes today. Enjoy! 🎉</li>';
     return;
   }
-  list.innerHTML = events.slice(0, 4).map(e => `
-    <li class="schedule-item">
-      <span class="status-indicator blue"></span>
+
+  // Show max 3
+  const preview = todayScheduleData.slice(0, 3);
+  list.innerHTML = preview.map(c => `
+    <li class="schedule-item ${c.color || 'blue'}">
       <div class="schedule-details">
-        <strong>${e.title}</strong>
-        <small>${e.event_date}</small>
+        <strong>${c.subject}</strong>
+        <small>${fmtTime(c.time_start)} - ${fmtTime(c.time_end)}</small>
       </div>
+      <span class="room-tag">${c.room || '—'}</span>
     </li>
+  `).join('');
+
+  if (todayScheduleData.length > 3) {
+    list.innerHTML += `<li style="text-align:center;padding:8px;color:var(--text-muted);font-size:0.75rem;">+ ${todayScheduleData.length - 3} more classes</li>`;
+  }
+}
+
+function renderUpcomingTasksPreview() {
+  const list = document.getElementById('upcoming-tasks-list');
+  if (!list) return;
+
+  if (upcomingItemsData.length === 0) {
+    list.innerHTML = '<li class="empty-msg">There\'s no Task</li>';
+    return;
+  }
+
+  const preview = upcomingItemsData.slice(0, 3);
+  list.innerHTML = preview.map(item => {
+    const d = daysUntil(item.date);
+    return `
+      <li class="task-item">
+        <span class="task-title">${item.title}</span>
+        <span class="badge ${badgeClass(d)}">${badgeLabel(d)}</span>
+      </li>
+    `;
+  }).join('');
+}
+
+// ============ Modals ============
+function setupModals() {
+  const scheduleModal = document.getElementById('schedule-modal');
+  const tasksModal    = document.getElementById('tasks-modal');
+
+  // View All buttons
+  document.querySelectorAll('.btn-view-all').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.modal;
+      if (target === 'schedule') {
+        renderScheduleModal();
+        scheduleModal.style.display = 'flex';
+      } else {
+        renderTasksModal();
+        tasksModal.style.display = 'flex';
+      }
+    });
+  });
+
+  // Close buttons (bottom)
+  document.getElementById('schedule-modal-close-btn')?.addEventListener('click', () => {
+    scheduleModal.style.display = 'none';
+  });
+  document.getElementById('tasks-modal-close-btn')?.addEventListener('click', () => {
+    tasksModal.style.display = 'none';
+  });
+
+  // Click outside closes
+  scheduleModal?.addEventListener('click', (e) => {
+    if (e.target === scheduleModal) scheduleModal.style.display = 'none';
+  });
+  tasksModal?.addEventListener('click', (e) => {
+    if (e.target === tasksModal) tasksModal.style.display = 'none';
+  });
+
+  // Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
+      if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
+    }
+  });
+}
+
+  // Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
+      if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
+    }
+  });
+
+
+function renderScheduleModal() {
+  const content = document.getElementById('schedule-modal-content');
+  if (!content) return;
+
+  if (todayScheduleData.length === 0) {
+    content.innerHTML = '<div class="empty-msg" style="padding:40px;">No classes scheduled today.</div>';
+    return;
+  }
+
+  content.innerHTML = todayScheduleData.map(c => `
+    <div class="modal-item ${c.color || 'blue'}">
+      <div class="modal-item__title">${c.subject}</div>
+      <div class="modal-item__meta">
+        <span><i class="fa-regular fa-clock"></i> ${fmtTime(c.time_start)} - ${fmtTime(c.time_end)}</span>
+        <span><i class="fa-solid fa-location-dot"></i> ${c.room || '—'}</span>
+      </div>
+    </div>
   `).join('');
 }
 
-function renderUpcomingTasks(tasks) {
-  const list = document.querySelector('.task-list');
-  if (!list) return;
-  if (!tasks || tasks.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:10px 0;">Tiada tugasan.</p>';
+function renderTasksModal() {
+  const content = document.getElementById('tasks-modal-content');
+  if (!content) return;
+
+  if (upcomingItemsData.length === 0) {
+    content.innerHTML = '<div class="empty-msg" style="padding:40px;">There\'s no Task</div>';
     return;
   }
-  list.innerHTML = tasks.slice(0, 3).map(t => {
-    const fmt = t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB') : 'Soon';
+
+  content.innerHTML = upcomingItemsData.map(item => {
+    const d = daysUntil(item.date);
+    const typeClass = item.type === 'assignment' && item.is_exam ? 'exam' : (item.type || 'assignment');
+    const typeLabel = item.type === 'assignment' && item.is_exam ? 'EXAM' : (item.type || 'task').toUpperCase();
+
     return `
-      <li class="task-item">
-        <span class="task-title">${t.subject}</span>
-        <span class="badge due-soon">${fmt}</span>
-      </li>
+      <div class="modal-item ${item.color || 'blue'}">
+        <div class="modal-item__title">
+          ${item.title}
+          <span class="modal-item__type ${typeClass}">${typeLabel}</span>
+        </div>
+        ${item.description ? `<div class="modal-item__desc">${item.description}</div>` : ''}
+        <div class="modal-item__meta">
+          <span><i class="fa-regular fa-calendar"></i> ${fmtDate(item.date)}</span>
+          ${item.time ? `<span><i class="fa-regular fa-clock"></i> ${fmtTime(item.time)}</span>` : ''}
+          <span><i class="fa-solid fa-hourglass"></i> ${badgeLabel(d)}</span>
+        </div>
+      </div>
     `;
   }).join('');
 }

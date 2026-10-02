@@ -1,5 +1,5 @@
 /* =========================================
-   NOTES — REDESIGN v3 (with zoom)
+   NOTES — REDESIGN v5 (fixed zoom layout)
    ========================================= */
 
 .notes-container {
@@ -247,6 +247,8 @@
   from { opacity: 0; } to { opacity: 1; }
 }
 
+/* KEY FIX: modal is a flex column with fixed max-height.
+   Children keep their size, content shrinks & scrolls. */
 .note-modal {
   position: relative;
   width: 100%;
@@ -264,6 +266,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow: hidden;
 }
 
 @keyframes modalSlide {
@@ -272,6 +275,7 @@
 }
 
 .note-modal__header {
+  flex-shrink: 0;
   padding-bottom: 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-right: 50px;
@@ -332,6 +336,7 @@
 }
 
 .note-modal__toolbar {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -379,6 +384,7 @@
    ZOOM CONTROLS
    ========================================= */
 .note-modal__zoom {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -431,21 +437,20 @@
 }
 
 /* =========================================
-   CONTENT
+   CONTENT — flex-grow, own scroll, respects modal height
    ========================================= */
 .note-modal__content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 200px;
+  max-height: none;
+  overflow: auto;
   outline: none;
   font-size: 0.95rem;
   line-height: 1.75;
   color: #cbd5e1;
-  overflow-y: auto;
   padding: 8px 4px;
-  min-height: 260px;
-  max-height: 50vh;
   word-wrap: break-word;
-  transform-origin: top left;
-  transition: transform 0.15s ease-out;
+  transition: zoom 0.15s ease-out;
 }
 
 .note-modal__content[contenteditable="true"] {
@@ -453,7 +458,7 @@
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 10px;
   padding: 14px 16px;
-  transition: border-color 0.15s, transform 0.15s ease-out;
+  transition: border-color 0.15s, zoom 0.15s ease-out;
 }
 
 .note-modal__content[contenteditable="true"]:focus {
@@ -466,10 +471,13 @@
   user-select: text;
 }
 
-.note-modal__content::-webkit-scrollbar { width: 6px; }
+.note-modal__content::-webkit-scrollbar { width: 6px; height: 6px; }
 .note-modal__content::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
+}
+.note-modal__content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .note-modal__content:empty::before {
@@ -482,6 +490,7 @@
 
 .note-modal__content img {
   max-width: 100%;
+  height: auto;
   border-radius: 12px;
   margin: 12px 0;
   display: block;
@@ -502,7 +511,8 @@
   border-radius: 12px;
   padding: 14px 16px;
   margin: 12px 0;
-  max-width: 480px;
+  max-width: 100%;
+  box-sizing: border-box;
   transition: border-color 0.15s;
 }
 .note-attachment:hover { border-color: rgba(59, 130, 246, 0.3); }
@@ -567,8 +577,11 @@
   background-color: rgba(239, 68, 68, 0.08);
 }
 
-/* Footer */
+/* =========================================
+   FOOTER
+   ========================================= */
 .note-modal__footer {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;

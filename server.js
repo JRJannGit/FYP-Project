@@ -176,7 +176,7 @@ app.delete('/api/timetable/:student_id', async (req, res) => {
 app.get('/api/reminders/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT * FROM reminders WHERE student_id = ? ORDER BY remind_date ASC',
+      'SELECT * FROM reminders WHERE student_id = ? ORDER BY remind_date ASC, remind_time ASC',
       [req.params.student_id]
     );
     ok(res, rows);
@@ -185,10 +185,11 @@ app.get('/api/reminders/:student_id', async (req, res) => {
 
 app.post('/api/reminders', async (req, res) => {
   try {
-    const { student_id, title, description, remind_date, priority } = req.body;
+    const { student_id, title, description, remind_date, remind_time, priority } = req.body;
     const [result] = await db.query(
-      'INSERT INTO reminders (student_id, title, description, remind_date, priority) VALUES (?, ?, ?, ?, ?)',
-      [student_id, title, description || '', remind_date, priority || 'normal']
+      `INSERT INTO reminders (student_id, title, description, remind_date, remind_time, priority)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [student_id, title, description || '', remind_date, remind_time || '09:00:00', priority || 'normal']
     );
     ok(res, { id: result.insertId });
   } catch (err) { fail(res, err.message); }
@@ -196,10 +197,10 @@ app.post('/api/reminders', async (req, res) => {
 
 app.put('/api/reminders/:id', async (req, res) => {
   try {
-    const { title, description, remind_date, priority } = req.body;
+    const { title, description, remind_date, remind_time, priority } = req.body;
     await db.query(
-      'UPDATE reminders SET title=?, description=?, remind_date=?, priority=? WHERE id=?',
-      [title, description, remind_date, priority, req.params.id]
+      `UPDATE reminders SET title=?, description=?, remind_date=?, remind_time=?, priority=? WHERE id=?`,
+      [title, description, remind_date, remind_time, priority, req.params.id]
     );
     ok(res, { updated: true });
   } catch (err) { fail(res, err.message); }
@@ -209,6 +210,20 @@ app.delete('/api/reminders/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM reminders WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// Reminders due soon (within next N minutes)
+app.get('/api/reminders/:student_id/due', async (req, res) => {
+  try {
+    const minutes = parseInt(req.query.minutes || '5', 10);
+    const [rows] = await db.query(
+      `SELECT * FROM reminders
+       WHERE student_id = ?
+         AND CONCAT(remind_date, ' ', remind_time) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? MINUTE)`,
+      [req.params.student_id, minutes]
+    );
+    ok(res, rows);
   } catch (err) { fail(res, err.message); }
 });
 
@@ -370,6 +385,58 @@ app.get('/api/admin/stats', async (req, res) => {
     const [[{ timetableCount }]]  = await db.query('SELECT COUNT(*) AS timetableCount FROM timetable');
     const [recent] = await db.query('SELECT * FROM assignments ORDER BY created_at DESC LIMIT 5');
     ok(res, { studentCount, assignmentCount, resourceCount, timetableCount, recentAssignments: recent });
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// TIMETABLE ENTRIES (read-only for student)
+// =========================================
+app.get('/api/timetable-entries', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM timetable_entries ORDER BY FIELD(day_of_week, "Mon","Tue","Wed","Thu","Fri","Sat","Sun"), time_start ASC'
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.get('/api/timetable-entries/today', async (req, res) => {
+  try {
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const today = days[new Date().getDay()];
+    const [rows] = await db.query(
+      'SELECT * FROM timetable_entries WHERE day_of_week = ? ORDER BY time_start ASC',
+      [today]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// DASHBOARD COMBINED — upcoming items
+// =========================================
+app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
+  try {
+    const sid = req.params.student_id;
+    const [assignments] = await db.query(
+      `SELECT id, subject AS title, description, due_date AS date, NULL AS time, 'assignment' AS type, is_exam
+       FROM assignments WHERE due_date >= CURDATE() ORDER BY due_date ASC`
+    );
+    const [reminders] = await db.query(
+      `SELECT id, title, description, remind_date AS date, remind_time AS time, 'reminder' AS type, priority
+       FROM reminders WHERE student_id = ? AND remind_date >= CURDATE() ORDER BY remind_date ASC`,
+      [sid]
+    );
+    const [events] = await db.query(
+      `SELECT id, title, description, event_date AS date, start_time AS time, 'event' AS type, color
+       FROM events WHERE (student_id = ? OR student_id IS NULL) AND event_date >= CURDATE() ORDER BY event_date ASC`,
+      [sid]
+    );
+
+    const combined = [...assignments, ...reminders, ...events]
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    ok(res, combined);
   } catch (err) { fail(res, err.message); }
 });
 
