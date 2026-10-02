@@ -13,6 +13,52 @@ const ok = (res, data) => res.json({ success: true, data });
 const fail = (res, msg, code = 500) => res.status(code).json({ success: false, error: msg });
 
 // =========================================
+// UNIVERSAL LOGIN (detect role automatically)
+// =========================================
+app.post('/api/auth/login', async (req, res) => {
+  const { identifier, password, role } = req.body || {};
+  console.log(`[LOGIN] role=${role} id=${identifier}`);
+
+  try {
+    if (!identifier || !password || !role) {
+      return fail(res, 'Missing fields', 400);
+    }
+
+    if (role === 'student') {
+      const [rows] = await db.query(
+        'SELECT id, student_id AS identifier, full_name, email FROM students WHERE student_id = ? AND password = ?',
+        [identifier, password]
+      );
+      if (rows.length === 0) return fail(res, 'Invalid Student ID or Password', 401);
+      return ok(res, { role: 'student', user: rows[0] });
+    }
+
+    if (role === 'lecturer') {
+      const [rows] = await db.query(
+        'SELECT id, lecturer_id AS identifier, full_name, email, department FROM lecturers WHERE email = ? AND password = ?',
+        [identifier, password]
+      );
+      if (rows.length === 0) return fail(res, 'Invalid Email or Password', 401);
+      return ok(res, { role: 'lecturer', user: rows[0] });
+    }
+
+    if (role === 'admin') {
+      const [rows] = await db.query(
+        'SELECT id, admin_id AS identifier, full_name FROM admins WHERE admin_id = ? AND password = ?',
+        [identifier, password]
+      );
+      if (rows.length === 0) return fail(res, 'Invalid Admin ID or Password', 401);
+      return ok(res, { role: 'admin', user: rows[0] });
+    }
+
+    fail(res, 'Invalid role', 400);
+  } catch (err) {
+    console.error('[LOGIN] error:', err);
+    fail(res, err.message);
+  }
+});
+
+// =========================================
 // AUTH — STUDENT
 // =========================================
 app.post('/api/auth/student/login', async (req, res) => {
@@ -271,144 +317,74 @@ app.delete('/api/notes/:id', async (req, res) => {
 // =========================================
 app.get('/api/resources', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM resources ORDER BY title ASC');
+    const [rows] = await db.query('SELECT * FROM resources ORDER BY is_system DESC, title ASC');
     ok(res, rows);
   } catch (err) { fail(res, err.message); }
 });
 
+// Helper: check if user can modify resource
+function canModifyResource(role, userId, resource) {
+  if (role === 'admin') return true;
+  if (resource.is_system) return false;            // system resources: admin only
+  return resource.created_by === userId;            // own resources: owner only
+}
+
+// CREATE — semua role boleh add
 app.post('/api/resources', async (req, res) => {
   try {
-    const { title, url, description, icon } = req.body;
+    const { title, url_link, caption, icon, created_by } = req.body;
+    const role = req.headers['x-user-role'];
+
+    if (!role) return fail(res, 'Not authenticated', 401);
+
     const [result] = await db.query(
-      'INSERT INTO resources (title, url, description, icon) VALUES (?, ?, ?, ?)',
-      [title, url, description || '', icon || 'fa-link']
+      `INSERT INTO resources (title, url, url_link, caption, description, icon, created_by, is_system)
+       VALUES (?, ?, ?, ?, ?, ?, ?, FALSE)`,
+      [title, url_link || '', url_link || '', caption || '', caption || '', icon || 'fa-link', created_by || null]
     );
     ok(res, { id: result.insertId });
   } catch (err) { fail(res, err.message); }
 });
 
+// UPDATE — kena check ownership
 app.put('/api/resources/:id', async (req, res) => {
   try {
-    const { title, url, description, icon } = req.body;
+    const role = req.headers['x-user-role'];
+    const userId = req.headers['x-user-id'];
+    if (!role) return fail(res, 'Not authenticated', 401);
+
+    const [rows] = await db.query('SELECT * FROM resources WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return fail(res, 'Resource not found', 404);
+
+    if (!canModifyResource(role, userId, rows[0])) {
+      return fail(res, 'You cannot edit this resource', 403);
+    }
+
+    const { title, url_link, caption, icon } = req.body;
     await db.query(
-      'UPDATE resources SET title=?, url=?, description=?, icon=? WHERE id=?',
-      [title, url, description, icon, req.params.id]
+      'UPDATE resources SET title=?, url=?, url_link=?, caption=?, description=?, icon=? WHERE id=?',
+      [title, url_link || '', url_link || '', caption || '', caption || '', icon || 'fa-link', req.params.id]
     );
     ok(res, { updated: true });
   } catch (err) { fail(res, err.message); }
 });
 
+// DELETE — kena check ownership
 app.delete('/api/resources/:id', async (req, res) => {
   try {
+    const role = req.headers['x-user-role'];
+    const userId = req.headers['x-user-id'];
+    if (!role) return fail(res, 'Not authenticated', 401);
+
+    const [rows] = await db.query('SELECT * FROM resources WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return fail(res, 'Resource not found', 404);
+
+    if (!canModifyResource(role, userId, rows[0])) {
+      return fail(res, 'You cannot delete this resource', 403);
+    }
+
     await db.query('DELETE FROM resources WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
-  } catch (err) { fail(res, err.message); }
-});
-
-// =========================================
-// EVENTS
-// =========================================
-app.get('/api/events/:student_id', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT * FROM events WHERE student_id = ? OR student_id IS NULL ORDER BY event_date ASC, start_time ASC',
-      [req.params.student_id]
-    );
-    ok(res, rows);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.post('/api/events', async (req, res) => {
-  try {
-    const { student_id, title, event_date, description, color, start_time, end_time } = req.body;
-    const [result] = await db.query(
-      `INSERT INTO events (student_id, title, event_date, description, color, start_time, end_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [student_id || null, title, event_date, description || '', color || 'blue',
-       start_time || '09:00:00', end_time || '10:00:00']
-    );
-    ok(res, { id: result.insertId });
-  } catch (err) { fail(res, err.message); }
-});
-
-app.put('/api/events/:id', async (req, res) => {
-  try {
-    const { title, event_date, description, color, start_time, end_time } = req.body;
-    await db.query(
-      `UPDATE events SET title=?, event_date=?, description=?, color=?, start_time=?, end_time=? WHERE id=?`,
-      [title, event_date, description, color, start_time, end_time, req.params.id]
-    );
-    ok(res, { updated: true });
-  } catch (err) { fail(res, err.message); }
-});
-
-app.delete('/api/events/:id', async (req, res) => {
-  try {
-    await db.query('DELETE FROM events WHERE id = ?', [req.params.id]);
-    ok(res, { deleted: true });
-  } catch (err) { fail(res, err.message); }
-});
-
-// =========================================
-// ACADEMIC CALENDAR (admin upload, public get)
-// =========================================
-app.get('/api/academic-calendar', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT * FROM academic_calendar ORDER BY uploaded_at DESC LIMIT 1'
-    );
-    ok(res, rows[0] || null);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.post('/api/academic-calendar', async (req, res) => {
-  try {
-    const { file_data, file_type } = req.body;
-    // Replace old one — one global academic calendar
-    await db.query('DELETE FROM academic_calendar');
-    await db.query(
-      'INSERT INTO academic_calendar (file_data, file_type) VALUES (?, ?)',
-      [file_data, file_type || 'image']
-    );
-    ok(res, { uploaded: true });
-  } catch (err) { fail(res, err.message); }
-});
-
-// =========================================
-// ADMIN STATS
-// =========================================
-app.get('/api/admin/stats', async (req, res) => {
-  try {
-    const [[{ studentCount }]]    = await db.query('SELECT COUNT(*) AS studentCount FROM students');
-    const [[{ assignmentCount }]] = await db.query('SELECT COUNT(*) AS assignmentCount FROM assignments');
-    const [[{ resourceCount }]]   = await db.query('SELECT COUNT(*) AS resourceCount FROM resources');
-    const [[{ timetableCount }]]  = await db.query('SELECT COUNT(*) AS timetableCount FROM timetable');
-    const [recent] = await db.query('SELECT * FROM assignments ORDER BY created_at DESC LIMIT 5');
-    ok(res, { studentCount, assignmentCount, resourceCount, timetableCount, recentAssignments: recent });
-  } catch (err) { fail(res, err.message); }
-});
-
-// =========================================
-// TIMETABLE ENTRIES (read-only for student)
-// =========================================
-app.get('/api/timetable-entries', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT * FROM timetable_entries ORDER BY FIELD(day_of_week, "Mon","Tue","Wed","Thu","Fri","Sat","Sun"), time_start ASC'
-    );
-    ok(res, rows);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.get('/api/timetable-entries/today', async (req, res) => {
-  try {
-    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const today = days[new Date().getDay()];
-    const [rows] = await db.query(
-      'SELECT * FROM timetable_entries WHERE day_of_week = ? ORDER BY time_start ASC',
-      [today]
-    );
-    ok(res, rows);
   } catch (err) { fail(res, err.message); }
 });
 

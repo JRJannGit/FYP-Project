@@ -66,7 +66,7 @@
 /* ---------- Grid ---------- */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 1fr 1.3fr;
   gap: 20px;
   min-width: 0;
 }
@@ -121,21 +121,18 @@
   transform: translateY(-1px);
 }
 
-/* ---------- Mascot ---------- */
+/* ---------- Mascot card ---------- */
 .mascot-card {
   background-color: var(--bg-card);
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 1px solid var(--border-color);
   min-height: 220px;
-}
-
-.mascot-img {
-  max-height: 180px;
-  object-fit: contain;
+  max-height: 260px;
+  overflow: hidden;
 }
 
 /* ---------- Quick Access ---------- */
@@ -372,7 +369,6 @@
   border-radius: 4px;
 }
 
-/* Items inside modal */
 .modal-item {
   padding: 14px 16px;
   background-color: #0d1420;

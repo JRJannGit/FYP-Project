@@ -1,10 +1,22 @@
+// =========================================
+// src/storage.js — session helper
+// Delegates to Auth for normalization
+// =========================================
+
 const AppStorage = {
   getUser() {
-    try { return JSON.parse(localStorage.getItem('uptm_user')); }
-    catch { return null; }
+    if (window.Auth && typeof window.Auth.getUser === 'function') {
+      return window.Auth.getUser();
+    }
+    console.warn('[AppStorage] Auth not loaded yet');
+    return null;
   },
-  setUser(user) { localStorage.setItem('uptm_user', JSON.stringify(user)); },
-  clearUser()   { localStorage.removeItem('uptm_user'); }
+  setUser(user) {
+    console.warn('[AppStorage] setUser deprecated. Use Auth.setSession instead.');
+  },
+  clearUser() {
+    if (window.Auth) window.Auth.logout();
+  }
 };
 
 window.AppStorage = AppStorage;

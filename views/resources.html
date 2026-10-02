@@ -1,56 +1,73 @@
 <div class="resources-container">
+
+  <!-- Header -->
   <div class="resources-header">
-    <h3>University Resources</h3>
-    <p>Quick access to UPTM portals and learning services</p>
+    <div class="header-info">
+      <h3>University Resources</h3>
+      <p>Customs your url-links</p>
+    </div>
+    <button class="add-resource-btn" id="btn-add-resource">
+      <i class="fa-solid fa-link"></i> Add url-link
+    </button>
   </div>
 
-  <div class="resources-grid">
-    <!-- UCAM -->
-    <a href="https://ucam.uptm.edu.my" target="_blank" class="resource-card">
-      <div class="card-brand ucam">
-        <i class="fa-solid fa-graduation-cap"></i>
-      </div>
-      <div class="card-info">
-        <h4>UCAM Portal</h4>
-        <p>Access subject registration, examination results, and fee statements.</p>
-      </div>
-      <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
-    </a>
+  <!-- Grid -->
+  <div class="resources-grid" id="resources-grid">
+    <!-- rendered by JS -->
+  </div>
+</div>
 
-    <!-- Open Learning -->
-    <a href="#" class="resource-card">
-      <div class="card-brand openlearning">
-        <i class="fa-solid fa-book-open"></i>
-      </div>
-      <div class="card-info">
-        <h4>Open Learning</h4>
-        <p>Online course management, lecture modules, and discussion boards.</p>
-      </div>
-      <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
-    </a>
+<!-- =========================================
+     ADD/EDIT RESOURCE MODAL
+     ========================================= -->
+<div class="modal-overlay" id="resource-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="resource-modal-title">Add Resource</h3>
+      <button class="modal-close" id="resource-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
 
-    <!-- Email -->
-    <a href="#" class="resource-card">
-      <div class="card-brand email">
-        <i class="fa-solid fa-envelope"></i>
-      </div>
-      <div class="card-info">
-        <h4>Student Email</h4>
-        <p>Official UPTM Webmail for announcements and lecturer communications.</p>
-      </div>
-      <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
-    </a>
+    <form id="resource-form" class="modal-form">
+      <input type="hidden" id="resource-id">
 
-    <!-- eLearning Portal -->
-    <a href="#" class="resource-card">
-      <div class="card-brand elearning">
-        <i class="fa-solid fa-globe"></i>
+      <div class="form-group">
+        <label for="resource-title">Topic</label>
+        <input type="text" id="resource-title" required placeholder="e.g. UCAM Portal" maxlength="100">
       </div>
-      <div class="card-info">
-        <h4>eLearning Portal</h4>
-        <p>Submit assignments, take quizzes, and track academic progress.</p>
+
+      <div class="form-group">
+        <label for="resource-caption">Caption / Description</label>
+        <textarea id="resource-caption" rows="2" placeholder="e.g. Access subject registration"></textarea>
       </div>
-      <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
-    </a>
+
+      <div class="form-group">
+        <label for="resource-url">Url-link</label>
+        <input type="url" id="resource-url" required placeholder="https://">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="resource-modal-cancel">Cancel</button>
+        <button type="submit" class="btn-save" id="resource-modal-save">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================
+     DELETE CONFIRM MODAL
+     ========================================= -->
+<div class="modal-overlay" id="delete-resource-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Delete Resource?</h3>
+      <button class="modal-close" id="delete-resource-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="modal-text" id="delete-resource-name">This resource will be permanently deleted.</p>
+    <div class="modal-actions modal-actions--center">
+      <button type="button" class="btn-danger" id="delete-resource-yes">DELETE</button>
+      <button type="button" class="btn-cancel" id="delete-resource-no">CANCEL</button>
+    </div>
   </div>
 </div>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rive Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body {
+      height: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0b0f17;
+      color: #f8fafc;
+      gap: 20px;
+    }
+    h1 { font-size: 1.2rem; color: #94a3b8; font-weight: 500; }
+    
+    canvas {
+    width: 500px;
+    height: 1000px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    }
+
+    canvas:hover { transform: scale(1.02); }
+    canvas:active { transform: scale(0.98); }
+    .hint {
+      font-size: 0.85rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hint i { color: #3b82f6; }
+    #status {
+      font-size: 0.8rem;
+      color: #4ade80;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>UPTM Buddy — Rive Test</h1>
+  <canvas id="buddy-canvas"></canvas>
+  <div class="hint">
+    <i class="fa-solid fa-hand-pointer"></i>
+    Click the mascot to wave!
+  </div>
+  <div id="status"></div>
+
+  <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>
+  <script>
+    const canvas = document.getElementById('buddy-canvas');
+    const status = document.getElementById('status');
+    let r;
+
+    r = new rive.Rive({
+      src: 'assets/buddy.riv',
+      canvas: canvas,
+      autoplay: true,
+      stateMachines: 'Buddy Animation',
+      layout: new rive.Layout({
+        fit: rive.Fit.Cover,
+        alignment: rive.Alignment.Center
+      }),
+      onLoad: () => {
+        r.resizeDrawingSurfaceToCanvas();
+        status.innerText = '✅ Rive loaded! Click mascot to wave.';
+        console.log('✅ Rive loaded');
+        console.log('Available inputs:', r.stateMachineInputs('Buddy Animation').map(i => i.name));
+      },
+      onLoadError: (err) => {
+        status.innerText = '❌ Failed to load: ' + err;
+        status.style.color = '#f87171';
+        console.error('❌ Rive error:', err);
+      }
+    });
+
+    // Click canvas → trigger wave
+    canvas.addEventListener('click', () => {
+      const inputs = r.stateMachineInputs('Buddy Animation');
+      if (!inputs) return;
+      const waveInput = inputs.find(i => i.name === 'wave');
+      if (waveInput) {
+        waveInput.fire();
+        status.innerText = '👋 Wave triggered!';
+        setTimeout(() => {
+          status.innerText = '✅ Rive loaded! Click mascot to wave.';
+        }, 1500);
+        console.log('👋 Wave fired');
+      } else {
+        console.warn('No "wave" input. Available:', inputs.map(i => i.name));
+        status.innerText = '⚠ No "wave" input found';
+      }
+    });
+  </script>
+</body>
+</html>

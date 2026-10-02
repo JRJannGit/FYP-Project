@@ -1,43 +1,262 @@
 // =========================================
-// src/resources.js
+// src/resources.js — open in Electron window
 // =========================================
 
 function initResources() {
-  const grid = document.querySelector('.resources-grid');
+  const grid = document.getElementById('resources-grid');
+  const addBtn = document.getElementById('btn-add-resource');
 
-  async function load() {
-    if (!grid) return;
-    const res = await API.get('/api/resources');
-    if (!res.success) {
-      grid.innerHTML = `<p style="color:#f87171;">Failed: ${res.error}</p>`;
-      return;
-    }
-    grid.innerHTML = res.data.map(r => `
-      <a href="${r.url}" class="resource-card" data-url="${r.url}">
-        <div class="card-brand"><i class="fa-solid ${r.icon || 'fa-link'}"></i></div>
-        <div class="card-info">
-          <h4>${r.title}</h4>
-          <p>${r.description || ''}</p>
-        </div>
-        <i class="fa-solid fa-arrow-up-right-from-square external-icon"></i>
-      </a>
-    `).join('');
+  const currentUser = window.Auth?.getUser?.() || {};
+  const role = window.Auth?.getRole?.() || 'student';
+  const userId = currentUser.student_id || currentUser.lecturer_id || currentUser.admin_id || currentUser.identifier || '';
+  const isAdmin = role === 'admin';
+
+  const modal       = document.getElementById('resource-modal');
+  const modalTitle  = document.getElementById('resource-modal-title');
+  const form        = document.getElementById('resource-form');
+  const closeBtn    = document.getElementById('resource-modal-close');
+  const cancelBtn   = document.getElementById('resource-modal-cancel');
+  const saveBtn     = document.getElementById('resource-modal-save');
+
+  const inputId      = document.getElementById('resource-id');
+  const inputTitle   = document.getElementById('resource-title');
+  const inputCaption = document.getElementById('resource-caption');
+  const inputUrl     = document.getElementById('resource-url');
+
+  const deleteModal = document.getElementById('delete-resource-modal');
+  const deleteName  = document.getElementById('delete-resource-name');
+  const deleteYes   = document.getElementById('delete-resource-yes');
+  const deleteNo    = document.getElementById('delete-resource-no');
+  const deleteClose = document.getElementById('delete-resource-close');
+
+  let resources = [];
+  let pendingDeleteId = null;
+
+  // ============ Helpers ============
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
   }
 
-  grid?.addEventListener('click', (e) => {
-    const card = e.target.closest('.resource-card');
-    if (!card) return;
-    e.preventDefault();
-    const url = card.dataset.url;
+  function getIconClass(url) {
+    if (!url) return 'fa-link';
+    const u = url.toLowerCase();
+    if (u.includes('ucam')) return 'fa-graduation-cap';
+    if (u.includes('openlearning')) return 'fa-book-open';
+    if (u.includes('mail') || u.includes('gmail')) return 'fa-envelope';
+    if (u.includes('uptm.edu')) return 'fa-globe';
+    return 'fa-link';
+  }
+
+  function canModify(r) {
+    if (isAdmin) return true;
+    if (r.is_system) return false;
+    return r.created_by === userId;
+  }
+
+  // Open URL in Electron window
+  function openInElectron(url) {
     if (!url) return;
-    if (window.require) {
-      const { shell } = window.require('electron');
-      shell.openExternal(url);
+    // target="_blank" intercepted by Electron → opens new BrowserWindow
+    window.open(url, '_blank');
+  }
+
+  // ============ Render ============
+  function render() {
+    if (!grid) return;
+
+    if (resources.length === 0) {
+      grid.innerHTML = `
+        <div class="resources-empty">
+          <i class="fa-solid fa-link"></i>
+          No resources yet. Click <strong>Add url-link</strong> to create one.
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = resources.map(r => {
+      const url = r.url_link || r.url || '#';
+      const caption = r.caption || r.description || 'Text...';
+      const icon = r.icon || getIconClass(url);
+      const editable = canModify(r);
+
+      const actionsHtml = editable
+        ? `
+          <div class="card-actions">
+            <button class="icon-btn-sm" data-action="edit" data-id="${r.id}" title="Edit">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="icon-btn-sm" data-action="open" data-id="${r.id}" data-url="${escapeHtml(url)}" title="Open">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+        `
+        : `
+          <div class="card-actions">
+            <button class="icon-btn-sm" data-action="open" data-id="${r.id}" data-url="${escapeHtml(url)}" title="Open">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+        `;
+
+      const badge = !r.is_system && r.created_by === userId
+        ? '<span class="owner-badge">Yours</span>'
+        : '';
+
+      return `
+        <div class="resource-card ${r.is_system ? 'system' : ''}" data-id="${r.id}" data-url="${escapeHtml(url)}">
+          <div class="card-brand">
+            <i class="fa-solid ${icon}"></i>
+          </div>
+          <div class="card-info">
+            <h4>${escapeHtml(r.title)} ${badge}</h4>
+            <p>${escapeHtml(caption)}</p>
+          </div>
+          ${actionsHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ============ Load ============
+  async function load() {
+    const res = await API.get('/api/resources');
+    if (!res.success) {
+      grid.innerHTML = `<div class="resources-empty" style="color:#f87171;">Failed: ${res.error}</div>`;
+      return;
+    }
+    resources = res.data;
+    render();
+  }
+
+  // ============ Modal ============
+  function openModal(mode = 'add', r = null) {
+    if (mode === 'edit') {
+      if (!r || !canModify(r)) return;
+      modalTitle.innerText = 'Edit Resource';
+      saveBtn.innerText = 'Save';
+      inputId.value      = r.id;
+      inputTitle.value   = r.title || '';
+      inputCaption.value = r.caption || r.description || '';
+      inputUrl.value     = r.url_link || r.url || '';
     } else {
-      window.open(url, '_blank');
+      modalTitle.innerText = 'Add Resource';
+      saveBtn.innerText = 'Add';
+      form.reset();
+      inputId.value = '';
+    }
+    modal.style.display = 'flex';
+    setTimeout(() => inputTitle.focus(), 50);
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+    form.reset();
+    inputId.value = '';
+  }
+
+  // ============ Save ============
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      title: inputTitle.value.trim(),
+      caption: inputCaption.value.trim(),
+      url_link: inputUrl.value.trim(),
+      icon: getIconClass(inputUrl.value.trim()),
+      created_by: userId
+    };
+    if (!payload.title || !payload.url_link) return;
+
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Saving...';
+
+    const res = inputId.value
+      ? await API.put(`/api/resources/${inputId.value}`, payload)
+      : await API.post('/api/resources', payload);
+
+    saveBtn.disabled = false;
+    saveBtn.innerText = inputId.value ? 'Save' : 'Add';
+
+    if (!res.success) {
+      alert('Save failed: ' + res.error);
+      return;
+    }
+    closeModal();
+    load();
+  });
+
+  // ============ Grid click ============
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      const r = resources.find(x => String(x.id) === String(id));
+      if (!r) return;
+
+      if (action === 'edit') {
+        openModal('edit', r);
+      } else if (action === 'open') {
+        openInElectron(r.url_link || r.url);
+      }
+      return;
+    }
+
+    // Card body click → open
+    const card = e.target.closest('.resource-card');
+    if (card) {
+      openInElectron(card.dataset.url);
     }
   });
 
+  // ============ Delete flow ============
+  function openDeleteModal(id) {
+    const r = resources.find(x => String(x.id) === String(id));
+    if (!r || !canModify(r)) return;
+    pendingDeleteId = id;
+    deleteName.innerText = `"${r.title}" will be permanently deleted.`;
+    deleteModal.style.display = 'flex';
+  }
+
+  function closeDeleteModal() {
+    deleteModal.style.display = 'none';
+    pendingDeleteId = null;
+  }
+
+  deleteYes.addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+    const res = await API.delete(`/api/resources/${pendingDeleteId}`);
+    if (res.success) {
+      closeDeleteModal();
+      load();
+    } else {
+      alert('Delete failed: ' + res.error);
+    }
+  });
+
+  deleteNo.addEventListener('click', closeDeleteModal);
+  deleteClose.addEventListener('click', closeDeleteModal);
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) closeDeleteModal();
+  });
+
+  // ============ Buttons ============
+  if (addBtn) addBtn.addEventListener('click', () => openModal('add'));
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (deleteModal.style.display === 'flex') { closeDeleteModal(); return; }
+    if (modal.style.display === 'flex') closeModal();
+  });
+
+  // ============ Init ============
   load();
 }
 

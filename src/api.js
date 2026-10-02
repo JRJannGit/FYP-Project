@@ -1,33 +1,39 @@
+// =========================================
+// src/api.js — with role + userId headers
+// =========================================
+
 const BASE = 'http://localhost:3000';
 
 async function request(method, path, body) {
   const url = BASE + path;
-  console.log(`[API] ${method} ${url}`);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
+  const user = window.Auth?.getUser?.();
+  const role = window.Auth?.getRole?.();
+  const userId = user?.student_id || user?.lecturer_id || user?.admin_id || user?.identifier || '';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-user-role': role || '',
+    'x-user-id': userId
+  };
+
   try {
-    const opts = {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal
-    };
+    const opts = { method, headers, signal: controller.signal };
     if (body !== undefined) opts.body = JSON.stringify(body);
 
     const res = await fetch(url, opts);
     clearTimeout(timeoutId);
     const json = await res.json();
-    console.log(`[API] ← ${res.status}`);
 
     if (!json.success) return { success: false, error: json.error || 'Unknown error' };
     return json;
   } catch (err) {
     clearTimeout(timeoutId);
-    if (err.name === 'AbortError') {
-      return { success: false, error: 'Server timeout. Make sure "node server.js" is running.' };
-    }
-    return { success: false, error: 'Server offline. Make sure "node server.js" is running.' };
+    if (err.name === 'AbortError') return { success: false, error: 'Server timeout.' };
+    return { success: false, error: 'Server offline.' };
   }
 }
 

@@ -19,7 +19,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile('login.html');
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.webContents.setZoomLevel(0);
@@ -40,13 +40,51 @@ function createWindow() {
   mainWindow.on('maximize', () => setTimeout(resetZoom, 50));
   mainWindow.on('unmaximize', () => setTimeout(resetZoom, 50));
 
+  // Block Ctrl +/-/0 dan Ctrl+Scroll zoom
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (!input.control) return;
     if (['+', '-', '=', '0'].includes(input.key)) event.preventDefault();
     if (input.type === 'mouseWheel') event.preventDefault();
   });
+
+  // =========================================
+  // Handle ALL external links → small Electron window
+  // =========================================
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('file://')) {
+      return { action: 'allow' };
+    }
+
+    // External URL → small Electron window
+    return {
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        width: 700,
+        height: 500,
+        minWidth: 500,
+        minHeight: 400,
+        autoHideMenuBar: true,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true
+        }
+      }
+    };
+  });
+
+  // Prevent external navigation in main window
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file://')) {
+      event.preventDefault();
+      mainWindow.webContents.send('force-external-open', url);
+    }
+  });
 }
 
+// =========================================
+// Notification popup window
+// =========================================
 function createNotificationWindow(data) {
   if (notificationWindow && !notificationWindow.isDestroyed()) {
     notificationWindow.close();
@@ -97,6 +135,9 @@ function createNotificationWindow(data) {
   });
 }
 
+// =========================================
+// IPC HANDLERS
+// =========================================
 ipcMain.on('trigger-notification', (event, data) => {
   console.log('[MAIN] Trigger notification:', data.title);
   createNotificationWindow(data);
@@ -119,6 +160,27 @@ ipcMain.on('view-reminder', () => {
   }
 });
 
+// Open URL from renderer in small Electron window
+ipcMain.on('open-external', (event, url) => {
+  if (!url) return;
+  const extWin = new BrowserWindow({
+    width: 700,
+    height: 500,
+    minWidth: 500,
+    minHeight: 400,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+  extWin.loadURL(url);
+});
+
+// =========================================
+// APP LIFECYCLE
+// =========================================
 app.whenReady().then(() => {
   createWindow();
   app.on('activate', () => {

@@ -105,10 +105,11 @@ input:checked + .slider:before {
   gap: 8px;
 }
 
-.about-mascot {
-  width: 90px;
-  height: auto;
-  margin-bottom: 10px;
+canvas.buddy-rive--settings {
+  width: 200px;
+  height: 250px;
+  margin: 0 auto 10px;
+  display: block;
 }
 
 .version-tag {
