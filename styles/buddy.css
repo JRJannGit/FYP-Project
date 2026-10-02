@@ -48,3 +48,10 @@ body.no-buddy-anim canvas.buddy-rive {
   align-items: center;
   justify-content: center;
 }
+
+/* =========================================
+   LIGHT THEME — Buddy overrides
+   ========================================= */
+body.light-theme canvas.buddy-rive {
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.1));
+}

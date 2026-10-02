@@ -457,3 +457,64 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* =========================================
+   LIGHT THEME — Assignments overrides
+   ========================================= */
+body.light-theme .assignments-header,
+body.light-theme .assignments-table {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .filter-tabs {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .tab-btn {
+  color: #64748b;
+}
+body.light-theme .tab-btn.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+body.light-theme .assignments-table-header {
+  background-color: #f8fafc;
+  border-bottom-color: #e2e8f0;
+  color: #64748b;
+}
+
+body.light-theme .assignment-row {
+  border-bottom-color: #e2e8f0;
+}
+body.light-theme .assignment-row:hover {
+  background-color: #f8fafc;
+}
+
+body.light-theme .icon-btn {
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+body.light-theme .icon-btn:hover {
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+body.light-theme .modal-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme .modal-form input,
+body.light-theme .modal-form textarea,
+body.light-theme .modal-form select {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .btn-cancel {
+  background-color: transparent;
+  color: #64748b;
+  border-color: #e2e8f0;
+}

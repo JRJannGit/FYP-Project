@@ -370,3 +370,35 @@
   margin-bottom: 22px;
   line-height: 1.55;
 }
+
+/* =========================================
+   LIGHT THEME — Reminders overrides
+   ========================================= */
+body.light-theme .reminders-header,
+body.light-theme .reminder-card {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .reminders-header p,
+body.light-theme .reminder-details p,
+body.light-theme .reminder-time {
+  color: #64748b;
+}
+
+body.light-theme .modal-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme .modal-form input,
+body.light-theme .modal-form textarea,
+body.light-theme .modal-form select {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .btn-cancel {
+  background-color: transparent;
+  color: #64748b;
+  border-color: #e2e8f0;
+}

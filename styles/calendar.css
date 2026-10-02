@@ -493,3 +493,55 @@ input:checked + .slider:before {
   color: #ffffff;
 }
 .btn-danger:hover { background-color: #dc2626; }
+
+/* =========================================
+   LIGHT THEME — Calendar overrides
+   ========================================= */
+body.light-theme .calendar-topbar,
+body.light-theme .events-panel,
+body.light-theme .calendar-view {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .switch-label { color: #0f172a; }
+
+body.light-theme .slider {
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
+}
+body.light-theme .slider:before { background-color: #94a3b8; }
+body.light-theme input:checked + .slider {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+body.light-theme input:checked + .slider:before { background-color: #ffffff; }
+
+body.light-theme .event-item {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+body.light-theme .event-date-chip {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+body.light-theme .day-cell {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .day-cell:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+body.light-theme .day-cell.today {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+}
+
+body.light-theme .academic-image-wrapper {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}

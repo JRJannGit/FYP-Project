@@ -385,3 +385,55 @@
 .resource-card.system::before {
   background: linear-gradient(180deg, #64748b, #475569);
 }
+
+/* Delete icon button (red on hover) */
+.icon-btn-sm.danger {
+  color: var(--text-muted);
+}
+
+.icon-btn-sm.danger:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+/* =========================================
+   LIGHT THEME — Resources overrides
+   ========================================= */
+body.light-theme .resources-header,
+body.light-theme .resource-card {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme .resource-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+body.light-theme .card-brand {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+body.light-theme .icon-btn-sm {
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+body.light-theme .icon-btn-sm:hover {
+  color: #2563eb;
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+body.light-theme .modal-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme .modal-form input,
+body.light-theme .modal-form textarea {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .btn-cancel {
+  background-color: transparent;
+  color: #64748b;
+  border-color: #e2e8f0;
+}

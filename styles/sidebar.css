@@ -1,22 +1,28 @@
 :root {
-  /* Sleek Modern Palette */
+  /* Dark palette */
   --bg-main: #0b0f17;
   --bg-sidebar: #111726;
   --bg-card: #182032;
+  --bg-input: #0d1420;
+  --bg-hover: #172030;
   --primary-glow: #3b82f6;
   --primary-accent: #2563eb;
+  --primary-blue: #3b82f6;
+  --primary-hover: #2563eb;
   --text-main: #f8fafc;
   --text-muted: #64748b;
   --border-color: rgba(255, 255, 255, 0.07);
 }
 
-/* Light Mode Overrides */
+/* =========================================
+   LIGHT THEME
+   ========================================= */
 body.light-theme {
-  --bg-main: #f8fafc;
+  --bg-main: #f1f5f9;
   --bg-sidebar: #ffffff;
-  --bg-card: #f1f5f9;
-  --primary-glow: #2563eb;
-  --primary-accent: #1d4ed8;
+  --bg-card: #ffffff;
+  --bg-input: #f8fafc;
+  --bg-hover: #f1f5f9;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-color: #e2e8f0;
@@ -32,22 +38,21 @@ body.light-theme {
 html, body {
   height: 100%;
   width: 100%;
-  margin: 0;
-  padding: 0;
   overflow: hidden;
   background-color: var(--bg-main);
   color: var(--text-main);
+  transition: background-color 0.2s, color 0.2s;
 }
 
-/* Master Layout */
+/* Layout */
 .app-container {
   display: flex;
-  height: 100%;
   width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
-/* Sleek Floating Sidebar */
+/* Sidebar */
 .sidebar {
   width: 260px;
   min-width: 260px;
@@ -59,9 +64,9 @@ html, body {
   padding: 24px 18px;
   user-select: none;
   flex-shrink: 0;
+  transition: background-color 0.2s;
 }
 
-/* Brand Header */
 .brand {
   display: flex;
   align-items: center;
@@ -87,7 +92,7 @@ html, body {
   color: var(--primary-glow);
 }
 
-/* Navigation Links */
+/* Navigation */
 .nav-menu {
   display: flex;
   flex-direction: column;
@@ -97,10 +102,7 @@ html, body {
   overflow-y: auto;
 }
 
-/* Hide scrollbar for nav menu */
-.nav-menu::-webkit-scrollbar {
-  display: none;
-}
+.nav-menu::-webkit-scrollbar { display: none; }
 
 .nav-item {
   display: flex;
@@ -123,10 +125,9 @@ html, body {
   transition: transform 0.18s ease;
 }
 
-/* Hover State */
 .nav-item:hover {
   color: var(--text-main);
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--bg-hover);
 }
 
 .nav-item:hover i {
@@ -134,7 +135,6 @@ html, body {
   color: var(--primary-glow);
 }
 
-/* Active Pill State */
 .nav-item.active {
   color: #ffffff;
   background: linear-gradient(135deg, var(--primary-glow) 0%, var(--primary-accent) 100%);
@@ -142,16 +142,11 @@ html, body {
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
-.nav-item.active i {
-  color: #ffffff;
-}
+.nav-item.active i { color: #ffffff; }
 
-/* Click Press Effect */
-.nav-item:active {
-  transform: scale(0.97);
-}
+.nav-item:active { transform: scale(0.97); }
 
-/* Student Profile Footer */
+/* User profile */
 .user-profile {
   display: flex;
   align-items: center;
@@ -199,31 +194,24 @@ html, body {
   color: var(--text-muted);
 }
 
-/* Main Content Wrapper (Strict Overflow Lock) */
+/* Content area */
 .content-area {
-  flex-grow: 1;
+  flex: 1;
   height: 100%;
   padding: 28px 32px;
   overflow-y: auto;
   overflow-x: hidden;
   background-color: var(--bg-main);
   min-width: 0;
+  transition: background-color 0.2s;
 }
 
-/* Custom Sleek Scrollbar */
-.content-area::-webkit-scrollbar {
-  width: 5px;
-}
-
-.content-area::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+.content-area::-webkit-scrollbar { width: 5px; }
+.content-area::-webkit-scrollbar-track { background: transparent; }
 .content-area::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 10px;
 }
-
 .content-area::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }

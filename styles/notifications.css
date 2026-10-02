@@ -117,3 +117,15 @@
 .action-btn:hover {
   opacity: 0.9;
 }
+
+/* =========================================
+   LIGHT THEME — Toast overrides
+   ========================================= */
+body.light-theme .toast-card {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+body.light-theme .toast-title { color: #0f172a; }
+body.light-theme .toast-time,
+body.light-theme .toast-brand { color: #64748b; }

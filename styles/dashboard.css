@@ -461,3 +461,58 @@
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
 }
+
+/* =========================================
+   LIGHT THEME — Dashboard overrides
+   ========================================= */
+body.light-theme .dashboard-header,
+body.light-theme .card,
+body.light-theme .mascot-card {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .quote-card {
+  background-color: #f8fafc;
+  border-left-color: #3b82f6;
+}
+
+body.light-theme .quote-icon {
+  color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .quote-text {
+  color: #0f172a;
+}
+
+body.light-theme .schedule-item,
+body.light-theme .task-item {
+  background-color: #f8fafc;
+}
+
+body.light-theme .portal-btn {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .portal-btn:hover {
+  background-color: #eff6ff;
+}
+
+body.light-theme .room-tag {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #64748b;
+}
+
+body.light-theme .badge.due-soon {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+body.light-theme .badge.due-medium {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+body.light-theme .badge.due-normal {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}

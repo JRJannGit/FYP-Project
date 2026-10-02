@@ -59,41 +59,32 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // =========================================
-// AUTH — STUDENT
+// AUTH — STUDENT (legacy)
 // =========================================
 app.post('/api/auth/student/login', async (req, res) => {
   const { student_id, password } = req.body || {};
-  console.log(`[LOGIN] attempt: ${student_id}`);
   try {
     if (!student_id || !password) return fail(res, 'Student ID and password are required', 400);
     const [rows] = await db.query(
       'SELECT id, student_id, full_name, email FROM students WHERE student_id = ? AND password = ?',
       [student_id, password]
     );
-    console.log(`[LOGIN] returned ${rows.length} row(s)`);
     if (rows.length === 0) return fail(res, 'Invalid Student ID or Password', 401);
-    console.log(`[LOGIN] success: ${rows[0].full_name}`);
     ok(res, rows[0]);
-  } catch (err) {
-    console.error('[LOGIN] error:', err);
-    fail(res, err.message);
-  }
+  } catch (err) { fail(res, err.message); }
 });
 
 app.post('/api/auth/student/signup', async (req, res) => {
   const { student_id, full_name, email, password } = req.body || {};
-  console.log(`[SIGNUP] attempt: ${student_id}`);
   try {
     if (!student_id || !full_name || !email || !password) return fail(res, 'All fields are required', 400);
     const [result] = await db.query(
       'INSERT INTO students (student_id, full_name, email, password) VALUES (?, ?, ?, ?)',
       [student_id, full_name, email, password]
     );
-    console.log(`[SIGNUP] success: id=${result.insertId}`);
     ok(res, { id: result.insertId, student_id, full_name, email });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return fail(res, 'This Student ID is already registered', 400);
-    console.error('[SIGNUP] error:', err);
     fail(res, err.message);
   }
 });
@@ -185,7 +176,7 @@ app.post('/api/assignments/:id/toggle', async (req, res) => {
 });
 
 // =========================================
-// TIMETABLE
+// TIMETABLE (file upload)
 // =========================================
 app.get('/api/timetable/:student_id', async (req, res) => {
   try {
@@ -217,6 +208,30 @@ app.delete('/api/timetable/:student_id', async (req, res) => {
 });
 
 // =========================================
+// TIMETABLE ENTRIES (class schedule)
+// =========================================
+app.get('/api/timetable-entries', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM timetable_entries ORDER BY FIELD(day_of_week, "Mon","Tue","Wed","Thu","Fri","Sat","Sun"), time_start ASC'
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.get('/api/timetable-entries/today', async (req, res) => {
+  try {
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const today = days[new Date().getDay()];
+    const [rows] = await db.query(
+      'SELECT * FROM timetable_entries WHERE day_of_week = ? ORDER BY time_start ASC',
+      [today]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
 // REMINDERS
 // =========================================
 app.get('/api/reminders/:student_id', async (req, res) => {
@@ -224,6 +239,19 @@ app.get('/api/reminders/:student_id', async (req, res) => {
     const [rows] = await db.query(
       'SELECT * FROM reminders WHERE student_id = ? ORDER BY remind_date ASC, remind_time ASC',
       [req.params.student_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.get('/api/reminders/:student_id/due', async (req, res) => {
+  try {
+    const minutes = parseInt(req.query.minutes || '5', 10);
+    const [rows] = await db.query(
+      `SELECT * FROM reminders
+       WHERE student_id = ?
+         AND CONCAT(remind_date, ' ', remind_time) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? MINUTE)`,
+      [req.params.student_id, minutes]
     );
     ok(res, rows);
   } catch (err) { fail(res, err.message); }
@@ -256,20 +284,6 @@ app.delete('/api/reminders/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM reminders WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
-  } catch (err) { fail(res, err.message); }
-});
-
-// Reminders due soon (within next N minutes)
-app.get('/api/reminders/:student_id/due', async (req, res) => {
-  try {
-    const minutes = parseInt(req.query.minutes || '5', 10);
-    const [rows] = await db.query(
-      `SELECT * FROM reminders
-       WHERE student_id = ?
-         AND CONCAT(remind_date, ' ', remind_time) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? MINUTE)`,
-      [req.params.student_id, minutes]
-    );
-    ok(res, rows);
   } catch (err) { fail(res, err.message); }
 });
 
@@ -315,6 +329,21 @@ app.delete('/api/notes/:id', async (req, res) => {
 // =========================================
 // RESOURCES
 // =========================================
+function requireAdmin(req, res, next) {
+  const role = req.headers['x-user-role'];
+  if (role !== 'admin') {
+    // non-admin can still POST (own resource), but not edit/delete system resources
+    // actual ownership check done inside the route
+  }
+  next();
+}
+
+function canModifyResource(role, userId, resource) {
+  if (role === 'admin') return true;
+  if (resource.is_system) return false;
+  return resource.created_by === userId;
+}
+
 app.get('/api/resources', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM resources ORDER BY is_system DESC, title ASC');
@@ -322,19 +351,10 @@ app.get('/api/resources', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// Helper: check if user can modify resource
-function canModifyResource(role, userId, resource) {
-  if (role === 'admin') return true;
-  if (resource.is_system) return false;            // system resources: admin only
-  return resource.created_by === userId;            // own resources: owner only
-}
-
-// CREATE — semua role boleh add
 app.post('/api/resources', async (req, res) => {
   try {
     const { title, url_link, caption, icon, created_by } = req.body;
     const role = req.headers['x-user-role'];
-
     if (!role) return fail(res, 'Not authenticated', 401);
 
     const [result] = await db.query(
@@ -346,7 +366,6 @@ app.post('/api/resources', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// UPDATE — kena check ownership
 app.put('/api/resources/:id', async (req, res) => {
   try {
     const role = req.headers['x-user-role'];
@@ -369,7 +388,6 @@ app.put('/api/resources/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// DELETE — kena check ownership
 app.delete('/api/resources/:id', async (req, res) => {
   try {
     const role = req.headers['x-user-role'];
@@ -389,20 +407,67 @@ app.delete('/api/resources/:id', async (req, res) => {
 });
 
 // =========================================
-// DASHBOARD COMBINED — upcoming items
+// EVENTS
+// =========================================
+app.get('/api/events/:student_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM events WHERE student_id = ? OR student_id IS NULL ORDER BY event_date ASC, start_time ASC',
+      [req.params.student_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/events', async (req, res) => {
+  try {
+    const { student_id, title, event_date, description, color, start_time, end_time } = req.body;
+    const [result] = await db.query(
+      `INSERT INTO events (student_id, title, event_date, description, color, start_time, end_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [student_id || null, title, event_date, description || '', color || 'blue',
+       start_time || '09:00:00', end_time || '10:00:00']
+    );
+    ok(res, { id: result.insertId });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.put('/api/events/:id', async (req, res) => {
+  try {
+    const { title, event_date, description, color, start_time, end_time } = req.body;
+    await db.query(
+      `UPDATE events SET title=?, event_date=?, description=?, color=?, start_time=?, end_time=? WHERE id=?`,
+      [title, event_date, description, color, start_time, end_time, req.params.id]
+    );
+    ok(res, { updated: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.delete('/api/events/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM events WHERE id = ?', [req.params.id]);
+    ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// DASHBOARD — combined upcoming items
 // =========================================
 app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
   try {
     const sid = req.params.student_id;
+
     const [assignments] = await db.query(
       `SELECT id, subject AS title, description, due_date AS date, NULL AS time, 'assignment' AS type, is_exam
        FROM assignments WHERE due_date >= CURDATE() ORDER BY due_date ASC`
     );
+
     const [reminders] = await db.query(
       `SELECT id, title, description, remind_date AS date, remind_time AS time, 'reminder' AS type, priority
        FROM reminders WHERE student_id = ? AND remind_date >= CURDATE() ORDER BY remind_date ASC`,
       [sid]
     );
+
     const [events] = await db.query(
       `SELECT id, title, description, event_date AS date, start_time AS time, 'event' AS type, color
        FROM events WHERE (student_id = ? OR student_id IS NULL) AND event_date >= CURDATE() ORDER BY event_date ASC`,
@@ -413,6 +478,86 @@ app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     ok(res, combined);
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// ACADEMIC CALENDAR
+// =========================================
+app.get('/api/academic-calendar', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM academic_calendar ORDER BY uploaded_at DESC LIMIT 1'
+    );
+    ok(res, rows[0] || null);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/academic-calendar', async (req, res) => {
+  try {
+    const { file_data, file_type } = req.body;
+    await db.query('DELETE FROM academic_calendar');
+    await db.query(
+      'INSERT INTO academic_calendar (file_data, file_type) VALUES (?, ?)',
+      [file_data, file_type || 'image']
+    );
+    ok(res, { uploaded: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// USER SETTINGS
+// =========================================
+app.get('/api/settings/:user_id/:role', async (req, res) => {
+  try {
+    const { user_id, role } = req.params;
+    const [rows] = await db.query(
+      'SELECT * FROM user_settings WHERE user_id = ? AND user_role = ?',
+      [user_id, role]
+    );
+    if (rows.length === 0) {
+      // Return defaults
+      return ok(res, {
+        show_notifications: true,
+        play_animations: true,
+        dark_mode: true,
+        is_new: true
+      });
+    }
+    ok(res, rows[0]);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const { user_id, user_role, show_notifications, play_animations, dark_mode } = req.body;
+    if (!user_id || !user_role) return fail(res, 'user_id and user_role are required', 400);
+
+    // UPSERT: insert kalau belum ada, update kalau dah ada
+    await db.query(
+      `INSERT INTO user_settings (user_id, user_role, show_notifications, play_animations, dark_mode)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         show_notifications = VALUES(show_notifications),
+         play_animations    = VALUES(play_animations),
+         dark_mode          = VALUES(dark_mode)`,
+      [user_id, user_role, show_notifications ? 1 : 0, play_animations ? 1 : 0, dark_mode ? 1 : 0]
+    );
+    ok(res, { saved: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// ADMIN STATS
+// =========================================
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    const [[{ studentCount }]]    = await db.query('SELECT COUNT(*) AS studentCount FROM students');
+    const [[{ assignmentCount }]] = await db.query('SELECT COUNT(*) AS assignmentCount FROM assignments');
+    const [[{ resourceCount }]]   = await db.query('SELECT COUNT(*) AS resourceCount FROM resources');
+    const [[{ timetableCount }]]  = await db.query('SELECT COUNT(*) AS timetableCount FROM timetable');
+    const [recent] = await db.query('SELECT * FROM assignments ORDER BY created_at DESC LIMIT 5');
+    ok(res, { studentCount, assignmentCount, resourceCount, timetableCount, recentAssignments: recent });
   } catch (err) { fail(res, err.message); }
 });
 

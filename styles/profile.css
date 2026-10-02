@@ -265,3 +265,43 @@
 }
 
 .form-banner i { font-size: 1rem; flex-shrink: 0; }
+
+/* =========================================
+   LIGHT THEME — Profile overrides
+   ========================================= */
+body.light-theme .auth-card,
+body.light-theme .profile-card {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .auth-tabs {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .tab-btn {
+  color: #64748b;
+}
+body.light-theme .tab-btn.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+body.light-theme .tab-btn.inactive:hover {
+  color: #0f172a;
+}
+
+body.light-theme .form-input {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .form-input::placeholder { color: #94a3b8; }
+
+body.light-theme .profile-details {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+body.light-theme .profile-detail-item {
+  color: #334155;
+}

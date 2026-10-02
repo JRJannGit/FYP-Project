@@ -765,3 +765,68 @@ body.notes-edit-mode .btn-delete {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
 }
+
+/* =========================================
+   LIGHT THEME — Notes overrides
+   ========================================= */
+body.light-theme .notes-sidebar,
+body.light-theme .notes-editor {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .search-box {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+body.light-theme .search-box input {
+  color: #0f172a;
+}
+body.light-theme .search-box input::placeholder {
+  color: #94a3b8;
+}
+
+body.light-theme .note-item {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .note-item:hover {
+  border-color: #3b82f6;
+}
+
+body.light-theme .note-modal {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme .note-modal__title {
+  color: #0f172a;
+}
+body.light-theme .note-modal__content {
+  color: #334155;
+}
+body.light-theme .note-modal__content[contenteditable="true"] {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+body.light-theme .note-modal__toolbar {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+body.light-theme .tool-btn {
+  color: #64748b;
+}
+body.light-theme .tool-btn:hover {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}
+
+body.light-theme .btn-footer {
+  border-color: #e2e8f0;
+  color: #334155;
+  background-color: #f8fafc;
+}
+
+body.light-theme .modal-box--small {
+  background: #ffffff;
+}

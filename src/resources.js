@@ -1,5 +1,5 @@
 // =========================================
-// src/resources.js — open in Electron window
+// src/resources.js — with delete option
 // =========================================
 
 function initResources() {
@@ -55,10 +55,8 @@ function initResources() {
     return r.created_by === userId;
   }
 
-  // Open URL in Electron window
   function openInElectron(url) {
     if (!url) return;
-    // target="_blank" intercepted by Electron → opens new BrowserWindow
     window.open(url, '_blank');
   }
 
@@ -82,20 +80,26 @@ function initResources() {
       const icon = r.icon || getIconClass(url);
       const editable = canModify(r);
 
+      // Actions:
+      // - Editable: Edit | Delete | Open
+      // - Non-editable: Open only
       const actionsHtml = editable
         ? `
           <div class="card-actions">
             <button class="icon-btn-sm" data-action="edit" data-id="${r.id}" title="Edit">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="icon-btn-sm" data-action="open" data-id="${r.id}" data-url="${escapeHtml(url)}" title="Open">
+            <button class="icon-btn-sm danger" data-action="delete" data-id="${r.id}" title="Delete">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+            <button class="icon-btn-sm" data-action="open" data-id="${r.id}" title="Open">
               <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </button>
           </div>
         `
         : `
           <div class="card-actions">
-            <button class="icon-btn-sm" data-action="open" data-id="${r.id}" data-url="${escapeHtml(url)}" title="Open">
+            <button class="icon-btn-sm" data-action="open" data-id="${r.id}" title="Open">
               <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </button>
           </div>
@@ -200,13 +204,15 @@ function initResources() {
 
       if (action === 'edit') {
         openModal('edit', r);
+      } else if (action === 'delete') {
+        openDeleteModal(id);
       } else if (action === 'open') {
         openInElectron(r.url_link || r.url);
       }
       return;
     }
 
-    // Card body click → open
+    // Card body → open URL
     const card = e.target.closest('.resource-card');
     if (card) {
       openInElectron(card.dataset.url);
