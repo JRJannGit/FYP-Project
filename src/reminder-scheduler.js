@@ -1,8 +1,10 @@
 async function checkReminders() {
   if (typeof API === 'undefined') return;
 
-  // Check notification toggle
-  if (window.__showNotifications === false) {
+  // Check notification toggle (from window flag atau localStorage)
+  const showNotif = window.__showNotifications !== false &&
+                    localStorage.getItem('uptm_notif') !== 'off';
+  if (!showNotif) {
     console.log('[scheduler] Notifications disabled — skipping');
     return;
   }

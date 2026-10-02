@@ -97,5 +97,14 @@
   <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>
   <script src="src/rive-buddy.js"></script>
   <script src="src/navigation.js"></script>
+
+  <script>
+  (async function applyOnStartup() {
+    // Wait for Auth to be ready
+    if (window.Auth && typeof window.Auth.applyUserSettings === 'function') {
+      await window.Auth.applyUserSettings();
+    }
+  })();
+</script>
 </body>
 </html>

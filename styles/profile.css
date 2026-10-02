@@ -305,3 +305,100 @@ body.light-theme .profile-details {
 body.light-theme .profile-detail-item {
   color: #334155;
 }
+
+/* =========================================
+   Logout confirm modal
+   ========================================= */
+
+#logout-modal .modal-box--small {
+  width: 100%;
+  max-width: 380px;
+  background: linear-gradient(180deg, #1a2236 0%, #151c2e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  animation: modalSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#logout-modal .modal-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+#logout-modal .modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+#logout-modal .modal-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.55;
+}
+
+#logout-modal .modal-actions--center {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+#logout-modal .btn-cancel,
+#logout-modal .btn-danger {
+  padding: 11px 26px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+  min-width: 130px;
+  font-family: inherit;
+}
+
+#logout-modal .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+#logout-modal .btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5);
+}
+
+#logout-modal .btn-cancel {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+#logout-modal .btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Light theme */
+body.light-theme #logout-modal .modal-box--small {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+}
+body.light-theme #logout-modal .modal-header h3 {
+  color: #0f172a;
+}
+body.light-theme #logout-modal .modal-text {
+  color: #64748b;
+}
+body.light-theme #logout-modal .btn-cancel {
+  background: transparent;
+  color: #334155;
+  border-color: #e2e8f0;
+}
+body.light-theme #logout-modal .btn-cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}

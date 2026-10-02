@@ -130,10 +130,23 @@ app.get('/api/assignments/student/:student_id', async (req, res) => {
 
 app.post('/api/assignments', async (req, res) => {
   try {
-    const { subject, description, due_date, is_exam } = req.body;
+    const {
+      subject, description, due_date, is_exam,
+      class_id, lecturer_id, start_time, end_time, status,
+      file_name, file_type, file_data, url_link
+    } = req.body;
+
     const [result] = await db.query(
-      'INSERT INTO assignments (subject, description, due_date, is_exam) VALUES (?, ?, ?, ?)',
-      [subject, description || '', due_date, is_exam ? 1 : 0]
+      `INSERT INTO assignments
+         (subject, description, due_date, is_exam, class_id, lecturer_id,
+          start_time, end_time, status, file_name, file_type, file_data, url_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        subject, description || '', due_date, is_exam ? 1 : 0,
+        class_id || null, lecturer_id || null,
+        start_time || '00:00:00', end_time || '23:59:00', status || 'released',
+        file_name || null, file_type || null, file_data || null, url_link || null
+      ]
     );
     ok(res, { id: result.insertId });
   } catch (err) { fail(res, err.message); }
@@ -544,6 +557,79 @@ app.post('/api/settings', async (req, res) => {
       [user_id, user_role, show_notifications ? 1 : 0, play_animations ? 1 : 0, dark_mode ? 1 : 0]
     );
     ok(res, { saved: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// LECTURER
+// =========================================
+app.get('/api/lecturer/classes/:lecturer_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM classes WHERE lecturer_id = ? ORDER BY class_code ASC',
+      [req.params.lecturer_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// Get assignments created by this lecturer
+app.get('/api/assignments/lecturer/:lecturer_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT a.*, c.class_code, c.class_name
+       FROM assignments a
+       LEFT JOIN classes c ON c.id = a.class_id
+       WHERE a.lecturer_id = ?
+       ORDER BY a.created_at DESC`,
+      [req.params.lecturer_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// SUBMISSIONS
+// =========================================
+app.get('/api/submissions/:assignment_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT s.id, s.assignment_id, s.student_id, s.file_name, s.submitted_at,
+              st.email AS student_email
+       FROM submissions s
+       LEFT JOIN students st ON st.student_id = s.student_id
+       WHERE s.assignment_id = ?
+       ORDER BY s.submitted_at ASC`,
+      [req.params.assignment_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.get('/api/submissions/item/:submission_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM submissions WHERE id = ?',
+      [req.params.submission_id]
+    );
+    ok(res, rows[0] || null);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/submissions', async (req, res) => {
+  try {
+    const { assignment_id, student_id, file_name, file_type, file_data } = req.body;
+    await db.query(
+      `INSERT INTO submissions (assignment_id, student_id, file_name, file_type, file_data)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         file_name=VALUES(file_name),
+         file_type=VALUES(file_type),
+         file_data=VALUES(file_data),
+         submitted_at=CURRENT_TIMESTAMP`,
+      [assignment_id, student_id, file_name, file_type, file_data]
+    );
+    ok(res, { uploaded: true });
   } catch (err) { fail(res, err.message); }
 });
 

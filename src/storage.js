@@ -1,6 +1,5 @@
 // =========================================
-// src/storage.js — session helper
-// Delegates to Auth for normalization
+// src/storage.js — session delegate to Auth
 // =========================================
 
 const AppStorage = {
@@ -15,7 +14,7 @@ const AppStorage = {
     console.warn('[AppStorage] setUser deprecated. Use Auth.setSession instead.');
   },
   clearUser() {
-    if (window.Auth) window.Auth.logout();
+    localStorage.removeItem('uptm_session');
   }
 };
 

@@ -50,7 +50,7 @@
     </div>
 
     <h2 id="profile-name" class="profile-name">User Name</h2>
-    <p id="profile-id" class="profile-id">Student ID</p>
+    <p id="profile-id" class="profile-id">User ID</p>
 
     <div class="profile-details">
       <div class="profile-detail-item">
@@ -60,7 +60,7 @@
       <div class="profile-detail-item">
         <strong>Status:</strong>
         <span class="status-badge">
-          <i class="fa-solid fa-circle" style="font-size:6px;"></i> Active Student
+          <i class="fa-solid fa-circle" style="font-size:6px;"></i> Active
         </span>
       </div>
     </div>
@@ -70,4 +70,20 @@
     </button>
   </div>
 
+</div>
+
+<!-- =========================================
+     LOGOUT CONFIRM MODAL
+     ========================================= -->
+<div class="modal-overlay" id="logout-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Log Out?</h3>
+    </div>
+    <p class="modal-text">You will be returned to the login page.</p>
+    <div class="modal-actions--center">
+      <button type="button" class="btn-danger" id="logout-yes">YES</button>
+      <button type="button" class="btn-cancel" id="logout-no">NO</button>
+    </div>
+  </div>
 </div>

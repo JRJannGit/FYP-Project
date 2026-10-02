@@ -1,0 +1,181 @@
+<div class="lecturer-assignments-container">
+
+  <!-- =========================================
+       TOP ROW: Left (Topic + editor) | Right (Upload + Meta)
+       ========================================= -->
+  <div class="lecturer-assignments-grid">
+
+    <!-- LEFT: Topic + Description editor -->
+    <div class="lecturer-card editor-card">
+      <label class="card-label">TOPIC</label>
+      <input type="text"
+             class="lecturer-topic-input"
+             id="topic-input"
+             placeholder="e.g. Database Systems Assignment 1"
+             maxlength="150">
+
+      <div class="editor-divider"></div>
+
+      <!-- Toolbar -->
+      <div class="lecturer-toolbar">
+        <button class="tool-btn" data-cmd="bold" title="Bold"><i class="fa-solid fa-bold"></i></button>
+        <button class="tool-btn" data-cmd="italic" title="Italic"><i class="fa-solid fa-italic"></i></button>
+        <button class="tool-btn" data-cmd="underline" title="Underline"><i class="fa-solid fa-underline"></i></button>
+        <div class="divider"></div>
+        <button class="tool-btn" data-cmd="insertUnorderedList" title="Bullet"><i class="fa-solid fa-list-ul"></i></button>
+        <button class="tool-btn" data-cmd="insertOrderedList" title="Numbered"><i class="fa-solid fa-list-ol"></i></button>
+      </div>
+
+      <!-- Description content -->
+      <div class="lecturer-desc-input"
+           id="desc-input"
+           contenteditable="true"
+           data-placeholder="Text..."></div>
+
+      <div class="editor-actions">
+        <button class="btn-secondary" id="btn-edit-toggle">
+          <i class="fa-solid fa-pen"></i> Edit
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Upload + Date + Time -->
+    <div class="lecturer-card meta-card">
+
+      <!-- Upload + URL buttons -->
+      <div class="upload-row">
+        <button class="upload-btn" id="btn-upload-file">
+          <div class="upload-icon">
+            <i class="fa-solid fa-file-arrow-up"></i>
+          </div>
+          <span>Upload File</span>
+        </button>
+
+        <button class="upload-btn" id="btn-insert-url">
+          <div class="upload-icon">
+            <i class="fa-solid fa-link"></i>
+          </div>
+          <span>Insert url-link</span>
+        </button>
+      </div>
+
+      <!-- Hidden file inputs -->
+      <input type="file" id="assignment-file-input" hidden>
+      <input type="url" id="assignment-url-input" hidden>
+
+      <!-- File/link preview -->
+      <div class="upload-preview" id="upload-preview" style="display:none;">
+        <div class="preview-info">
+          <i class="fa-solid fa-paperclip"></i>
+          <span id="preview-name">filename</span>
+        </div>
+        <button class="preview-remove" id="preview-remove">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="meta-divider"></div>
+
+      <!-- Date + Due Date -->
+      <div class="meta-row">
+        <div class="meta-field">
+          <label>Date</label>
+          <input type="date" id="meta-date" class="meta-input">
+        </div>
+        <div class="meta-field">
+          <label>Due Date</label>
+          <input type="date" id="meta-due-date" class="meta-input">
+        </div>
+      </div>
+
+      <!-- Start + End time -->
+      <div class="meta-row">
+        <div class="meta-field">
+          <label>Start Time</label>
+          <input type="time" id="meta-start-time" class="meta-input" value="09:00">
+        </div>
+        <div class="meta-field">
+          <label>End Time</label>
+          <input type="time" id="meta-end-time" class="meta-input" value="17:00">
+        </div>
+      </div>
+
+      <!-- Class selector -->
+      <div class="meta-field meta-field--full">
+        <label>Assign to Class</label>
+        <select id="meta-class" class="meta-input"></select>
+      </div>
+
+      <!-- Release + Reset -->
+      <div class="meta-actions">
+        <button class="btn-release" id="btn-release">
+          <i class="fa-solid fa-paper-plane"></i> Release
+        </button>
+        <button class="btn-reset" id="btn-reset">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       BOTTOM: Assignments Received
+       ========================================= -->
+  <div class="lecturer-card received-card">
+    <div class="received-header">
+      <h3>Assignments Received</h3>
+      <button class="btn-view" id="btn-view-submissions">
+        <i class="fa-solid fa-eye"></i> View
+      </button>
+    </div>
+    <p class="received-hint" id="received-hint">Select or create an assignment to view submissions.</p>
+  </div>
+
+</div>
+
+<!-- =========================================
+     MODAL: Submissions List
+     ========================================= -->
+<div class="modal-overlay" id="submissions-modal" style="display:none;">
+  <div class="submissions-modal">
+    <div class="submissions-header">
+      <h3><i class="fa-solid fa-inbox"></i> Submissions</h3>
+      <button class="modal-close" id="submissions-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="submissions-body">
+      <div class="submissions-table-header">
+        <div>Student Email</div>
+        <div>Time</div>
+        <div style="text-align:right;">Action</div>
+      </div>
+      <div class="submissions-list" id="submissions-list">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <div class="submissions-footer">
+      <button class="btn-download-all" id="btn-download-all">
+        <i class="fa-solid fa-download"></i> Download All
+      </button>
+      <button class="btn-cancel" id="submissions-close-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     MODAL: Pick Assignment (for View)
+     ========================================= -->
+<div class="modal-overlay" id="pick-assignment-modal" style="display:none;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Select Assignment</h3>
+      <button class="modal-close" id="pick-assignment-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="pick-list" id="pick-assignment-list">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
