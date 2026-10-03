@@ -668,6 +668,7 @@ app.delete('/api/academic-calendar', async (req, res) => {
 });
 
 // =========================================
+<<<<<<< HEAD
 // NOTIFICATION TEST (works without Electron)
 // =========================================
 app.get('/api/health', (req, res) => {
@@ -693,6 +694,8 @@ app.get('/test-notification.html', (req, res) => {
 });
 
 // =========================================
+=======
+>>>>>>> ba7a95056e4af477dd12cedc65126cf1400c215b
 // START
 // =========================================
 app.listen(3000, () => {
