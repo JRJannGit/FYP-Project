@@ -51,33 +51,11 @@
     <main id="main-content" class="content-area"></main>
   </div>
 
-  <script src="src/auth.js"></script>
-  <script src="src/storage.js"></script>
-  <script src="src/api.js"></script>
-  
-
-  <script src="src/dashboard.js"></script>
-  <script src="src/assignments.js"></script>
-  <script src="src/calendar.js"></script>
-  <script src="src/notes.js"></script>
-  <script src="src/reminders.js"></script>
-  <script src="src/resources.js"></script>
-  <script src="src/timetable.js"></script>
-  <script src="src/settings.js"></script>
-  <script src="src/profile.js"></script>
-  <script src="src/notifications.js"></script>
-  <script src="src/reminder-scheduler.js"></script>
-  <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>
-  <script src="src/rive-buddy.js"></script>
-  <script src="src/navigation.js"></script>
-
-  <script>
+  <script src="src/auth.js"></script>  <script src="src/storage.js"></script>  <script src="src/api.js"></script>  <script src="src/dashboard.js"></script>  <script src="src/assignments.js"></script>  <script src="src/calendar.js"></script>  <script src="src/notes.js"></script>  <script src="src/reminders.js"></script>  <script src="src/resources.js"></script>  <script src="src/timetable.js"></script>  <script src="src/settings.js"></script>  <script src="src/profile.js"></script>  <script src="src/notifications.js"></script>  <script src="src/reminder-scheduler.js"></script>  <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>  <script src="src/rive-buddy.js"></script>  <script src="src/navigation.js"></script>  <script>
   (async function applyOnStartup() {
-    // Wait for Auth to be ready
     if (window.Auth && typeof window.Auth.applyUserSettings === 'function') {
       await window.Auth.applyUserSettings();
     }
   })();
-</script>
-</body>
+</script></body>
 </html>

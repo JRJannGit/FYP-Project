@@ -24,7 +24,6 @@
 <body>
   <div class="app-container">
 
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand">
         <img src="assets/uptm-logo.png" alt="UPTM Logo" class="logo">
@@ -54,7 +53,6 @@
     <main id="main-content" class="content-area"></main>
   </div>
 
-  <!-- Toast -->
   <div class="toast-notification-overlay" id="reminder-toast" style="display:none;">
     <div class="toast-card">
       <div class="toast-header">
@@ -81,12 +79,10 @@
     </div>
   </div>
 
-  <!-- Core -->
   <script src="src/auth.js"></script>
   <script src="src/storage.js"></script>
   <script src="src/api.js"></script>
 
-  <!-- Shared feature scripts -->
   <script src="src/dashboard.js"></script>
   <script src="src/calendar.js"></script>
   <script src="src/notes.js"></script>
@@ -98,20 +94,15 @@
   <script src="src/notifications.js"></script>
   <script src="src/reminder-scheduler.js"></script>
 
-  <!-- Lecturer assignments (Fasa E nanti). Sementara guna student view -->
   <script src="src/assignments-lecturer.js"></script>
 
-  <!-- JSZip for Download All -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-  <!-- Rive -->
   <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>
   <script src="src/rive-buddy.js"></script>
 
-  <!-- Navigation (lecturer version) -->
   <script src="src/navigation-lecturer.js"></script>
 
-  <!-- Apply user settings on startup -->
   <script>
     (async function applyOnStartup() {
       if (window.Auth && typeof window.Auth.applyUserSettings === 'function') {

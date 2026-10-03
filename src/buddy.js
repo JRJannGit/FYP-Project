@@ -1,8 +1,3 @@
-// =========================================
-// UPTM Buddy — Mascot click handler
-// Auto-binds to any .buddy image, even if
-// injected later by navigation.js
-// =========================================
 
 (function () {
 
@@ -12,7 +7,7 @@
 
         el.addEventListener("click", () => {
             el.classList.remove("happy");
-            void el.offsetWidth; // force reflow so re-click restarts animation
+            void el.offsetWidth;
             el.classList.add("happy");
             setTimeout(() => el.classList.remove("happy"), 600);
         });
@@ -22,10 +17,8 @@
         root.querySelectorAll(".buddy").forEach(bindBuddy);
     }
 
-    // Initial bind (for anything already on the page)
     document.addEventListener("DOMContentLoaded", () => bindAll());
 
-    // Auto-bind whenever new .buddy elements get injected (view changes)
     const observer = new MutationObserver((mutations) => {
         for (const m of mutations) {
             m.addedNodes.forEach((node) => {

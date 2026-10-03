@@ -99,7 +99,6 @@
       normal: { label: 'NORMAL', color: '#3b82f6', bg: 'rgba(59, 130, 246, .16)' }
     };
 
-    // Same popup the in-app (non-Electron) scheduler renders
     function showPopup(data) {
       let host = $('uptm-toast-host');
       if (!host) {
@@ -139,7 +138,6 @@
 
     const api = (path, opts) => fetch(path, opts).then(r => r.json());
 
-    // Health check on load
     (async () => {
       try {
         const d = await api('/api/health');
@@ -157,14 +155,12 @@
       }
     })();
 
-    // 1 — manual popup
     $('btn-manual').addEventListener('click', () => {
       const d = { title: $('f-title').value, description: $('f-desc').value, priority: $('f-priority').value, time: $('f-time').value };
       showPopup(d);
       log('Manual popup shown: "' + d.title + '"');
     });
 
-    // 2 — simulated server push
     $('btn-server').addEventListener('click', async () => {
       try {
         const d = await api('/api/test-notification');
@@ -174,7 +170,6 @@
       } catch (e) { log('Server push FAILED: ' + e.message); }
     });
 
-    // 3 — real due reminders from DB
     $('btn-due').addEventListener('click', async () => {
       const sid = $('f-sid').value.trim();
       if (!sid) { log('Enter a Student ID first.'); return; }
@@ -189,7 +184,6 @@
       } catch (e) { log('Check FAILED: ' + e.message); }
     });
 
-    // helper — create a real reminder due in ~1 minute
     $('btn-seed').addEventListener('click', async () => {
       const sid = $('f-sid').value.trim();
       if (!sid) { log('Enter a Student ID first.'); return; }

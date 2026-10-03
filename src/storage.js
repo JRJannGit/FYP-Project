@@ -1,6 +1,3 @@
-// =========================================
-// src/storage.js — session delegate to Auth
-// =========================================
 
 const AppStorage = {
   getUser() {

@@ -1,6 +1,4 @@
-/* =========================================
-   SETTINGS
-   ========================================= */
+
 
 .settings-container {
   display: grid;
@@ -52,9 +50,7 @@
   line-height: 1.4;
 }
 
-/* =========================================
-   Toggle Switch
-   ========================================= */
+
 .switch {
   position: relative;
   display: inline-block;
@@ -107,9 +103,7 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
-/* =========================================
-   About Card
-   ========================================= */
+
 .about-card {
   align-items: center;
   text-align: center;
@@ -169,9 +163,7 @@ canvas.buddy-rive--settings {
   margin-left: 3px;
 }
 
-/* =========================================
-   Light Theme
-   ========================================= */
+
 body.light-theme {
   --bg-dark: #f1f5f9;
   --bg-card: #ffffff;
@@ -195,9 +187,7 @@ body.light-theme .slider {
   background-color: #f8fafc;
 }
 
-/* =========================================
-   LIGHT THEME — Settings overrides
-   ========================================= */
+
 body.light-theme .settings-card {
   background-color: #ffffff;
   border-color: #e2e8f0;
@@ -224,9 +214,7 @@ body.light-theme .version-tag {
   color: #64748b;
 }
 
-/* =========================================
-   Accent Colour Picker
-   ========================================= */
+
 .setting-item--accent {
   flex-wrap: wrap;
 }

@@ -1,6 +1,3 @@
-// =========================================
-// src/navigation-admin.js — SPA router (Admin)
-// =========================================
 
 (function () {
   if (window.Auth && typeof window.Auth.guard === 'function') {
@@ -80,7 +77,6 @@
     loadView('dashboard');
   });
 
-  // Zoom fix
   if (window.require) {
     try {
       const { ipcRenderer, webFrame } = window.require('electron');

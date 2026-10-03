@@ -1,6 +1,4 @@
-/* =========================================
-   ADMIN PANEL
-   ========================================= */
+
 
 .calendar-top-actions {
   display: flex;
@@ -36,9 +34,7 @@
   background-color: rgba(239, 68, 68, 0.08);
 }
 
-/* =========================================
-   Admin Resources — badge variants
-   ========================================= */
+
 .system-badge {
   font-size: 0.6rem;
   background-color: rgba(59, 130, 246, 0.15);
@@ -69,7 +65,7 @@
   background: linear-gradient(180deg, #3b82f6, #1d4ed8);
 }
 
-/* Checkbox group inside modal */
+
 .modal-form .checkbox-group {
   display: flex;
   align-items: flex-start;
@@ -95,9 +91,7 @@
   line-height: 1.4;
 }
 
-/* =========================================
-   LIGHT THEME
-   ========================================= */
+
 body.light-theme .icon-top-btn {
   background: #f8fafc;
   border-color: #e2e8f0;

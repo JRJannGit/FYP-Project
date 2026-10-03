@@ -1,6 +1,3 @@
-// =========================================
-// src/admin-calendar.js
-// =========================================
 
 function initAdminCalendar() {
   const eventsList   = document.getElementById('events-list');

@@ -1,6 +1,4 @@
-/* =========================================
-   REMINDERS
-   ========================================= */
+
 
 .reminders-container {
   display: flex;
@@ -9,7 +7,7 @@
   min-width: 0;
 }
 
-/* Header */
+
 .reminders-header {
   display: flex;
   justify-content: space-between;
@@ -52,7 +50,7 @@
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
 }
 
-/* List */
+
 .reminders-list {
   display: flex;
   flex-direction: column;
@@ -193,9 +191,7 @@
   line-height: 1.6;
 }
 
-/* =========================================
-   MODAL (shared)
-   ========================================= */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -371,9 +367,7 @@
   line-height: 1.55;
 }
 
-/* =========================================
-   LIGHT THEME — Reminders overrides
-   ========================================= */
+
 body.light-theme .reminders-header,
 body.light-theme .reminder-card {
   background-color: #ffffff;

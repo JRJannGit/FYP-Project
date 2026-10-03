@@ -1,7 +1,3 @@
-// =========================================
-// src/assignments-lecturer.js
-// Lecturer create assignment + view submissions
-// =========================================
 
 function initAssignments() {
   console.log('[Lecturer Assignments] init');
@@ -10,7 +6,6 @@ function initAssignments() {
   const role = Auth.getRole();
   const userId = user?.lecturer_id || user?.admin_id || user?.identifier || '';
 
-  // ============ Element refs ============
   const topicInput  = document.getElementById('topic-input');
   const descInput   = document.getElementById('desc-input');
   const metaDate    = document.getElementById('meta-date');
@@ -44,7 +39,6 @@ function initAssignments() {
   const pickList  = document.getElementById('pick-assignment-list');
   const pickClose = document.getElementById('pick-assignment-close');
 
-  // URL modal
   const urlModal  = document.getElementById('url-input-modal');
   const urlField  = document.getElementById('url-input-field');
   const urlError  = document.getElementById('url-error');
@@ -52,14 +46,12 @@ function initAssignments() {
   const urlCancel = document.getElementById('url-input-cancel');
   const urlClose  = document.getElementById('url-input-close');
 
-  // ============ State ============
   let uploadedFile = null;
   let uploadedUrl  = '';
   let editingId    = null;
   let currentAssignmentForSubs = null;
   let allAssignments = [];
 
-  // ============ Helpers ============
   function todayISO() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -75,7 +67,6 @@ function initAssignments() {
     return `${String(h).padStart(2, '0')}.${String(m).padStart(2, '0')} ${ampm}`;
   }
 
-  // ============ Load classes ============
   async function loadClasses() {
     if (!metaClass) return;
     try {
@@ -89,7 +80,6 @@ function initAssignments() {
     }
   }
 
-  // ============ Edit toggle for description ============
   if (btnEditToggle && descInput) {
     descInput.setAttribute('contenteditable', 'false');
     btnEditToggle.addEventListener('click', () => {
@@ -103,7 +93,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Toolbar commands ============
   document.querySelectorAll('.lecturer-toolbar .tool-btn[data-cmd]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -115,7 +104,6 @@ function initAssignments() {
     });
   });
 
-  // ============ File upload ============
   if (btnUploadFile && fileInput) {
     btnUploadFile.addEventListener('click', () => fileInput.click());
   }
@@ -144,7 +132,6 @@ function initAssignments() {
     });
   }
 
-  // ============ URL modal ============
   function openUrlModal() {
     if (!urlModal) {
       console.error('[URL Modal] element not found');
@@ -213,7 +200,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Preview ============
   function showPreview(name, type) {
     if (!uploadPreview) return;
     uploadPreview.style.display = 'flex';
@@ -238,7 +224,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Reset ============
   if (btnReset) {
     btnReset.addEventListener('click', () => {
       if (!confirm('Reset all fields?')) return;
@@ -257,7 +242,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Release ============
   if (btnRelease) {
     btnRelease.addEventListener('click', async () => {
       const topic = topicInput?.value.trim();
@@ -311,14 +295,12 @@ function initAssignments() {
     });
   }
 
-  // ============ Load assignments ============
   async function loadAssignmentsList() {
     const res = await API.get(`/api/assignments/lecturer/${userId}`);
     if (!res.success) return;
     allAssignments = res.data;
   }
 
-  // ============ View submissions ============
   if (btnViewSubs) {
     btnViewSubs.addEventListener('click', async () => {
       await loadAssignmentsList();
@@ -355,7 +337,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Submissions modal ============
   async function openSubmissionsModal(assignment) {
     if (!submissionsList || !submissionsModal) return;
 
@@ -444,7 +425,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Download All (ZIP) ============
   if (btnDownloadAll) {
     btnDownloadAll.addEventListener('click', async () => {
       if (!currentAssignmentForSubs) return;
@@ -489,7 +469,6 @@ function initAssignments() {
     });
   }
 
-  // ============ Init ============
   loadClasses();
   loadAssignmentsList();
 

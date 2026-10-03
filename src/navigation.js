@@ -1,6 +1,3 @@
-// =========================================
-// src/navigation.js — SPA router + zoom fix
-// =========================================
 
 (function () {
   const navItems = document.querySelectorAll('.nav-item');
@@ -75,36 +72,28 @@
     loadView('dashboard');
   });
 
-  // =========================================
-  // ZOOM FIX
-  // =========================================
   if (window.require) {
     try {
       const { ipcRenderer, webFrame } = window.require('electron');
 
-      // Force zoom = 1 on initial load
       webFrame.setZoomLevel(0);
       webFrame.setZoomFactor(1);
 
-      // Reset zoom when window resizes / restores
       ipcRenderer.on('window-resized', () => {
         webFrame.setZoomLevel(0);
         webFrame.setZoomFactor(1);
       });
 
-      // Global Ctrl+/-/0 block (defensive)
       document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && ['+', '-', '=', '0'].includes(e.key)) {
           e.preventDefault();
         }
       });
 
-      // Block Ctrl+Scroll (mouse wheel zoom)
       document.addEventListener('wheel', (e) => {
         if (e.ctrlKey) e.preventDefault();
       }, { passive: false });
 
-      // Block pinch zoom (trackpad)
       document.addEventListener('gesturestart', (e) => e.preventDefault());
 
     } catch (err) {

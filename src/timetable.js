@@ -1,14 +1,3 @@
-// =========================================
-// src/timetable.js
-// =========================================
-// NOTE: document-level listeners are bound ONCE (delegation).
-// Previously they were re-registered inside initTimetable() on
-// every view load — after visiting the Timetable view 3 times,
-// clicking "Upload Timetable" opened the file picker 3 times
-// (one stale handler per visit, each calling its own detached
-// input's click()). Handlers now resolve DOM/user state at
-// event time, so they stay correct across view reloads.
-// =========================================
 
 function initTimetable() {
   bindTimetableListenersOnce();

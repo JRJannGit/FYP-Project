@@ -8,7 +8,7 @@
   position: relative;
 }
 
-/* Outer Card Shell */
+
 .timetable-card {
   width: 100%;
   max-width: 950px;
@@ -25,7 +25,7 @@
   position: relative;
 }
 
-/* Display Card untuk Gambar Jadual */
+
 .timetable-card.display-card {
   padding: 20px;
   flex-direction: column;
@@ -40,7 +40,7 @@
   justify-content: center;
   overflow: hidden;
   border-radius: 12px;
-  background: #ffffff; /* Latar belakang putih untuk paparan imej/jadual yang jelas */
+  background: #ffffff;  
 }
 
 .timetable-preview-wrapper img {
@@ -55,7 +55,7 @@
   border: none;
 }
 
-/* Split Panel Sections */
+
 .timetable-section {
   flex: 1;
   display: flex;
@@ -65,7 +65,7 @@
   padding: 20px;
 }
 
-/* Center Divider Line */
+
 .section-divider {
   width: 2px;
   height: 80%;
@@ -73,7 +73,7 @@
   opacity: 0.7;
 }
 
-/* Action Boxes */
+
 .action-box {
   display: flex;
   flex-direction: column;
@@ -127,7 +127,7 @@
   color: var(--text-muted, #8b949e);
 }
 
-/* Butang Tong Sampah di Bawah Kanan */
+
 .delete-icon-btn {
   position: absolute;
   bottom: 20px;
@@ -154,7 +154,7 @@
   transform: scale(1.05);
 }
 
-/* MODAL OVERLAY & BOX */
+
 .modal-overlay {
   position: fixed;
   top: 0;

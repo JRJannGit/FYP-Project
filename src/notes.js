@@ -1,6 +1,3 @@
-// =========================================
-// src/notes.js — modal viewer/editor with CSS zoom
-// =========================================
 
 function initNotes() {
   const notesList   = document.getElementById('notes-list');
@@ -52,7 +49,6 @@ function initNotes() {
   let searchTerm = '';
   let currentZoom = 100;
 
-  // ============ Helpers ============
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -95,12 +91,7 @@ function initNotes() {
     if (isEditMode) modalContent.focus();
   }
 
-  // ============ Zoom — use CSS `zoom` property ============
   function applyZoom() {
-    // CSS `zoom` re-flows the layout:
-    //  - scrollbars appear automatically
-    //  - images stay inside the content box
-    //  - padding, borders and text all scale together
     modalContent.style.zoom = (currentZoom / 100);
 
     zoomValueBtn.innerText = currentZoom + '%';
@@ -130,7 +121,6 @@ function initNotes() {
     if (e.key === '0')                   { e.preventDefault(); zoomReset(); }
   });
 
-  // ============ Mode switch ============
   function enterViewMode() {
     isEditMode = false;
     modalTitle.readOnly = true;
@@ -153,7 +143,6 @@ function initNotes() {
     modalTitle.focus();
   }
 
-  // ============ Load list ============
   async function load() {
     if (!studentId) {
       notesList.innerHTML = '<p class="notes-empty">Please log in.</p>';

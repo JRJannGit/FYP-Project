@@ -1,6 +1,3 @@
-// =========================================
-// src/notifications.js
-// =========================================
 
 function initNotifications() {
   const toast = document.getElementById('reminder-toast');

@@ -7,15 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// =========================================
-// HELPERS
-// =========================================
 const ok = (res, data) => res.json({ success: true, data });
 const fail = (res, msg, code = 500) => res.status(code).json({ success: false, error: msg });
 
-// =========================================
-// UNIVERSAL LOGIN (detect role automatically)
-// =========================================
 app.post('/api/auth/login', async (req, res) => {
   const { identifier, password, role } = req.body || {};
   console.log(`[LOGIN] role=${role} id=${identifier}`);
@@ -59,9 +53,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// =========================================
-// AUTH — STUDENT (legacy)
-// =========================================
 app.post('/api/auth/student/login', async (req, res) => {
   const { student_id, password } = req.body || {};
   try {
@@ -90,9 +81,6 @@ app.post('/api/auth/student/signup', async (req, res) => {
   }
 });
 
-// =========================================
-// AUTH — ADMIN
-// =========================================
 app.post('/api/auth/admin/login', async (req, res) => {
   const { admin_id, password } = req.body || {};
   try {
@@ -105,9 +93,6 @@ app.post('/api/auth/admin/login', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// ASSIGNMENTS
-// =========================================
 app.get('/api/assignments', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM assignments ORDER BY due_date ASC');
@@ -189,9 +174,6 @@ app.post('/api/assignments/:id/toggle', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// TIMETABLE (file upload)
-// =========================================
 app.get('/api/timetable/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -221,9 +203,6 @@ app.delete('/api/timetable/:student_id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// TIMETABLE ENTRIES (class schedule)
-// =========================================
 app.get('/api/timetable-entries', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -245,9 +224,6 @@ app.get('/api/timetable-entries/today', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// REMINDERS
-// =========================================
 app.get('/api/reminders/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -301,9 +277,6 @@ app.delete('/api/reminders/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// NOTES
-// =========================================
 app.get('/api/notes/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -340,11 +313,7 @@ app.delete('/api/notes/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// RESOURCES
-// =========================================
 
-// Helper: check if user can modify resource
 function canModifyResource(role, userId, resource) {
   if (role === 'admin') return true;
   if (resource.is_system) return false;
@@ -364,7 +333,6 @@ app.post('/api/resources', async (req, res) => {
     const role = req.headers['x-user-role'];
     if (!role) return fail(res, 'Not authenticated', 401);
 
-    // Only admin can create system resources
     const systemFlag = (role === 'admin' && is_system) ? 1 : 0;
 
     const [result] = await db.query(
@@ -386,14 +354,12 @@ app.put('/api/resources/:id', async (req, res) => {
     const [rows] = await db.query('SELECT * FROM resources WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return fail(res, 'Resource not found', 404);
 
-    // Admin can edit all; non-admin can only edit own resources
     if (role !== 'admin' && !canModifyResource(role, userId, rows[0])) {
       return fail(res, 'You cannot edit this resource', 403);
     }
 
     const { title, url_link, caption, icon, is_system } = req.body;
 
-    // Only admin can toggle is_system; others keep original
     let systemFlag = rows[0].is_system;
     if (role === 'admin' && is_system !== undefined) {
       systemFlag = is_system ? 1 : 0;
@@ -419,7 +385,6 @@ app.delete('/api/resources/:id', async (req, res) => {
     const [rows] = await db.query('SELECT * FROM resources WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return fail(res, 'Resource not found', 404);
 
-    // Admin can delete all; non-admin only own resources
     if (role !== 'admin' && !canModifyResource(role, userId, rows[0])) {
       return fail(res, 'You cannot delete this resource', 403);
     }
@@ -429,9 +394,6 @@ app.delete('/api/resources/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// EVENTS
-// =========================================
 app.get('/api/events/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -473,9 +435,6 @@ app.delete('/api/events/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// DASHBOARD — combined upcoming items
-// =========================================
 app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
   try {
     const sid = req.params.student_id;
@@ -504,9 +463,6 @@ app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// ACADEMIC CALENDAR
-// =========================================
 app.get('/api/academic-calendar', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -528,9 +484,6 @@ app.post('/api/academic-calendar', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// USER SETTINGS
-// =========================================
 app.get('/api/settings/:user_id/:role', async (req, res) => {
   try {
     const { user_id, role } = req.params;
@@ -539,7 +492,6 @@ app.get('/api/settings/:user_id/:role', async (req, res) => {
       [user_id, role]
     );
     if (rows.length === 0) {
-      // Return defaults
       return ok(res, {
         show_notifications: true,
         play_animations: true,
@@ -556,7 +508,6 @@ app.post('/api/settings', async (req, res) => {
     const { user_id, user_role, show_notifications, play_animations, dark_mode } = req.body;
     if (!user_id || !user_role) return fail(res, 'user_id and user_role are required', 400);
 
-    // UPSERT: insert kalau belum ada, update kalau dah ada
     await db.query(
       `INSERT INTO user_settings (user_id, user_role, show_notifications, play_animations, dark_mode)
        VALUES (?, ?, ?, ?, ?)
@@ -570,9 +521,6 @@ app.post('/api/settings', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// LECTURER
-// =========================================
 app.get('/api/lecturer/classes/:lecturer_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -583,7 +531,6 @@ app.get('/api/lecturer/classes/:lecturer_id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// Get assignments created by this lecturer
 app.get('/api/assignments/lecturer/:lecturer_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -598,9 +545,6 @@ app.get('/api/assignments/lecturer/:lecturer_id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// SUBMISSIONS
-// =========================================
 app.get('/api/submissions/:assignment_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -643,9 +587,6 @@ app.post('/api/submissions', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// ADMIN STATS
-// =========================================
 app.get('/api/admin/stats', async (req, res) => {
   try {
     const [[{ studentCount }]]    = await db.query('SELECT COUNT(*) AS studentCount FROM students');
@@ -657,9 +598,6 @@ app.get('/api/admin/stats', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-// ADMIN — delete academic calendar
-// =========================================
 app.delete('/api/academic-calendar', async (req, res) => {
   try {
     await db.query('DELETE FROM academic_calendar');
@@ -667,16 +605,10 @@ app.delete('/api/academic-calendar', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-// =========================================
-<<<<<<< HEAD
-// NOTIFICATION TEST (works without Electron)
-// =========================================
 app.get('/api/health', (req, res) => {
   ok(res, { status: 'up', service: 'uptm-buddy-api', time: new Date().toISOString() });
 });
 
-// Simulated push payload — lets test-notification.html show a popup
-// in any browser without needing the Electron shell.
 app.get('/api/test-notification', (req, res) => {
   ok(res, {
     id: 'TEST-' + Date.now(),
@@ -688,16 +620,10 @@ app.get('/api/test-notification', (req, res) => {
   });
 });
 
-// Standalone browser test page
 app.get('/test-notification.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-notification.html'));
 });
 
-// =========================================
-=======
->>>>>>> ba7a95056e4af477dd12cedc65126cf1400c215b
-// START
-// =========================================
 app.listen(3000, () => {
   console.log('🚀 UPTM Buddy API running at http://localhost:3000');
 });

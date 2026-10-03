@@ -1,9 +1,5 @@
-// =========================================
-// src/login.js — login page logic
-// =========================================
 
 (function () {
-  // ============ Element refs ============
   const roleTabs      = document.querySelectorAll('.role-tab');
   const loginForm     = document.getElementById('login-form');
   const signupForm    = document.getElementById('signup-form');
@@ -20,10 +16,8 @@
   const btnGotoLogin  = document.getElementById('btn-goto-login');
   const signupBtn     = document.getElementById('btn-signup');
 
-  // ============ State ============
   let currentRole = 'student';
 
-  // ============ Helpers ============
   function showError(msg) {
     errorBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><span>${msg}</span>`;
     errorBox.style.display = 'flex';
@@ -46,7 +40,6 @@
     }
   }
 
-  // ============ Role tabs ============
   function updateRoleTab(role) {
     currentRole = role;
 
@@ -54,7 +47,6 @@
       t.classList.toggle('active', t.dataset.role === role);
     });
 
-    // Update label + placeholder based on role
     if (role === 'student') {
       loginLabel.innerText = 'Student ID';
       loginIcon.className = 'fa-solid fa-id-card';
@@ -82,14 +74,12 @@
     tab.addEventListener('click', () => updateRoleTab(tab.dataset.role));
   });
 
-  // ============ Password toggle ============
   togglePw.addEventListener('click', () => {
     const isPw = loginPassword.type === 'password';
     loginPassword.type = isPw ? 'text' : 'password';
     togglePw.innerHTML = `<i class="fa-solid fa-eye${isPw ? '-slash' : ''}"></i>`;
   });
 
-  // ============ Login ============
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError();
@@ -119,10 +109,8 @@
         return;
       }
 
-      // Save session
       Auth.setSession(data.data.role, data.data.user);
 
-      // Redirect based on role
       if (data.data.role === 'student')  window.location.href = 'index.html';
       if (data.data.role === 'lecturer') window.location.href = 'lecturer.html';
       if (data.data.role === 'admin')    window.location.href = 'admin.html';
@@ -134,7 +122,6 @@
     }
   });
 
-  // ============ Sign Up flow ============
   btnGotoSignup.addEventListener('click', () => {
     loginForm.style.display = 'none';
     signupForm.style.display = 'block';
@@ -190,7 +177,6 @@
         return;
       }
 
-      // Auto-login after signup
       Auth.setSession('student', result.data);
       window.location.href = 'index.html';
 
@@ -200,7 +186,6 @@
     }
   });
 
-  // ============ Dev shortcuts ============
   document.querySelectorAll('.dev-shortcuts button').forEach(btn => {
     btn.addEventListener('click', () => {
       const role = btn.dataset.devRole;
@@ -211,7 +196,6 @@
     });
   });
 
-  // ============ If already logged in, redirect ============
   const existing = Auth.getSession();
   if (existing) {
     if (existing.role === 'student')  window.location.href = 'index.html';
@@ -219,7 +203,6 @@
     if (existing.role === 'admin')    window.location.href = 'admin.html';
   }
 
-  // ============ Init ============
   updateRoleTab('student');
 
 })();

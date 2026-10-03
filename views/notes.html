@@ -1,6 +1,5 @@
 <div class="notes-container">
 
-  <!-- ============ LEFT: Notes List ============ -->
   <div class="notes-sidebar">
     <div class="sidebar-header">
       <div class="search-box">
@@ -10,11 +9,9 @@
     </div>
 
     <div class="notes-list" id="notes-list">
-      <!-- rendered by JS -->
     </div>
   </div>
 
-  <!-- ============ RIGHT: Empty state ============ -->
   <div class="notes-editor notes-editor--empty" id="notes-quick-panel">
     <div class="quick-empty">
       <div class="quick-empty__icon">
@@ -30,18 +27,13 @@
 
 </div>
 
-<!-- =========================================
-     NOTE MODAL
-     ========================================= -->
 <div class="modal-overlay note-modal-overlay" id="note-modal" style="display:none;">
   <div class="note-modal">
 
-    <!-- Close button -->
     <button class="modal-close-btn" id="modal-close-btn" title="Close">
       <i class="fa-solid fa-xmark"></i>
     </button>
 
-    <!-- Topic header -->
     <div class="note-modal__header">
       <input
         type="text"
@@ -52,7 +44,6 @@
         readonly>
     </div>
 
-    <!-- Toolbar (only in edit mode) -->
     <div class="note-modal__toolbar" id="modal-toolbar" style="display:none;">
       <button class="tool-btn" data-cmd="bold" title="Bold"><i class="fa-solid fa-bold"></i></button>
       <button class="tool-btn" data-cmd="italic" title="Italic"><i class="fa-solid fa-italic"></i></button>
@@ -67,7 +58,6 @@
       </label>
     </div>
 
-    <!-- Zoom controls (always visible) -->
     <div class="note-modal__zoom">
       <button class="zoom-btn" id="zoom-out-btn" title="Zoom out">
         <i class="fa-solid fa-magnifying-glass-minus"></i>
@@ -78,13 +68,11 @@
       </button>
     </div>
 
-    <!-- Content -->
     <div
       class="note-modal__content"
       id="modal-content"
       data-placeholder="Text or/and image..."></div>
 
-    <!-- Footer: Edit | Discard | Delete -->
     <div class="note-modal__footer">
       <div class="footer-left">
         <button class="btn-footer btn-edit" id="modal-btn-edit">
@@ -104,7 +92,6 @@
   </div>
 </div>
 
-<!-- ============ DISCARD CONFIRM MODAL ============ -->
 <div class="modal-overlay" id="discard-modal" style="display:none;z-index:10000;">
   <div class="modal-box modal-box--small">
     <div class="modal-header">
@@ -119,7 +106,6 @@
   </div>
 </div>
 
-<!-- ============ DELETE CONFIRM MODAL ============ -->
 <div class="modal-overlay" id="delete-modal" style="display:none;z-index:10000;">
   <div class="modal-box modal-box--small">
     <div class="modal-header">

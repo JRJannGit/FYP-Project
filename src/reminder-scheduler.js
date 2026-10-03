@@ -1,16 +1,9 @@
-// =========================================
-// src/reminder-scheduler.js
-// Check every 30s for upcoming reminders
-// Trigger desktop popup via IPC
-// =========================================
 
 (function () {
-  const CHECK_INTERVAL_MS = 30 * 1000;   // 30s
-  const DUE_WINDOW_MIN    = 5;           // within next 5 minutes
+  const CHECK_INTERVAL_MS = 30 * 1000;
+  const DUE_WINDOW_MIN    = 5;
   const triggeredIds = new Set();
 
-  // Electron : popup via IPC → native BrowserWindow
-  // Browser  : no Electron — in-page DOM toast popup instead
   let ipcRenderer = null;
   if (window.require) {
     try {
@@ -34,9 +27,6 @@
     return `${String(h12).padStart(2, '0')}.${String(m).padStart(2, '0')} ${ampm}`;
   }
 
-  // =========================================
-  // Browser-mode DOM toast (same look as notification.html)
-  // =========================================
   const TOAST_CSS = `
     .uptm-toast-host { position: fixed; right: 20px; bottom: 20px; z-index: 99999;
       display: flex; flex-direction: column; gap: 12px; }
@@ -109,7 +99,7 @@
 
     host.appendChild(el);
     while (host.children.length > 3) host.firstElementChild.remove();
-    setTimeout(remove, 60000); // same 60s auto-close as the Electron popup
+    setTimeout(remove, 60000);
   }
 
   function goToReminders() {
@@ -120,16 +110,15 @@
 
   function showNotification(data) {
     if (ipcRenderer) {
-      ipcRenderer.send('trigger-notification', data);   // native Electron popup
+      ipcRenderer.send('trigger-notification', data);
     } else {
-      showDomToast(data);                               // browser / no-Electron popup
+      showDomToast(data);
     }
   }
 
   async function checkReminders() {
     if (typeof API === 'undefined') return;
 
-    // Respect "Show Notifications" toggle
     const showNotif = window.__showNotifications !== false &&
                       localStorage.getItem('uptm_notif') !== 'off';
     if (!showNotif) {
@@ -166,7 +155,6 @@
     }
   }
 
-  // Electron only: main process asks to open reminders view
   if (ipcRenderer) {
     ipcRenderer.on('open-view', (event, viewName) => {
       goToReminders();
@@ -174,13 +162,11 @@
     });
   }
 
-  // Start checking
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(checkReminders, 5000);
     setInterval(checkReminders, CHECK_INTERVAL_MS);
   });
 
-  // Manual trigger — works in Electron AND in a plain browser
   window.testReminderPopup = function (data = {}) {
     console.log('[scheduler] Manual test trigger');
     showNotification({

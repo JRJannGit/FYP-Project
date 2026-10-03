@@ -1,7 +1,5 @@
-<<<<<<< HEAD
 <div class="calendar-container">
 
-  <!-- Top Bar -->
   <div class="calendar-topbar">
     <button class="btn-add-event" id="btn-add-event">
       <i class="fa-solid fa-plus"></i> Add Event
@@ -16,21 +14,16 @@
     </div>
   </div>
 
-  <!-- Main Layout -->
   <div class="calendar-layout">
 
-    <!-- Left: Events List -->
     <div class="events-panel">
       <h3 class="events-panel-title" id="events-month-title">Events</h3>
       <div class="events-list" id="events-list">
-        <!-- rendered by JS -->
       </div>
     </div>
 
-    <!-- Right: Monthly grid OR Academic calendar image -->
     <div class="calendar-view">
 
-      <!-- Monthly Grid -->
       <div class="monthly-view" id="monthly-view">
         <div class="month-header">
           <button class="month-nav" id="prev-month"><i class="fa-solid fa-chevron-left"></i></button>
@@ -44,11 +37,9 @@
         </div>
 
         <div class="days-grid" id="calendar-days">
-          <!-- rendered by JS -->
         </div>
       </div>
 
-      <!-- Academic Calendar View (admin-managed) -->
       <div class="academic-view" id="academic-view" style="display:none;">
         <div class="academic-header">
           <h3>UPTM Academic Calendar</h3>
@@ -81,31 +72,9 @@
       </div>
 
     </div>
-=======
-<div class="resources-container">
-
-  <!-- Header -->
-  <div class="resources-header">
-    <div class="header-info">
-      <h3>University Resources</h3>
-      <p>Manage system links for all users</p>
-    </div>
-    <button class="add-resource-btn" id="btn-add-resource">
-      <i class="fa-solid fa-link"></i> Add url-link
-    </button>
-  </div>
-
-  <!-- Grid -->
-  <div class="resources-grid" id="resources-grid">
-    <!-- rendered by JS -->
->>>>>>> ba7a95056e4af477dd12cedc65126cf1400c215b
   </div>
 </div>
 
-<!-- =========================================
-<<<<<<< HEAD
-     ADD EVENT MODAL
-     ========================================= -->
 <div class="modal-overlay" id="event-modal" style="display:none;">
   <div class="modal-box">
     <div class="modal-header">
@@ -153,54 +122,11 @@
       <div class="modal-actions">
         <button type="button" class="btn-cancel" id="event-modal-cancel">Cancel</button>
         <button type="submit" class="btn-save" id="event-modal-save">Add</button>
-=======
-     ADD/EDIT RESOURCE MODAL
-     ========================================= -->
-<div class="modal-overlay" id="resource-modal" style="display:none;">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 id="resource-modal-title">Add Resource</h3>
-      <button class="modal-close" id="resource-modal-close">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
-    <form id="resource-form" class="modal-form">
-      <input type="hidden" id="resource-id">
-
-      <div class="form-group">
-        <label for="resource-title">Topic</label>
-        <input type="text" id="resource-title" required placeholder="e.g. UCAM Portal" maxlength="100">
-      </div>
-
-      <div class="form-group">
-        <label for="resource-caption">Caption / Description</label>
-        <textarea id="resource-caption" rows="2" placeholder="e.g. Access subject registration"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="resource-url">Url-link</label>
-        <input type="url" id="resource-url" required placeholder="https://">
-      </div>
-
-      <div class="form-group checkbox-group">
-        <input type="checkbox" id="resource-system">
-        <label for="resource-system">System resource (visible to everyone, locked for non-admin)</label>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" id="resource-modal-cancel">Cancel</button>
-        <button type="submit" class="btn-save" id="resource-modal-save">Add</button>
->>>>>>> ba7a95056e4af477dd12cedc65126cf1400c215b
       </div>
     </form>
   </div>
 </div>
 
-<!-- =========================================
-<<<<<<< HEAD
-     DELETE EVENT CONFIRM MODAL
-     ========================================= -->
 <div class="modal-overlay" id="delete-event-modal" style="display:none;">
   <div class="modal-box modal-box--small">
     <div class="modal-header">
@@ -217,9 +143,6 @@
   </div>
 </div>
 
-<!-- =========================================
-     DELETE ACADEMIC CALENDAR CONFIRM MODAL
-     ========================================= -->
 <div class="modal-overlay" id="delete-academic-modal" style="display:none;z-index:10000;">
   <div class="modal-box modal-box--small">
     <div class="modal-header">
@@ -232,20 +155,6 @@
     <div class="modal-actions modal-actions--center">
       <button type="button" class="btn-danger" id="delete-academic-yes">DELETE</button>
       <button type="button" class="btn-cancel" id="delete-academic-no">CANCEL</button>
-=======
-     DELETE CONFIRM MODAL
-     ========================================= -->
-<div class="modal-overlay" id="delete-resource-modal" style="display:none;z-index:10000;">
-  <div class="modal-box modal-box--small">
-    <div class="modal-header">
-      <h3>Delete Resource?</h3>
-      <button class="modal-close" id="delete-resource-close"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <p class="modal-text" id="delete-resource-name">This resource will be permanently deleted.</p>
-    <div class="modal-actions modal-actions--center">
-      <button type="button" class="btn-danger" id="delete-resource-yes">DELETE</button>
-      <button type="button" class="btn-cancel" id="delete-resource-no">CANCEL</button>
->>>>>>> ba7a95056e4af477dd12cedc65126cf1400c215b
     </div>
   </div>
 </div>

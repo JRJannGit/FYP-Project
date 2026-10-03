@@ -1,6 +1,3 @@
-// =========================================
-// src/assignments.js — CRUD via API
-// =========================================
 
 function initAssignments() {
   const list       = document.getElementById('assignments-list');
@@ -23,7 +20,6 @@ function initAssignments() {
   let currentFilter = 'all';
   let allAssignments = [];
 
-  // ============ Role-aware user ID ============
   function getUserId() {
     const user = AppStorage.getUser();
     if (!user) return null;
@@ -32,7 +28,6 @@ function initAssignments() {
 
   let currentUserId = getUserId();
 
-  // ============ Helpers ============
   function formatDate(dateStr) {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
@@ -52,7 +47,6 @@ function initAssignments() {
     return 'due-normal';
   }
 
-  // ============ Render ============
   function renderAssignments() {
     if (!list) return;
 
@@ -119,7 +113,6 @@ function initAssignments() {
     `;
   }
 
-  // ============ Load ============
   async function loadAssignments() {
     if (!currentUserId) {
       list.innerHTML = '<p style="padding:20px;color:var(--text-muted);">Please log in to view assignments.</p>';
@@ -134,7 +127,6 @@ function initAssignments() {
     renderAssignments();
   }
 
-  // ============ Modal ============
   function openModal(mode = 'add', assignment = null) {
     if (mode === 'edit' && assignment) {
       modalTitle.innerText = 'Edit Assignment';
@@ -158,7 +150,6 @@ function initAssignments() {
     inputId.value = '';
   }
 
-  // ============ Save ============
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -190,7 +181,6 @@ function initAssignments() {
     loadAssignments();
   });
 
-  // ============ Event Delegation ============
   list.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
@@ -222,7 +212,6 @@ function initAssignments() {
     else alert('Toggle failed: ' + res.error);
   });
 
-  // ============ Buttons ============
   if (addBtn) addBtn.addEventListener('click', () => openModal('add'));
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
@@ -237,7 +226,6 @@ function initAssignments() {
     if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeModal();
   });
 
-  // ============ Filter tabs ============
   document.querySelectorAll('.tab-btn').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
@@ -247,7 +235,6 @@ function initAssignments() {
     });
   });
 
-  // ============ Init ============
   currentUserId = getUserId();
   loadAssignments();
 }

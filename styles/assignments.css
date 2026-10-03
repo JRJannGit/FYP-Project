@@ -4,7 +4,7 @@
   gap: 20px;
 }
 
-/* Header & Filter Controls */
+
 .assignments-header {
   display: flex;
   justify-content: space-between;
@@ -59,7 +59,7 @@
   background-color: var(--primary-hover);
 }
 
-/* Assignment Task List */
+
 .task-cards-list {
   display: flex;
   flex-direction: column;
@@ -135,9 +135,7 @@
 .due-medium { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 .due-normal { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 
-/* =========================================
-   NEW: Assignments Table Layout
-   ========================================= */
+
 
 .assignments-table {
   background-color: var(--bg-card);
@@ -268,7 +266,7 @@
   background-color: rgba(239, 68, 68, 0.08);
 }
 
-/* Empty State */
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -294,9 +292,7 @@
   font-size: 0.82rem;
 }
 
-/* =========================================
-   Modal Styles (shared across app)
-   ========================================= */
+
 
 .modal-overlay {
   position: fixed;
@@ -458,9 +454,7 @@
   cursor: not-allowed;
 }
 
-/* =========================================
-   LIGHT THEME — Assignments overrides
-   ========================================= */
+
 body.light-theme .assignments-header,
 body.light-theme .assignments-table {
   background-color: #ffffff;

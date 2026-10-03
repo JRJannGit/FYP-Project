@@ -1,6 +1,3 @@
-// =========================================
-// src/calendar.js — monthly grid + events CRUD + academic zoom
-// =========================================
 
 function initCalendar() {
   const eventsList   = document.getElementById('events-list');

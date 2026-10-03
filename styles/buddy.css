@@ -1,6 +1,4 @@
-/* =========================================
-   BUDDY RIVE MASCOT — sized per view
-   ========================================= */
+
 
 canvas.buddy-rive {
   display: block;
@@ -16,41 +14,39 @@ canvas.buddy-rive {
 canvas.buddy-rive:hover  { transform: scale(1.03); }
 canvas.buddy-rive:active { transform: scale(0.97); }
 
-/* Dashboard — kompak, sejajar dengan card lain */
+
 .buddy-rive--dashboard {
   width: 180px;
   height: 220px;
   margin: 0 auto;
 }
 
-/* Settings — kecik untuk about panel */
+
 .buddy-rive--settings {
   width: 140px;
   height: 175px;
   margin: 0 auto 10px;
 }
 
-/* Notification toast — sangat kecik */
+
 .buddy-rive--toast {
   width: 70px;
   height: 90px;
 }
 
-/* Respect "Play Buddy Animations" toggle */
+
 body.no-buddy-anim canvas.buddy-rive {
   pointer-events: none;
 }
 
-/* Toast container */
+
 .toast-mascot {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* =========================================
-   LIGHT THEME — Buddy overrides
-   ========================================= */
+
 body.light-theme canvas.buddy-rive {
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.1));
 }

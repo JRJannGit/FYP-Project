@@ -1,9 +1,5 @@
-// =========================================
-// src/navigation-lecturer.js — SPA router (Lecturer)
-// =========================================
 
 (function () {
-  // Guard: kena login sebagai lecturer
   if (window.Auth && typeof window.Auth.guard === 'function') {
     if (!window.Auth.guard('lecturer')) return;
   }
@@ -24,7 +20,6 @@
     notifications: 'initNotifications'
   };
 
-  // File override — lecturer guna assignments-lecturer.html
   const FILE_MAP = {
     assignments: 'assignments-lecturer'
   };
@@ -86,9 +81,6 @@
     loadView('dashboard');
   });
 
-  // =========================================
-  // ZOOM FIX
-  // =========================================
   if (window.require) {
     try {
       const { ipcRenderer, webFrame } = window.require('electron');

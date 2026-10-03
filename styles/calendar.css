@@ -1,6 +1,4 @@
-/* =========================================
-   CALENDAR
-   ========================================= */
+
 
 .calendar-container {
   display: flex;
@@ -9,7 +7,7 @@
   min-width: 0;
 }
 
-/* ---------- Top bar ---------- */
+
 .calendar-topbar {
   display: flex;
   justify-content: space-between;
@@ -48,7 +46,7 @@
   color: var(--text-main);
 }
 
-/* Toggle switch */
+
 .switch {
   position: relative;
   display: inline-block;
@@ -83,7 +81,7 @@ input:checked + .slider:before {
 .slider.round { border-radius: 24px; }
 .slider.round:before { border-radius: 50%; }
 
-/* ---------- Layout ---------- */
+
 .calendar-layout {
   display: grid;
   grid-template-columns: 300px 1fr;
@@ -91,7 +89,7 @@ input:checked + .slider:before {
   min-width: 0;
 }
 
-/* ---------- Events Panel (left) ---------- */
+
 .events-panel {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -194,7 +192,7 @@ input:checked + .slider:before {
   padding: 40px 20px;
 }
 
-/* ---------- Calendar View (right) ---------- */
+
 .calendar-view {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -294,9 +292,7 @@ input:checked + .slider:before {
 .day-dot.blue   { background-color: #3b82f6; }
 .day-dot.yellow { background-color: #f59e0b; }
 
-/* =========================================
-   Academic View (with zoom)
-   ========================================= */
+
 .academic-view {
   display: flex;
   flex-direction: column;
@@ -369,7 +365,7 @@ input:checked + .slider:before {
   border-color: rgba(59, 130, 246, 0.5);
 }
 
-/* KEY FIX: text-align center + inline-block */
+
 .academic-image-wrapper {
   flex: 1;
   overflow: auto;
@@ -430,9 +426,7 @@ input:checked + .slider:before {
 .academic-placeholder p { font-size: 0.9rem; margin-bottom: 4px; }
 .academic-placeholder small { font-size: 0.75rem; }
 
-/* =========================================
-   MODAL
-   ========================================= */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -569,9 +563,7 @@ input:checked + .slider:before {
 }
 .btn-danger:hover { background-color: #dc2626; }
 
-/* =========================================
-   LIGHT THEME
-   ========================================= */
+
 body.light-theme .calendar-topbar,
 body.light-theme .events-panel,
 body.light-theme .calendar-view {

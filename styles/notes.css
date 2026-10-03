@@ -1,6 +1,4 @@
-/* =========================================
-   NOTES — REDESIGN v5 (fixed zoom layout)
-   ========================================= */
+
 
 .notes-container {
   display: grid;
@@ -10,9 +8,7 @@
   min-width: 0;
 }
 
-/* =========================================
-   LEFT SIDEBAR
-   ========================================= */
+
 .notes-sidebar {
   background-color: var(--bg-card);
   border-radius: 14px;
@@ -137,9 +133,7 @@
   line-height: 1.6;
 }
 
-/* =========================================
-   RIGHT EMPTY PANEL
-   ========================================= */
+
 .notes-editor {
   background-color: var(--bg-card);
   border-radius: 14px;
@@ -227,9 +221,7 @@
 }
 .btn-new-note:active { transform: translateY(0); }
 
-/* =========================================
-   NOTE MODAL
-   ========================================= */
+
 .note-modal-overlay {
   position: fixed;
   inset: 0;
@@ -247,8 +239,7 @@
   from { opacity: 0; } to { opacity: 1; }
 }
 
-/* KEY FIX: modal is a flex column with fixed max-height.
-   Children keep their size, content shrinks & scrolls. */
+
 .note-modal {
   position: relative;
   width: 100%;
@@ -380,9 +371,7 @@
   margin: 0 6px;
 }
 
-/* =========================================
-   ZOOM CONTROLS
-   ========================================= */
+
 .note-modal__zoom {
   flex-shrink: 0;
   display: flex;
@@ -436,9 +425,7 @@
   border-color: rgba(59, 130, 246, 0.4);
 }
 
-/* =========================================
-   CONTENT — flex-grow, own scroll, respects modal height
-   ========================================= */
+
 .note-modal__content {
   flex: 1 1 auto;
   min-height: 200px;
@@ -501,7 +488,7 @@
 .note-modal__content ol { padding-left: 24px; margin: 8px 0; }
 .note-modal__content li { margin: 4px 0; }
 
-/* Attachments */
+
 .note-attachment {
   display: flex;
   align-items: center;
@@ -577,9 +564,7 @@
   background-color: rgba(239, 68, 68, 0.08);
 }
 
-/* =========================================
-   FOOTER
-   ========================================= */
+
 .note-modal__footer {
   flex-shrink: 0;
   display: flex;
@@ -655,9 +640,7 @@ body.notes-edit-mode .btn-delete {
   pointer-events: none;
 }
 
-/* =========================================
-   SMALL CONFIRM MODALS
-   ========================================= */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -766,9 +749,7 @@ body.notes-edit-mode .btn-delete {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* =========================================
-   LIGHT THEME — Notes overrides
-   ========================================= */
+
 body.light-theme .notes-sidebar,
 body.light-theme .notes-editor {
   background-color: #ffffff;

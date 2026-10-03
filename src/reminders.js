@@ -1,6 +1,3 @@
-// =========================================
-// src/reminders.js — with time + auto-check for notifications
-// =========================================
 
 function initReminders() {
   const list = document.getElementById('reminders-list');
@@ -34,7 +31,6 @@ function initReminders() {
   let reminders = [];
   let pendingDeleteId = null;
 
-  // ============ Helpers ============
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -43,7 +39,6 @@ function initReminders() {
 
   function fmtTime(t) {
     if (!t) return '';
-    // "23:59:00" → "11.59 PM"
     const [h, m] = t.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
     const h12 = h % 12 || 12;
@@ -57,7 +52,6 @@ function initReminders() {
     });
   }
 
-  // ============ Countdown ============
   function daysUntil(dateStr, timeStr) {
     if (!dateStr) return null;
     const dt = new Date(`${dateStr}T${timeStr || '00:00:00'}`);
@@ -83,7 +77,6 @@ function initReminders() {
     return { label: 'Due now', cls: 'red' };
   }
 
-  // ============ Render ============
   function render() {
     if (!list) return;
     if (reminders.length === 0) {
@@ -121,7 +114,6 @@ function initReminders() {
     }).join('');
   }
 
-  // ============ Load ============
   async function load() {
     if (!studentId) {
       if (list) list.innerHTML = '<div class="reminders-empty">Please log in.</div>';
@@ -136,7 +128,6 @@ function initReminders() {
     render();
   }
 
-  // ============ Modal ============
   function openModal(mode = 'add', r = null) {
     if (mode === 'edit' && r) {
       modalTitle.innerText = 'Edit Reminder';
@@ -167,7 +158,6 @@ function initReminders() {
     inputId.value = '';
   }
 
-  // ============ Save ============
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -195,7 +185,6 @@ function initReminders() {
     load();
   });
 
-  // ============ List click ============
   list.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="delete"]');
     if (!btn) return;
@@ -207,7 +196,6 @@ function initReminders() {
     deleteModal.style.display = 'flex';
   });
 
-  // ============ Delete ============
   deleteYes.addEventListener('click', async () => {
     if (!pendingDeleteId) return;
     const res = await API.delete(`/api/reminders/${pendingDeleteId}`);
@@ -226,7 +214,6 @@ function initReminders() {
     if (e.target === deleteModal) { deleteModal.style.display = 'none'; pendingDeleteId = null; }
   });
 
-  // ============ Buttons ============
   addBtn.addEventListener('click', () => openModal('add'));
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
@@ -238,7 +225,6 @@ function initReminders() {
     if (modal.style.display === 'flex') closeModal();
   });
 
-  // ============ Init ============
   load();
 }
 

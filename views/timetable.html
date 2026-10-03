@@ -1,7 +1,5 @@
 <div class="timetable-container">
-  <!-- TAMPILAN 1: BILA BELUM UPLOAD TIMETABLE -->
   <div id="timetable-upload-view" class="timetable-card">
-    <!-- Left Section: Upload Timetable -->
     <div class="timetable-section upload-section">
       <div id="btn-upload-timetable" class="action-box upload-box">
         <div class="icon-wrapper">
@@ -13,10 +11,8 @@
       </div>
     </div>
 
-    <!-- Center Separator -->
     <div class="section-divider"></div>
 
-    <!-- Right Section: Web Timetable -->
     <div class="timetable-section web-section">
       <a href="https://uptm.edupage.org/timetable/" target="_blank" rel="noopener" class="action-box web-box">
         <div class="icon-wrapper">
@@ -28,21 +24,17 @@
     </div>
   </div>
 
-  <!-- TAMPILAN 2: BILA DAFTAR / UPLOAD BERJAYA -->
   <div id="timetable-display-view" class="timetable-card display-card" style="display: none;">
-    <!-- Container Paparan Fail / Gambar Jadual -->
     <div class="timetable-preview-wrapper">
       <img id="timetable-img-preview" src="" alt="Uploaded Timetable" style="display: none;">
       <iframe id="timetable-pdf-preview" src="" style="display: none;"></iframe>
     </div>
 
-    <!-- Butang Tong Sampah di Bawah Kanan -->
     <button id="btn-delete-timetable" class="delete-icon-btn" title="Delete Timetable">
       <i class="fa-regular fa-trash-can"></i>
     </button>
   </div>
 
-  <!-- MODAL PENGESAHAN PADAM (DELETE CONFIRMATION MODAL) -->
   <div id="delete-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
       <div class="modal-icon">

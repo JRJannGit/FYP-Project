@@ -1,6 +1,3 @@
-// =========================================
-// src/settings.js — with localStorage cache
-// =========================================
 
 function initSettings() {
   const notifToggle = document.getElementById('toggle-notifications');
@@ -11,7 +8,6 @@ function initSettings() {
   const role = window.Auth?.getRole?.();
   const userId = user?.student_id || user?.lecturer_id || user?.admin_id || user?.identifier || '';
 
-  // ============ Load dari DB ============
   async function loadSettings() {
     if (!userId || !role) {
       applySettings({ show_notifications: true, play_animations: true, dark_mode: true });
@@ -26,7 +22,6 @@ function initSettings() {
     applySettings(res.data);
   }
 
-  // ============ Apply + cache ============
   function applySettings(s) {
     const showNotif = s.show_notifications === true || s.show_notifications === 1;
     const playAnim  = s.play_animations === true || s.play_animations === 1;
@@ -53,7 +48,6 @@ function initSettings() {
     window.__playAnimations = enabled;
     localStorage.setItem('uptm_anim', enabled ? 'on' : 'off');
 
-    // Pause / play Rive mascot
     if (typeof window.setBuddyAnimation === 'function') {
       window.setBuddyAnimation(enabled);
     }
@@ -66,7 +60,6 @@ function initSettings() {
     localStorage.setItem('uptm_theme', dark ? 'dark' : 'light');
   }
 
-  // ============ Save ke DB ============
   async function saveSettings() {
     if (!userId || !role) return;
     const payload = {
@@ -80,7 +73,6 @@ function initSettings() {
     if (!res.success) console.error('[Settings] Save failed:', res.error);
   }
 
-  // ============ Event listeners ============
   if (notifToggle) {
     notifToggle.addEventListener('change', () => {
       applyNotification(notifToggle.checked);
@@ -102,7 +94,6 @@ function initSettings() {
     });
   }
 
-  // ============ Accent colour picker (all roles) ============
   const swatchWrap  = document.getElementById('accent-swatches');
   const customInput = document.getElementById('accent-custom');
   const resetBtn    = document.getElementById('accent-reset');
@@ -152,10 +143,8 @@ function initSettings() {
     });
   }
 
-  // Show current selection on load
   markActiveSwatch(getSavedAccent());
 
-  // ============ Init ============
   loadSettings();
 }
 

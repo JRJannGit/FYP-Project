@@ -1,4 +1,4 @@
-/* Toast Overlay Fixed Positioning */
+
 .toast-notification-overlay {
   position: fixed;
   top: 25px;
@@ -118,9 +118,7 @@
   opacity: 0.9;
 }
 
-/* =========================================
-   LIGHT THEME — Toast overrides
-   ========================================= */
+
 body.light-theme .toast-card {
   background-color: #ffffff;
   border-color: #3b82f6;

@@ -1,6 +1,4 @@
-/* =========================================
-   RESOURCES
-   ========================================= */
+
 
 .resources-container {
   display: flex;
@@ -9,7 +7,7 @@
   min-width: 0;
 }
 
-/* Header */
+
 .resources-header {
   display: flex;
   justify-content: space-between;
@@ -53,14 +51,14 @@
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
 }
 
-/* Grid */
+
 .resources-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
-/* Card */
+
 .resource-card {
   display: flex;
   align-items: center;
@@ -177,7 +175,7 @@
   background-color: rgba(239, 68, 68, 0.08);
 }
 
-/* Empty state */
+
 .resources-empty {
   grid-column: 1 / -1;
   text-align: center;
@@ -198,9 +196,7 @@
   color: var(--primary-blue);
 }
 
-/* =========================================
-   MODAL
-   ========================================= */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -367,7 +363,7 @@
   line-height: 1.55;
 }
 
-/* Own resource badge */
+
 .owner-badge {
   font-size: 0.6rem;
   background-color: rgba(34, 197, 94, 0.15);
@@ -381,12 +377,12 @@
   vertical-align: middle;
 }
 
-/* System card — subtle differentiation */
+
 .resource-card.system::before {
   background: linear-gradient(180deg, #64748b, #475569);
 }
 
-/* Delete icon button (red on hover) */
+
 .icon-btn-sm.danger {
   color: var(--text-muted);
 }
@@ -397,9 +393,7 @@
   background-color: rgba(239, 68, 68, 0.08);
 }
 
-/* =========================================
-   LIGHT THEME — Resources overrides
-   ========================================= */
+
 body.light-theme .resources-header,
 body.light-theme .resource-card {
   background-color: #ffffff;

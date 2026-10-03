@@ -1,6 +1,3 @@
-// =========================================
-// src/resources.js — with delete option
-// =========================================
 
 function initResources() {
   const grid = document.getElementById('resources-grid');
@@ -32,7 +29,6 @@ function initResources() {
   let resources = [];
   let pendingDeleteId = null;
 
-  // ============ Helpers ============
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -60,7 +56,6 @@ function initResources() {
     window.open(url, '_blank');
   }
 
-  // ============ Render ============
   function render() {
     if (!grid) return;
 
@@ -80,9 +75,6 @@ function initResources() {
       const icon = r.icon || getIconClass(url);
       const editable = canModify(r);
 
-      // Actions:
-      // - Editable: Edit | Delete | Open
-      // - Non-editable: Open only
       const actionsHtml = editable
         ? `
           <div class="card-actions">
@@ -124,7 +116,6 @@ function initResources() {
     }).join('');
   }
 
-  // ============ Load ============
   async function load() {
     const res = await API.get('/api/resources');
     if (!res.success) {
@@ -135,7 +126,6 @@ function initResources() {
     render();
   }
 
-  // ============ Modal ============
   function openModal(mode = 'add', r = null) {
     if (mode === 'edit') {
       if (!r || !canModify(r)) return;
@@ -161,7 +151,6 @@ function initResources() {
     inputId.value = '';
   }
 
-  // ============ Save ============
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -191,7 +180,6 @@ function initResources() {
     load();
   });
 
-  // ============ Grid click ============
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (btn) {
@@ -212,14 +200,12 @@ function initResources() {
       return;
     }
 
-    // Card body → open URL
     const card = e.target.closest('.resource-card');
     if (card) {
       openInElectron(card.dataset.url);
     }
   });
 
-  // ============ Delete flow ============
   function openDeleteModal(id) {
     const r = resources.find(x => String(x.id) === String(id));
     if (!r || !canModify(r)) return;
@@ -250,7 +236,6 @@ function initResources() {
     if (e.target === deleteModal) closeDeleteModal();
   });
 
-  // ============ Buttons ============
   if (addBtn) addBtn.addEventListener('click', () => openModal('add'));
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
@@ -262,7 +247,6 @@ function initResources() {
     if (modal.style.display === 'flex') closeModal();
   });
 
-  // ============ Init ============
   load();
 }
 

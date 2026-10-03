@@ -1,8 +1,3 @@
-// =========================================
-// src/rive-buddy.js
-// Loads Rive mascot on any <canvas class="buddy-rive">
-// Exposes window.setBuddyAnimation(enabled) to pause/play/recreate
-// =========================================
 
 (function () {
   if (typeof rive === 'undefined') {
@@ -27,7 +22,6 @@
         r.resizeDrawingSurfaceToCanvas();
         console.log('[Rive Buddy] Loaded on', canvas.id || canvas.className);
 
-        // If animations disabled, pause immediately
         if (!animationEnabled) {
           try { r.pause(); } catch (e) {}
         }
@@ -44,10 +38,8 @@
   function initRiveCanvas(canvas) {
     if (!canvas || instances.has(canvas)) return;
 
-    // Create instance
     createRiveInstance(canvas);
 
-    // Bind click (once per canvas)
     if (!canvas.dataset.buddyClickBound) {
       canvas.dataset.buddyClickBound = 'true';
 
@@ -82,9 +74,6 @@
     root.querySelectorAll('canvas.buddy-rive').forEach(initRiveCanvas);
   }
 
-  // =========================================
-  // PUBLIC: Enable / disable mascot animation
-  // =========================================
   window.setBuddyAnimation = function (enabled) {
     const newState = !!enabled;
     const changed = newState !== animationEnabled;
@@ -101,9 +90,7 @@
       }
 
       if (animationEnabled) {
-        // ── ENABLE ──
         if (changed) {
-          // Recreate instance for fresh state machine
           console.log('[Rive Buddy] Recreating instance...');
           try {
             r.cleanup();
@@ -113,19 +100,14 @@
           instances.delete(canvas);
           createRiveInstance(canvas);
         } else {
-          // No change, just try play
           try { r.play(); } catch (e) {}
         }
       } else {
-        // ── DISABLE ──
         try { r.pause(); } catch (e) {}
       }
     });
   };
 
-  // =========================================
-  // Bootstrap
-  // =========================================
   document.addEventListener('DOMContentLoaded', () => {
     initAll();
 

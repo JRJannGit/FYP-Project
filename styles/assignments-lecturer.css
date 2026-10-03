@@ -1,6 +1,4 @@
-/* =========================================
-   LECTURER ASSIGNMENTS
-   ========================================= */
+
 
 .lecturer-assignments-container {
   display: flex;
@@ -9,7 +7,7 @@
   min-width: 0;
 }
 
-/* TOP ROW: 2 columns */
+
 .lecturer-assignments-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -18,7 +16,7 @@
   align-items: start;
 }
 
-/* LEFT column: stacked editor + received */
+
 .left-stack {
   display: flex;
   flex-direction: column;
@@ -26,7 +24,7 @@
   min-width: 0;
 }
 
-/* Common card */
+
 .lecturer-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -38,7 +36,7 @@
   min-width: 0;
 }
 
-/* ---------- Editor card ---------- */
+
 .card-label {
   font-size: 0.72rem;
   font-weight: 700;
@@ -69,7 +67,7 @@
   margin: 4px 0 10px;
 }
 
-/* Toolbar */
+
 .lecturer-toolbar {
   display: flex;
   align-items: center;
@@ -108,7 +106,7 @@
   margin: 0 6px;
 }
 
-/* Description */
+
 .lecturer-desc-input {
   flex: 1;
   min-height: 180px;
@@ -173,7 +171,7 @@
   border-color: var(--primary-blue);
 }
 
-/* ---------- Received card ---------- */
+
 .received-card {
   align-items: center;
   justify-content: center;
@@ -211,7 +209,7 @@
   background-color: rgba(59, 130, 246, 0.08);
 }
 
-/* ---------- Meta card (right) ---------- */
+
 .meta-card {
   justify-content: flex-start;
 }
@@ -302,7 +300,7 @@
   background: rgba(239, 68, 68, 0.15);
 }
 
-/* Meta rows */
+
 .meta-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -347,7 +345,7 @@
   color: #f8fafc;
 }
 
-/* Meta actions */
+
 .meta-actions {
   display: flex;
   gap: 12px;
@@ -399,9 +397,7 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-/* =========================================
-   SUBMISSIONS MODAL
-   ========================================= */
+
 .submissions-modal {
   width: 100%;
   max-width: 640px;
@@ -624,7 +620,7 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* Pick list */
+
 .pick-list {
   display: flex;
   flex-direction: column;
@@ -653,9 +649,7 @@
   margin-top: 3px;
 }
 
-/* =========================================
-   LIGHT THEME
-   ========================================= */
+
 body.light-theme .lecturer-card {
   background-color: #ffffff;
   border-color: #e2e8f0;
@@ -778,16 +772,14 @@ body.light-theme .pick-item {
   color: #0f172a;
 }
 
-/* Responsive */
+
 @media (max-width: 900px) {
   .lecturer-assignments-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* =========================================
-   URL input modal
-   ========================================= */
+
 #url-input-modal .modal-box--small {
   width: 100%;
   max-width: 460px;
@@ -852,7 +844,7 @@ body.light-theme .pick-item {
   margin-bottom: 4px;
 }
 
-/* Light theme */
+
 body.light-theme #url-input-modal .modal-box--small {
   background: #ffffff;
   border-color: #e2e8f0;

@@ -1,6 +1,3 @@
-// =========================================
-// src/admin-dashboard.js
-// =========================================
 
 const ADMIN_QUOTES = [
   "Small progress every day leads to big results.",
@@ -50,14 +47,12 @@ async function initAdminDashboard() {
 
   if (greetingName) greetingName.innerText = userName;
 
-  // Quote
   if (quoteText) {
     quoteText.innerText = '"Loading quote..."';
     const q = await fetchAdminQuote();
     quoteText.innerText = `"${q}"`;
   }
 
-  // Time badge
   if (timeBadge) {
     const now = new Date();
     const opts = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -90,12 +85,10 @@ async function initAdminDashboard() {
   setupQAModal();
 }
 
-// ============ Quick Access with edit ============
 function renderAdminQuickAccess() {
   const grid = document.getElementById('admin-portal-grid');
   if (!grid) return;
 
-  // Show first 4 system resources or all if fewer
   const items = adminResources.slice(0, 4);
   if (items.length === 0) {
     grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;grid-column:1/-1;text-align:center;">No resources yet.</p>';
@@ -109,7 +102,6 @@ function renderAdminQuickAccess() {
     </a>
   `).join('');
 
-  // Handle click → open external
   grid.querySelectorAll('.portal-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -119,7 +111,6 @@ function renderAdminQuickAccess() {
   });
 }
 
-// ============ Schedule Preview ============
 function renderAdminSchedulePreview() {
   const list = document.getElementById('today-schedule-list');
   if (!list) return;
@@ -157,7 +148,6 @@ function renderAdminTasksPreview() {
   }).join('');
 }
 
-// ============ Edit Quick Access Modal ============
 function setupQAModal() {
   const editBtn   = document.getElementById('btn-edit-quick-access');
   const modal     = document.getElementById('qa-modal');
@@ -176,8 +166,6 @@ function setupQAModal() {
       alert('No resource to edit.');
       return;
     }
-    // For simplicity, edit the first resource in the list.
-    // Advanced: show picker modal.
     const r = adminResources[0];
     titleH.innerText = 'Edit Quick Access';
     idField.value = r.id;
@@ -215,7 +203,6 @@ function setupQAModal() {
       return;
     }
     close();
-    // Reload resources + repaint
     const fresh = await API.get('/api/resources');
     if (fresh.success) {
       adminResources = fresh.data;
@@ -224,7 +211,6 @@ function setupQAModal() {
   });
 }
 
-// ============ Schedule + Tasks modals ============
 function setupAdminModals() {
   const scheduleModal = document.getElementById('schedule-modal');
   const tasksModal    = document.getElementById('tasks-modal');

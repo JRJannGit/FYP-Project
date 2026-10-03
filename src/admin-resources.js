@@ -1,7 +1,3 @@
-// =========================================
-// src/admin-resources.js
-// Admin can CRUD all resources (system + user)
-// =========================================
 
 function initAdminResources() {
   console.log('[Admin Resources] init');
@@ -34,7 +30,6 @@ function initAdminResources() {
   let resources = [];
   let pendingDeleteId = null;
 
-  // ============ Helpers ============
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -56,7 +51,6 @@ function initAdminResources() {
     window.open(url, '_blank');
   }
 
-  // ============ Render ============
   function render() {
     if (!grid) return;
 
@@ -105,7 +99,6 @@ function initAdminResources() {
     }).join('');
   }
 
-  // ============ Load ============
   async function load() {
     const res = await API.get('/api/resources');
     if (!res.success) {
@@ -116,7 +109,6 @@ function initAdminResources() {
     render();
   }
 
-  // ============ Modal ============
   function openModal(mode = 'add', r = null) {
     if (mode === 'edit' && r) {
       modalTitle.innerText = 'Edit Resource';
@@ -143,7 +135,6 @@ function initAdminResources() {
     inputId.value = '';
   }
 
-  // ============ Save ============
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -174,7 +165,6 @@ function initAdminResources() {
     load();
   });
 
-  // ============ Grid click ============
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (btn) {
@@ -195,14 +185,12 @@ function initAdminResources() {
       return;
     }
 
-    // Card body → open URL
     const card = e.target.closest('.resource-card');
     if (card) {
       openInElectron(card.dataset.url);
     }
   });
 
-  // ============ Delete flow ============
   function openDeleteModal(id) {
     const r = resources.find(x => String(x.id) === String(id));
     if (!r) return;
@@ -233,7 +221,6 @@ function initAdminResources() {
     if (e.target === deleteModal) closeDeleteModal();
   });
 
-  // ============ Buttons ============
   if (addBtn) addBtn.addEventListener('click', () => openModal('add'));
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
@@ -245,7 +232,6 @@ function initAdminResources() {
     if (modal.style.display === 'flex') closeModal();
   });
 
-  // ============ Init ============
   load();
 }
 

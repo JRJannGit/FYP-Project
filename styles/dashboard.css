@@ -1,6 +1,4 @@
-/* =========================================
-   DASHBOARD
-   ========================================= */
+
 
 .dashboard-container {
   display: flex;
@@ -9,7 +7,7 @@
   min-width: 0;
 }
 
-/* ---------- Header ---------- */
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -63,7 +61,7 @@
   margin-top: 6px;
 }
 
-/* ---------- Grid ---------- */
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1.3fr;
@@ -78,7 +76,7 @@
   min-width: 0;
 }
 
-/* ---------- Card ---------- */
+
 .card {
   background-color: var(--bg-card);
   border-radius: 12px;
@@ -98,7 +96,7 @@
   font-weight: 700;
 }
 
-/* View All button */
+
 .btn-view-all {
   background: transparent;
   border: 1px solid var(--border-color);
@@ -121,7 +119,7 @@
   transform: translateY(-1px);
 }
 
-/* ---------- Mascot card ---------- */
+
 .mascot-card {
   background-color: var(--bg-card);
   border-radius: 12px;
@@ -135,7 +133,7 @@
   overflow: hidden;
 }
 
-/* ---------- Quick Access ---------- */
+
 .quick-access-card h3 {
   font-size: 1.05rem;
   margin-bottom: 15px;
@@ -174,7 +172,7 @@
   color: var(--primary-hover, #3b82f6);
 }
 
-/* ---------- Schedule & Tasks list ---------- */
+
 .schedule-list,
 .task-list {
   list-style: none;
@@ -272,9 +270,7 @@
   font-style: italic;
 }
 
-/* =========================================
-   DASHBOARD MODAL
-   ========================================= */
+
 .dash-modal-overlay {
   position: fixed;
   inset: 0;
@@ -462,9 +458,7 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* =========================================
-   LIGHT THEME — Dashboard overrides
-   ========================================= */
+
 body.light-theme .dashboard-header,
 body.light-theme .card,
 body.light-theme .mascot-card {

@@ -1,6 +1,3 @@
-// =========================================
-// src/dashboard.js — with modals
-// =========================================
 
 const LOCAL_QUOTES = [
   "Small progress every day leads to big results.",
@@ -22,7 +19,6 @@ async function fetchOnlineQuote() {
   }
 }
 
-// ============ Format helpers ============
 function fmtDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -56,11 +52,9 @@ function badgeLabel(days) {
   return `${days} days`;
 }
 
-// ============ State ============
 let todayScheduleData = [];
 let upcomingItemsData = [];
 
-// ============ Main init ============
 async function initDashboard() {
   const buddySpeech = document.getElementById('buddy-speech-text');
   const quoteText   = document.querySelector('.quote-text');
@@ -75,14 +69,12 @@ async function initDashboard() {
 
   if (greetingName) greetingName.innerText = userName;
 
-  // Quote
   if (quoteText) {
     quoteText.innerText = '"Loading quote..."';
     const q = await fetchOnlineQuote();
     quoteText.innerText = `"${q}"`;
   }
 
-  // Time badge
   if (timeBadge) {
     const now = new Date();
     const opts = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -90,7 +82,6 @@ async function initDashboard() {
   }
 
   try {
-    // Fetch all data in parallel
     const [todayRes, upcomingRes] = await Promise.all([
       API.get('/api/timetable-entries/today'),
       API.get(`/api/dashboard/upcoming/${studentId || 'none'}`)
@@ -99,7 +90,6 @@ async function initDashboard() {
     todayScheduleData  = todayRes.success ? todayRes.data : [];
     upcomingItemsData  = upcomingRes.success ? upcomingRes.data : [];
 
-    // Update speech
     if (buddySpeech) {
       if (upcomingItemsData.length > 0) {
         const next = upcomingItemsData[0];
@@ -119,7 +109,6 @@ async function initDashboard() {
   setupModals();
 }
 
-// ============ Preview renders ============
 function renderTodaySchedulePreview() {
   const list = document.getElementById('today-schedule-list');
   if (!list) return;
@@ -129,7 +118,6 @@ function renderTodaySchedulePreview() {
     return;
   }
 
-  // Show max 3
   const preview = todayScheduleData.slice(0, 3);
   list.innerHTML = preview.map(c => `
     <li class="schedule-item ${c.color || 'blue'}">
@@ -167,12 +155,10 @@ function renderUpcomingTasksPreview() {
   }).join('');
 }
 
-// ============ Modals ============
 function setupModals() {
   const scheduleModal = document.getElementById('schedule-modal');
   const tasksModal    = document.getElementById('tasks-modal');
 
-  // View All buttons
   document.querySelectorAll('.btn-view-all').forEach(btn => {
     btn.addEventListener('click', () => {
       const target = btn.dataset.modal;
@@ -186,7 +172,6 @@ function setupModals() {
     });
   });
 
-  // Close buttons (bottom)
   document.getElementById('schedule-modal-close-btn')?.addEventListener('click', () => {
     scheduleModal.style.display = 'none';
   });
@@ -194,7 +179,6 @@ function setupModals() {
     tasksModal.style.display = 'none';
   });
 
-  // Click outside closes
   scheduleModal?.addEventListener('click', (e) => {
     if (e.target === scheduleModal) scheduleModal.style.display = 'none';
   });
@@ -202,7 +186,6 @@ function setupModals() {
     if (e.target === tasksModal) tasksModal.style.display = 'none';
   });
 
-  // Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';

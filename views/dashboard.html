@@ -1,6 +1,5 @@
 <div class="dashboard-container">
 
-  <!-- Header -->
   <div class="dashboard-header">
     <div class="greeting-box">
       <h1>Hey, <span id="user-greeting-name">Guest</span>! 👋</h1>
@@ -15,10 +14,8 @@
     </div>
   </div>
 
-  <!-- Grid -->
   <div class="dashboard-grid">
 
-    <!-- Left Column -->
     <div class="grid-column left-col">
 
       <div class="mascot-card">
@@ -48,7 +45,6 @@
       </div>
     </div>
 
-    <!-- Right Column -->
     <div class="grid-column right-col">
 
       <div class="card schedule-card">
@@ -57,7 +53,6 @@
           <button class="btn-view-all" data-modal="schedule">View All</button>
         </div>
         <ul class="schedule-list" id="today-schedule-list">
-          <!-- rendered by JS -->
         </ul>
       </div>
 
@@ -67,16 +62,12 @@
           <button class="btn-view-all" data-modal="tasks">View All</button>
         </div>
         <ul class="task-list" id="upcoming-tasks-list">
-          <!-- rendered by JS -->
         </ul>
       </div>
     </div>
   </div>
 </div>
 
-<!-- =========================================
-     MODAL: Today's Schedule (full)
-     ========================================= -->
 <div class="modal-overlay dash-modal-overlay" id="schedule-modal" style="display:none;">
   <div class="dash-modal">
     <div class="dash-modal__header">
@@ -84,7 +75,6 @@
       <p>Full class list for today</p>
     </div>
     <div class="dash-modal__content" id="schedule-modal-content">
-      <!-- rendered by JS -->
     </div>
     <div class="dash-modal__footer">
       <button class="btn-close-modal" id="schedule-modal-close-btn">Close</button>
@@ -92,9 +82,6 @@
   </div>
 </div>
 
-<!-- =========================================
-     MODAL: Upcoming Tasks (full)
-     ========================================= -->
 <div class="modal-overlay dash-modal-overlay" id="tasks-modal" style="display:none;">
   <div class="dash-modal">
     <div class="dash-modal__header">
@@ -102,7 +89,6 @@
       <p>Assignments, reminders and events</p>
     </div>
     <div class="dash-modal__content" id="tasks-modal-content">
-      <!-- rendered by JS -->
     </div>
     <div class="dash-modal__footer">
       <button class="btn-close-modal" id="tasks-modal-close-btn">Close</button>

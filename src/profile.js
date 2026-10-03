@@ -1,6 +1,3 @@
-// =========================================
-// src/profile.js — profile view + logout
-// =========================================
 
 function updateSidebarProfile(user) {
   const name = document.querySelector('.user-name');
@@ -42,7 +39,6 @@ function switchTab(tab) {
   clearBanner(signup);
 }
 
-// ============ Banner helpers ============
 function showBanner(formEl, message, type = 'error') {
   if (!formEl) return;
   clearBanner(formEl);
@@ -78,7 +74,6 @@ function setLoading(btn, loading, text = 'Loading...') {
   }
 }
 
-// ============ Init profile ============
 function initProfile() {
   const authSection    = document.getElementById('auth-section');
   const profileSection = document.getElementById('profile-section');
@@ -111,13 +106,11 @@ function initProfile() {
   setupFormEvents();
 }
 
-// ============ Form events ============
 function setupFormEvents() {
   const loginForm  = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
   const btnLogout  = document.getElementById('btn-logout');
 
-  // ---------- LOGIN ----------
   if (loginForm) {
     loginForm.onsubmit = async (e) => {
       e.preventDefault();
@@ -158,7 +151,6 @@ function setupFormEvents() {
     };
   }
 
-  // ---------- SIGN UP ----------
   if (signupForm) {
     signupForm.onsubmit = async (e) => {
       e.preventDefault();
@@ -207,7 +199,6 @@ function setupFormEvents() {
     };
   }
 
-  // ---------- LOGOUT ----------
   const logoutModal = document.getElementById('logout-modal');
   const logoutYes   = document.getElementById('logout-yes');
   const logoutNo    = document.getElementById('logout-no');
@@ -219,7 +210,6 @@ function setupFormEvents() {
 
     logoutYes.onclick = () => {
       localStorage.removeItem('uptm_session');
-      // Redirect ikut role
       window.location.href = 'login.html';
     };
 
@@ -237,7 +227,6 @@ function setupFormEvents() {
       }
     });
   } else if (btnLogout) {
-    // Fallback kalau takde modal
     btnLogout.onclick = () => {
       if (!confirm('Log out?')) return;
       localStorage.removeItem('uptm_session');
@@ -246,7 +235,6 @@ function setupFormEvents() {
   }
 }
 
-// ============ Global listeners ============
 document.addEventListener('click', (e) => {
   if (e.target.id === 'tab-login-btn')  switchTab('login');
   if (e.target.id === 'tab-signup-btn') switchTab('signup');
