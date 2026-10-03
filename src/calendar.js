@@ -35,7 +35,11 @@ function initCalendar() {
   const delYes      = document.getElementById('delete-event-yes');
   const delNo       = document.getElementById('delete-event-no');
 
-  const studentId   = AppStorage.getUser()?.student_id;
+  const _u = AppStorage.getUser();
+  const studentId = _u
+    ? (_u.student_id || _u.lecturer_id || _u.admin_id || _u.identifier)
+    : null;
+
   let allEvents     = [];
   let currentMonth  = new Date();
   currentMonth.setDate(1);

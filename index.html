@@ -51,32 +51,6 @@
     <main id="main-content" class="content-area"></main>
   </div>
 
-  <div class="toast-notification-overlay" id="reminder-toast" style="display:none;">
-    <div class="toast-card">
-      <div class="toast-header">
-        <div class="toast-brand">
-          <i class="fa-solid fa-bell toast-icon"></i>
-          <span>UPTM Buddy</span>
-        </div>
-        <button class="toast-close" id="close-toast"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="toast-body">
-        <div class="buddy-wrap toast-mascot">
-          <img src="assets/robot-mascot.png" alt="UPTM Buddy Mascot" class="buddy buddy--notification">
-          <span class="buddy-eye buddy-eye--left"></span>
-          <span class="buddy-eye buddy-eye--right"></span>
-        </div>
-        <div class="toast-badge">Reminder</div>
-        <span class="toast-time" id="toast-time"></span>
-        <h4 class="toast-title" id="toast-title"></h4>
-      </div>
-      <div class="toast-footer">
-        <button class="action-btn primary" id="toast-view-btn">View Now</button>
-        <button class="action-btn secondary" id="toast-dismiss-btn">Dismiss</button>
-      </div>
-    </div>
-  </div>
-
   <script src="src/auth.js"></script>
   <script src="src/storage.js"></script>
   <script src="src/api.js"></script>
@@ -92,7 +66,6 @@
   <script src="src/settings.js"></script>
   <script src="src/profile.js"></script>
   <script src="src/notifications.js"></script>
-  <script src="src/buddy.js"></script>
   <script src="src/reminder-scheduler.js"></script>
   <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>
   <script src="src/rive-buddy.js"></script>

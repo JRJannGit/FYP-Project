@@ -26,7 +26,11 @@ function initReminders() {
   const deleteNo    = document.getElementById('delete-reminder-no');
   const deleteClose = document.getElementById('delete-reminder-close');
 
-  const studentId = AppStorage.getUser()?.student_id;
+  const _u = AppStorage.getUser();
+  const studentId = _u
+    ? (_u.student_id || _u.lecturer_id || _u.admin_id || _u.identifier)
+    : null;
+
   let reminders = [];
   let pendingDeleteId = null;
 

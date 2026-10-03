@@ -33,7 +33,11 @@ function initNotes() {
   const deleteNo     = document.getElementById('delete-no');
   const deleteClose  = document.getElementById('delete-close');
 
-  const studentId = AppStorage.getUser()?.student_id;
+  const _u = AppStorage.getUser();
+  const studentId = _u
+    ? (_u.student_id || _u.lecturer_id || _u.admin_id || _u.identifier)
+    : null;
+    
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const ZOOM_MIN = 50;

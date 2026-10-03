@@ -1,8 +1,11 @@
 // =========================================
-// src/assignments-lecturer.js — Lecturer create + view submissions
+// src/assignments-lecturer.js
+// Lecturer create assignment + view submissions
 // =========================================
 
 function initAssignments() {
+  console.log('[Lecturer Assignments] init');
+
   const user = AppStorage.getUser();
   const role = Auth.getRole();
   const userId = user?.lecturer_id || user?.admin_id || user?.identifier || '';
@@ -16,36 +19,45 @@ function initAssignments() {
   const metaEnd     = document.getElementById('meta-end-time');
   const metaClass   = document.getElementById('meta-class');
 
-  const btnUploadFile   = document.getElementById('btn-upload-file');
-  const btnInsertUrl    = document.getElementById('btn-insert-url');
-  const fileInput       = document.getElementById('assignment-file-input');
-  const urlInput        = document.getElementById('assignment-url-input');
+  const btnUploadFile = document.getElementById('btn-upload-file');
+  const btnInsertUrl  = document.getElementById('btn-insert-url');
+  const fileInput     = document.getElementById('assignment-file-input');
 
-  const uploadPreview   = document.getElementById('upload-preview');
-  const previewName     = document.getElementById('preview-name');
-  const previewRemove   = document.getElementById('preview-remove');
+  const uploadPreview = document.getElementById('upload-preview');
+  const previewName   = document.getElementById('preview-name');
+  const previewRemove = document.getElementById('preview-remove');
 
-  const btnRelease      = document.getElementById('btn-release');
-  const btnReset        = document.getElementById('btn-reset');
+  const btnEditToggle = document.getElementById('btn-edit-toggle');
+  const btnRelease    = document.getElementById('btn-release');
+  const btnReset      = document.getElementById('btn-reset');
 
-  const btnViewSubs     = document.getElementById('btn-view-submissions');
-  const receivedHint    = document.getElementById('received-hint');
+  const btnViewSubs  = document.getElementById('btn-view-submissions');
+  const receivedHint = document.getElementById('received-hint');
 
-  const submissionsModal = document.getElementById('submissions-modal');
-  const submissionsList  = document.getElementById('submissions-list');
-  const submissionsClose = document.getElementById('submissions-close');
+  const submissionsModal    = document.getElementById('submissions-modal');
+  const submissionsList     = document.getElementById('submissions-list');
+  const submissionsClose    = document.getElementById('submissions-close');
   const submissionsCloseBtn = document.getElementById('submissions-close-btn');
-  const btnDownloadAll   = document.getElementById('btn-download-all');
+  const btnDownloadAll      = document.getElementById('btn-download-all');
 
   const pickModal = document.getElementById('pick-assignment-modal');
   const pickList  = document.getElementById('pick-assignment-list');
   const pickClose = document.getElementById('pick-assignment-close');
 
+  // URL modal
+  const urlModal  = document.getElementById('url-input-modal');
+  const urlField  = document.getElementById('url-input-field');
+  const urlError  = document.getElementById('url-error');
+  const urlSave   = document.getElementById('url-input-save');
+  const urlCancel = document.getElementById('url-input-cancel');
+  const urlClose  = document.getElementById('url-input-close');
+
   // ============ State ============
-  let uploadedFile = null;      // { name, type, data }
-  let uploadedUrl  = '';        // url string
-  let editingId    = null;      // assignment id being edited
+  let uploadedFile = null;
+  let uploadedUrl  = '';
+  let editingId    = null;
   let currentAssignmentForSubs = null;
+  let allAssignments = [];
 
   // ============ Helpers ============
   function todayISO() {
@@ -53,31 +65,58 @@ function initAssignments() {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
-  function fmtTime(t) {
-    if (!t) return '';
-    const [h, m] = t.split(':');
-    return `${h}.${m}`;
-  }
-
-  function fmtDateTime(ts) {
-    if (!ts) return '';
+  function fmtTimeOnly(ts) {
+    if (!ts) return '—';
     const d = new Date(ts);
-    return `${d.toLocaleDateString('en-GB')} · ${d.toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'})}`;
+    let h = d.getHours();
+    const m = d.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${String(h).padStart(2, '0')}.${String(m).padStart(2, '0')} ${ampm}`;
   }
 
   // ============ Load classes ============
   async function loadClasses() {
     if (!metaClass) return;
-    const res = await fetch(`http://localhost:3000/api/lecturer/classes/${userId}`);
-    const data = await res.json();
-    if (!data.success) return;
-
-    metaClass.innerHTML = '<option value="">Select class...</option>' +
-      data.data.map(c => `<option value="${c.id}">${c.class_code} — ${c.class_name}</option>`).join('');
+    try {
+      const res = await fetch(`http://localhost:3000/api/lecturer/classes/${userId}`);
+      const data = await res.json();
+      if (!data.success) return;
+      metaClass.innerHTML = '<option value="">Select class...</option>' +
+        data.data.map(c => `<option value="${c.id}">${c.class_code} — ${c.class_name}</option>`).join('');
+    } catch (err) {
+      console.warn('[Classes] Load failed:', err);
+    }
   }
 
+  // ============ Edit toggle for description ============
+  if (btnEditToggle && descInput) {
+    descInput.setAttribute('contenteditable', 'false');
+    btnEditToggle.addEventListener('click', () => {
+      const isEditing = descInput.getAttribute('contenteditable') === 'true';
+      const next = !isEditing;
+      descInput.setAttribute('contenteditable', next ? 'true' : 'false');
+      btnEditToggle.innerHTML = next
+        ? '<i class="fa-solid fa-check"></i> Done'
+        : '<i class="fa-solid fa-pen"></i> Edit';
+      if (next) descInput.focus();
+    });
+  }
+
+  // ============ Toolbar commands ============
+  document.querySelectorAll('.lecturer-toolbar .tool-btn[data-cmd]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!descInput) return;
+      descInput.setAttribute('contenteditable', 'true');
+      descInput.focus();
+      try { document.execCommand(btn.dataset.cmd, false, null); }
+      catch (err) { console.warn('execCommand failed:', err); }
+    });
+  });
+
   // ============ File upload ============
-  if (btnUploadFile) {
+  if (btnUploadFile && fileInput) {
     btnUploadFile.addEventListener('click', () => fileInput.click());
   }
 
@@ -87,6 +126,7 @@ function initAssignments() {
       if (!file) return;
       if (file.size > 10 * 1024 * 1024) {
         alert('File too large. Max 10MB.');
+        e.target.value = '';
         return;
       }
       const reader = new FileReader();
@@ -104,24 +144,80 @@ function initAssignments() {
     });
   }
 
-  // ============ URL insert ============
+  // ============ URL modal ============
+  function openUrlModal() {
+    if (!urlModal) {
+      console.error('[URL Modal] element not found');
+      return;
+    }
+    if (urlField) urlField.value = uploadedUrl || '';
+    hideUrlError();
+    urlModal.style.display = 'flex';
+    setTimeout(() => urlField?.focus(), 60);
+  }
+
+  function closeUrlModal() {
+    if (!urlModal) return;
+    urlModal.style.display = 'none';
+    hideUrlError();
+  }
+
+  function showUrlError(msg) {
+    if (!urlError) return;
+    urlError.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><span>${msg}</span>`;
+    urlError.style.display = 'flex';
+  }
+
+  function hideUrlError() {
+    if (!urlError) return;
+    urlError.style.display = 'none';
+  }
+
+  function saveUrl() {
+    const url = (urlField?.value || '').trim();
+    if (!url) {
+      showUrlError('URL is required');
+      return;
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      showUrlError('URL must start with http:// or https://');
+      return;
+    }
+    uploadedUrl = url;
+    uploadedFile = null;
+    showPreview(url, 'link');
+    closeUrlModal();
+  }
+
   if (btnInsertUrl) {
-    btnInsertUrl.addEventListener('click', () => {
-      const url = prompt('Enter URL (https://...)');
-      if (!url) return;
-      if (!url.startsWith('http')) {
-        alert('URL must start with http:// or https://');
-        return;
-      }
-      uploadedUrl = url;
-      uploadedFile = null;
-      showPreview(url, 'link');
+    btnInsertUrl.addEventListener('click', openUrlModal);
+    console.log('[URL Modal] button wired');
+  } else {
+    console.warn('[URL Modal] btn-insert-url not found');
+  }
+
+  if (urlSave)   urlSave.addEventListener('click', saveUrl);
+  if (urlCancel) urlCancel.addEventListener('click', closeUrlModal);
+  if (urlClose)  urlClose.addEventListener('click', closeUrlModal);
+
+  if (urlField) {
+    urlField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); saveUrl(); }
+      if (e.key === 'Escape') { e.preventDefault(); closeUrlModal(); }
     });
   }
 
+  if (urlModal) {
+    urlModal.addEventListener('click', (e) => {
+      if (e.target === urlModal) closeUrlModal();
+    });
+  }
+
+  // ============ Preview ============
   function showPreview(name, type) {
+    if (!uploadPreview) return;
     uploadPreview.style.display = 'flex';
-    previewName.innerText = name;
+    if (previewName) previewName.innerText = name;
     const icon = uploadPreview.querySelector('i');
     if (icon) {
       icon.className = type === 'link' ? 'fa-solid fa-link' : 'fa-solid fa-paperclip';
@@ -129,8 +225,9 @@ function initAssignments() {
   }
 
   function hidePreview() {
+    if (!uploadPreview) return;
     uploadPreview.style.display = 'none';
-    previewName.innerText = '';
+    if (previewName) previewName.innerText = '';
   }
 
   if (previewRemove) {
@@ -145,30 +242,30 @@ function initAssignments() {
   if (btnReset) {
     btnReset.addEventListener('click', () => {
       if (!confirm('Reset all fields?')) return;
-      topicInput.value = '';
-      descInput.innerHTML = '';
-      metaDate.value = '';
-      metaDueDate.value = '';
-      metaStart.value = '09:00';
-      metaEnd.value = '17:00';
-      metaClass.value = '';
+      if (topicInput) topicInput.value = '';
+      if (descInput) descInput.innerHTML = '';
+      if (metaDate) metaDate.value = todayISO();
+      if (metaDueDate) metaDueDate.value = todayISO();
+      if (metaStart) metaStart.value = '09:00';
+      if (metaEnd) metaEnd.value = '17:00';
+      if (metaClass) metaClass.value = '';
       uploadedFile = null;
       uploadedUrl = '';
       editingId = null;
       hidePreview();
-      receivedHint.innerText = 'Select or create an assignment to view submissions.';
+      if (receivedHint) receivedHint.innerText = 'Select or create an assignment to view submissions.';
     });
   }
 
-  // ============ Release (Create/Update) ============
+  // ============ Release ============
   if (btnRelease) {
     btnRelease.addEventListener('click', async () => {
-      const topic = topicInput.value.trim();
-      const desc  = descInput.innerHTML.trim();
-      const dueDate = metaDueDate.value;
-      const startTime = metaStart.value;
-      const endTime = metaEnd.value;
-      const classId = metaClass.value;
+      const topic = topicInput?.value.trim();
+      const desc  = descInput?.innerHTML.trim();
+      const dueDate = metaDueDate?.value;
+      const startTime = metaStart?.value;
+      const endTime = metaEnd?.value;
+      const classId = metaClass?.value;
 
       if (!topic)   { alert('Topic is required'); topicInput.focus(); return; }
       if (!dueDate) { alert('Due Date is required'); metaDueDate.focus(); return; }
@@ -209,20 +306,19 @@ function initAssignments() {
 
       alert(editingId ? 'Assignment updated!' : 'Assignment released!');
       editingId = null;
-      receivedHint.innerText = `Assignment "${topic}" published. Click View to see submissions.`;
+      if (receivedHint) receivedHint.innerText = `Assignment "${topic}" published. Click View to see submissions.`;
       loadAssignmentsList();
     });
   }
 
-  // ============ Submissions view ============
-  let allAssignments = [];
-
+  // ============ Load assignments ============
   async function loadAssignmentsList() {
     const res = await API.get(`/api/assignments/lecturer/${userId}`);
     if (!res.success) return;
     allAssignments = res.data;
   }
 
+  // ============ View submissions ============
   if (btnViewSubs) {
     btnViewSubs.addEventListener('click', async () => {
       await loadAssignmentsList();
@@ -230,7 +326,7 @@ function initAssignments() {
         alert('No assignments created yet. Create one first.');
         return;
       }
-      // Show pick modal
+      if (!pickList || !pickModal) return;
       pickList.innerHTML = allAssignments.map(a => `
         <div class="pick-item" data-id="${a.id}">
           ${a.subject}
@@ -242,7 +338,7 @@ function initAssignments() {
   }
 
   if (pickClose) {
-    pickClose.addEventListener('click', () => pickModal.style.display = 'none');
+    pickClose.addEventListener('click', () => { pickModal.style.display = 'none'; });
   }
 
   if (pickList) {
@@ -259,29 +355,50 @@ function initAssignments() {
     });
   }
 
+  // ============ Submissions modal ============
   async function openSubmissionsModal(assignment) {
-    submissionsList.innerHTML = '<p class="submissions-empty">Loading...</p>';
+    if (!submissionsList || !submissionsModal) return;
+
+    submissionsList.innerHTML = `
+      <div class="submissions-empty">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <span>Loading...</span>
+      </div>
+    `;
     submissionsModal.style.display = 'flex';
 
     const res = await API.get(`/api/submissions/${assignment.id}`);
     if (!res.success) {
-      submissionsList.innerHTML = `<p class="submissions-empty" style="color:#f87171;">Failed: ${res.error}</p>`;
+      submissionsList.innerHTML = `
+        <div class="submissions-empty" style="color:#f87171;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span>Failed to load</span>
+          <small>${res.error}</small>
+        </div>
+      `;
       return;
     }
 
     const subs = res.data;
-    if (subs.length === 0) {
-      submissionsList.innerHTML = '<p class="submissions-empty">No submissions yet.</p>';
+
+    if (!subs || subs.length === 0) {
+      submissionsList.innerHTML = `
+        <div class="submissions-empty">
+          <i class="fa-regular fa-folder-open"></i>
+          <span>Empty</span>
+          <small>No submissions received yet.</small>
+        </div>
+      `;
       return;
     }
 
-    submissionsList.innerHTML = subs.map(s => `
+    submissionsList.innerHTML = subs.map((s, index) => `
       <div class="submission-row">
         <div class="submission-email">
-          <i class="fa-solid fa-envelope"></i>
-          ${s.student_email || s.student_id}
+          <span class="row-num">${index + 1}.</span>
+          <span>${s.student_email || s.student_id}</span>
         </div>
-        <div class="submission-time">${fmtDateTime(s.submitted_at)}</div>
+        <div class="submission-time">${fmtTimeOnly(s.submitted_at)}</div>
         <button class="submission-download" data-id="${s.id}" title="Download">
           <i class="fa-solid fa-download"></i>
         </button>
@@ -289,7 +406,6 @@ function initAssignments() {
     `).join('');
   }
 
-  // Download individual submission
   if (submissionsList) {
     submissionsList.addEventListener('click', async (e) => {
       const btn = e.target.closest('.submission-download');
@@ -312,16 +428,23 @@ function initAssignments() {
     a.click();
   }
 
-  // ============ Close submissions ============
-  if (submissionsClose) submissionsClose.addEventListener('click', () => submissionsModal.style.display = 'none');
-  if (submissionsCloseBtn) submissionsCloseBtn.addEventListener('click', () => submissionsModal.style.display = 'none');
+  if (submissionsClose) {
+    submissionsClose.addEventListener('click', () => {
+      submissionsModal.style.display = 'none';
+    });
+  }
+  if (submissionsCloseBtn) {
+    submissionsCloseBtn.addEventListener('click', () => {
+      submissionsModal.style.display = 'none';
+    });
+  }
   if (submissionsModal) {
     submissionsModal.addEventListener('click', (e) => {
       if (e.target === submissionsModal) submissionsModal.style.display = 'none';
     });
   }
 
-  // ============ Download All (as ZIP) ============
+  // ============ Download All (ZIP) ============
   if (btnDownloadAll) {
     btnDownloadAll.addEventListener('click', async () => {
       if (!currentAssignmentForSubs) return;
@@ -332,7 +455,6 @@ function initAssignments() {
         return;
       }
 
-      // Check JSZip availability
       if (typeof JSZip === 'undefined') {
         alert('ZIP library not loaded. Download individually.');
         return;
@@ -345,7 +467,6 @@ function initAssignments() {
       btnDownloadAll.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Zipping...';
 
       for (const s of res.data) {
-        // Fetch file data for each
         const itemRes = await API.get(`/api/submissions/item/${s.id}`);
         if (itemRes.success && itemRes.data && itemRes.data.file_data) {
           const parts = itemRes.data.file_data.split(',');
@@ -372,9 +493,10 @@ function initAssignments() {
   loadClasses();
   loadAssignmentsList();
 
-  // Prefill date
   if (metaDate) metaDate.value = todayISO();
   if (metaDueDate) metaDueDate.value = todayISO();
+
+  console.log('[Lecturer Assignments] initialized');
 }
 
 window.initAssignments = initAssignments;

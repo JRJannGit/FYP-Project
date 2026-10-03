@@ -8,7 +8,10 @@ function initTimetable() {
   const imgPreview  = document.getElementById('timetable-img-preview');
   const pdfPreview  = document.getElementById('timetable-pdf-preview');
   const fileInput   = document.getElementById('timetable-file-input');
-  const studentId = AppStorage.getUser()?.student_id;
+  const _u = AppStorage.getUser();
+  const studentId = _u
+    ? (_u.student_id || _u.lecturer_id || _u.admin_id || _u.identifier)
+    : null;
 
   async function load() {
     if (!studentId) { showUpload(); return; }

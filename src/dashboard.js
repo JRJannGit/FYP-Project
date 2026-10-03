@@ -69,7 +69,9 @@ async function initDashboard() {
 
   const user = AppStorage.getUser();
   const userName = user ? user.full_name : 'Guest';
-  const studentId = user ? user.student_id : null;
+  const studentId = user
+  ? (user.student_id || user.lecturer_id || user.admin_id || user.identifier || null)
+  : null;
 
   if (greetingName) greetingName.innerText = userName;
 
