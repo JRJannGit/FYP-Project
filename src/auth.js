@@ -5,6 +5,55 @@
 const Auth = {
   KEY: 'uptm_session',
 
+  // =========================================
+  // Accent colour system (used by Settings → Accent Colour)
+  // Works for every role (student / lecturer / admin) because
+  // applyUserSettings() runs at boot in all three shells.
+  // Persisted per device in localStorage (user_settings table
+  // has no colour column — no DB schema change needed).
+  // =========================================
+  ACCENT_PRESETS: [
+    { name: 'Ocean Blue',    glow: '#3b82f6', accent: '#2563eb' },
+    { name: 'Royal Purple',  glow: '#8b5cf6', accent: '#7c3aed' },
+    { name: 'Emerald',       glow: '#10b981', accent: '#059669' },
+    { name: 'Sunset Orange', glow: '#f97316', accent: '#ea580c' },
+    { name: 'Rose Pink',     glow: '#ec4899', accent: '#db2777' },
+    { name: 'Teal',          glow: '#14b8a6', accent: '#0d9488' }
+  ],
+  DEFAULT_ACCENT: '#3b82f6',
+
+  // Convert one hex colour into the glow/accent pair used by
+  // --primary-glow / --primary-blue / --primary-accent / --primary-hover
+  deriveAccent(hex) {
+    let h = String(hex || '').trim().toLowerCase();
+    if (/^#[0-9a-f]{3}$/.test(h)) {
+      h = '#' + h.slice(1).split('').map(c => c + c).join('');
+    }
+    if (!/^#[0-9a-f]{6}$/.test(h)) return null;
+    const n = parseInt(h.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const darken = c => Math.max(0, Math.round(c * 0.82));
+    const toHex = (r, g, b) => '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+    return { glow: h, accent: toHex(darken(r), darken(g), darken(b)) };
+  },
+
+  applyAccentColor(hex) {
+    const pair = this.deriveAccent(hex);
+    if (!pair) return false;
+    const root = document.documentElement.style;
+    root.setProperty('--primary-glow', pair.glow);
+    root.setProperty('--primary-blue', pair.glow);
+    root.setProperty('--primary-accent', pair.accent);
+    root.setProperty('--primary-hover', pair.accent);
+    return true;
+  },
+
+  clearAccentColor() {
+    const root = document.documentElement.style;
+    ['--primary-glow', '--primary-blue', '--primary-accent', '--primary-hover']
+      .forEach(v => root.removeProperty(v));
+  },
+
   setSession(role, user) {
     const session = {
       role,
@@ -82,16 +131,27 @@ const Auth = {
       document.body.classList.remove('light-theme');
     }
 
-    const cachedAnim = localStorage.getItem('uptm_anim');
+        const cachedAnim = localStorage.getItem('uptm_anim');
     if (cachedAnim === 'off') {
       document.body.classList.add('no-buddy-anim');
     } else if (cachedAnim === 'on') {
       document.body.classList.remove('no-buddy-anim');
     }
 
+    // Apply cache to Rive if it's ready
+    setTimeout(() => {
+      if (typeof window.setBuddyAnimation === 'function') {
+        window.setBuddyAnimation(cachedAnim !== 'off');
+      }
+    }, 100);
+
     const cachedNotif = localStorage.getItem('uptm_notif');
     if (cachedNotif === 'off') window.__showNotifications = false;
     else if (cachedNotif === 'on') window.__showNotifications = true;
+
+    // Apply cached accent colour instantly
+    const cachedAccent = localStorage.getItem('uptm_accent');
+    if (cachedAccent) this.applyAccentColor(cachedAccent);
 
     // ---------- Step 2: Sync with DB (authoritative) ----------
     const user = this.getUser();
@@ -114,9 +174,15 @@ const Auth = {
       if (darkMode) document.body.classList.remove('light-theme');
       else          document.body.classList.add('light-theme');
 
+      
       // Apply animation
       if (playAnim) document.body.classList.remove('no-buddy-anim');
       else          document.body.classList.add('no-buddy-anim');
+
+      // Pause/play Rive mascot if function available
+      if (typeof window.setBuddyAnimation === 'function') {
+        window.setBuddyAnimation(playAnim);
+      }
 
       // Cache to localStorage
       localStorage.setItem('uptm_theme', darkMode ? 'dark' : 'light');

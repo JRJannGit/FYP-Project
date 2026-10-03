@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UPTM Buddy — Notification Popup Test (no Electron)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+  body { min-height: 100vh; background: #0b0f17; color: #f8fafc; padding: 32px 24px 140px; }
+  .wrap { max-width: 660px; margin: 0 auto; }
+  header h1 { font-size: 1.3rem; }
+  header p { color: #94a3b8; font-size: .85rem; margin-top: 6px; line-height: 1.5; }
+  header code { color: #93c5fd; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 14px; border-radius: 20px; font-size: .75rem; font-weight: 600; border: 1px solid; }
+  .pill.ok { color: #4ade80; border-color: rgba(74, 222, 128, .4); background: rgba(74, 222, 128, .08); }
+  .pill.down { color: #ef4444; border-color: rgba(239, 68, 68, .4); background: rgba(239, 68, 68, .08); }
+  .card { background: #182032; border: 1px solid rgba(255, 255, 255, .07); border-radius: 14px; padding: 20px; margin-top: 18px; }
+  .card h2 { font-size: .95rem; margin-bottom: 4px; }
+  .card .hint { font-size: .78rem; color: #94a3b8; margin-bottom: 14px; line-height: 1.5; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: .72rem; color: #94a3b8; flex: 1; min-width: 130px; }
+  input, select { background: #0d1420; border: 1px solid rgba(255, 255, 255, .1); color: #f8fafc; border-radius: 8px; padding: 8px 10px; font-size: .85rem; font-family: inherit; }
+  button.act { padding: 9px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: .85rem; cursor: pointer; color: #fff; font-family: inherit; background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  button.act:hover { filter: brightness(1.1); }
+  button.act.ghost { background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .12); }
+  #log { margin-top: 20px; background: #0d1420; border: 1px solid rgba(255, 255, 255, .07); border-radius: 12px; padding: 14px 16px; font: 12px/1.6 Consolas, monospace; color: #94a3b8; max-height: 220px; overflow-y: auto; white-space: pre-wrap; }
+  .uptm-toast-host { position: fixed; right: 20px; bottom: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 12px; }
+  .uptm-toast { width: 360px; max-width: calc(100vw - 40px); padding: 16px 18px 16px 22px; background: linear-gradient(180deg, #1a2236 0%, #151c2e 100%); color: #e2e8f0; border: 1px solid rgba(59, 130, 246, .35); border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, .55); font-size: .8rem; animation: uptmToastIn .25s cubic-bezier(.16, 1, .3, 1); }
+  .uptm-toast::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #3b82f6, #2563eb); }
+  .uptm-toast__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .uptm-toast__brand { font-size: .72rem; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: #94a3b8; }
+  .uptm-toast__close { background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 1rem; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+  .uptm-toast__close:hover { color: #fff; background: rgba(239, 68, 68, .15); }
+  .uptm-toast__badge { display: inline-block; font-size: .65rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 6px; }
+  .uptm-toast__title { font-size: .95rem; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+  .uptm-toast__desc { font-size: .8rem; color: #94a3b8; margin-bottom: 8px; white-space: pre-wrap; }
+  .uptm-toast__time { font-size: .72rem; color: #64748b; margin-bottom: 12px; }
+  .uptm-toast__footer { display: flex; gap: 8px; }
+  .uptm-toast__btn { flex: 1; padding: 8px 12px; border-radius: 8px; font-size: .78rem; font-weight: 600; cursor: pointer; border: none; font-family: inherit; }
+  .uptm-toast__btn--primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff; }
+  .uptm-toast__btn--primary:hover { filter: brightness(1.1); }
+  .uptm-toast__btn--secondary { background: rgba(255, 255, 255, .04); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, .08); }
+  .uptm-toast__btn--secondary:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+  @keyframes uptmToastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>&#128276; UPTM Buddy — Notification Popup Test</h1>
+      <p>Runs in any browser — <strong>no Electron required</strong>. This is the same reminder popup the app shows (<code>src/reminder-scheduler.js</code> renders it in-page when Electron is not available).</p>
+      <div class="pill" id="health-pill">&#8987; Checking API&hellip;</div>
+    </header>
+
+    <div class="card">
+      <h2>1 &middot; Manual popup test</h2>
+      <p class="hint">Edit the fields and trigger the popup directly (same as <code>window.testReminderPopup()</code> in the app).</p>
+      <div class="row">
+        <label class="f">Title<input id="f-title" value="Assignment due tomorrow"></label>
+        <label class="f">Time<input id="f-time" value="Today at 05.00 PM"></label>
+      </div>
+      <div class="row">
+        <label class="f">Description<input id="f-desc" value="CSC504 — Final report submission."></label>
+        <label class="f">Priority<select id="f-priority"><option>normal</option><option selected>high</option><option>urgent</option></select></label>
+      </div>
+      <button class="act" id="btn-manual">Trigger Popup</button>
+    </div>
+
+    <div class="card">
+      <h2>2 &middot; Simulated server push</h2>
+      <p class="hint">Fetches a payload from <code>GET /api/test-notification</code> and shows the popup — simulates the scheduler receiving a due reminder from the API.</p>
+      <button class="act" id="btn-server">Fetch From Server &amp; Popup</button>
+    </div>
+
+    <div class="card">
+      <h2>3 &middot; Real due reminders (database)</h2>
+      <p class="hint">Checks <code>GET /api/reminders/:id/due</code> for real reminders due within the next N minutes. No rows yet? Use the helper button to create one due in ~1 minute.</p>
+      <div class="row">
+        <label class="f">Student ID<input id="f-sid" placeholder="e.g. S12345"></label>
+        <label class="f">Due window (minutes)<input id="f-min" type="number" value="5" min="1"></label>
+      </div>
+      <div class="row">
+        <button class="act" id="btn-due">Check Due Reminders</button>
+        <button class="act ghost" id="btn-seed">Create Test Reminder (due in 1 min)</button>
+      </div>
+    </div>
+
+    <div id="log"></div>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    function log(msg) {
+      const t = new Date().toLocaleTimeString('en-GB');
+      $('log').textContent = `[${t}] ${msg}\n` + $('log').textContent;
+    }
+
+    const PRIORITY_STYLES = {
+      urgent: { label: 'URGENT', color: '#ef4444', bg: 'rgba(239, 68, 68, .16)' },
+      high:   { label: 'HIGH',   color: '#f59e0b', bg: 'rgba(245, 158, 11, .16)' },
+      normal: { label: 'NORMAL', color: '#3b82f6', bg: 'rgba(59, 130, 246, .16)' }
+    };
+
+    // Same popup the in-app (non-Electron) scheduler renders
+    function showPopup(data) {
+      let host = $('uptm-toast-host');
+      if (!host) {
+        host = document.createElement('div');
+        host.id = 'uptm-toast-host';
+        host.className = 'uptm-toast-host';
+        document.body.appendChild(host);
+      }
+      const p = PRIORITY_STYLES[(data.priority || 'normal').toLowerCase()] || PRIORITY_STYLES.normal;
+      const el = document.createElement('div');
+      el.className = 'uptm-toast';
+      el.innerHTML = `
+        <div class="uptm-toast__header">
+          <span class="uptm-toast__brand">&#128276; UPTM Buddy &middot; Reminder</span>
+          <button class="uptm-toast__close" title="Close">&#10005;</button>
+        </div>
+        <div class="uptm-toast__badge" style="color:${p.color};background:${p.bg};">${p.label}</div>
+        <div class="uptm-toast__title"></div>
+        <div class="uptm-toast__desc"></div>
+        <div class="uptm-toast__time"></div>
+        <div class="uptm-toast__footer">
+          <button class="uptm-toast__btn uptm-toast__btn--primary">View Now</button>
+          <button class="uptm-toast__btn uptm-toast__btn--secondary">Dismiss</button>
+        </div>
+      `;
+      el.querySelector('.uptm-toast__title').textContent = data.title || 'Reminder';
+      el.querySelector('.uptm-toast__desc').textContent = data.description || '';
+      el.querySelector('.uptm-toast__time').textContent = data.time || '';
+      const remove = () => el.remove();
+      el.querySelector('.uptm-toast__close').addEventListener('click', remove);
+      el.querySelector('.uptm-toast__btn--secondary').addEventListener('click', remove);
+      el.querySelector('.uptm-toast__btn--primary').addEventListener('click', remove);
+      host.appendChild(el);
+      while (host.children.length > 3) host.firstElementChild.remove();
+      setTimeout(remove, 60000);
+    }
+
+    const api = (path, opts) => fetch(path, opts).then(r => r.json());
+
+    // Health check on load
+    (async () => {
+      try {
+        const d = await api('/api/health');
+        if (d && d.success && d.data.status === 'up') {
+          const el = $('health-pill');
+          el.className = 'pill ok';
+          el.innerHTML = '&#9989; API connected — ' + d.data.service;
+          log('Health check OK: ' + d.data.service);
+        } else throw new Error('bad response');
+      } catch {
+        const el = $('health-pill');
+        el.className = 'pill down';
+        el.innerHTML = '&#10060; API not reachable — run: node server.js';
+        log('Health check FAILED — is the server running?');
+      }
+    })();
+
+    // 1 — manual popup
+    $('btn-manual').addEventListener('click', () => {
+      const d = { title: $('f-title').value, description: $('f-desc').value, priority: $('f-priority').value, time: $('f-time').value };
+      showPopup(d);
+      log('Manual popup shown: "' + d.title + '"');
+    });
+
+    // 2 — simulated server push
+    $('btn-server').addEventListener('click', async () => {
+      try {
+        const d = await api('/api/test-notification');
+        if (!d || !d.success) throw new Error(d && d.error || 'unknown');
+        showPopup({ ...d.data, time: 'Today at ' + (d.data.remind_time || '').slice(0, 5) });
+        log('Server push OK → popup shown for "' + d.data.title + '"');
+      } catch (e) { log('Server push FAILED: ' + e.message); }
+    });
+
+    // 3 — real due reminders from DB
+    $('btn-due').addEventListener('click', async () => {
+      const sid = $('f-sid').value.trim();
+      if (!sid) { log('Enter a Student ID first.'); return; }
+      const min = $('f-min').value || 5;
+      try {
+        const d = await api(`/api/reminders/${encodeURIComponent(sid)}/due?minutes=${min}`);
+        if (!d || !d.success) { log('API error: ' + (d && d.error || 'unknown')); return; }
+        const rows = d.data || [];
+        if (rows.length === 0) { log('No reminders due within ' + min + ' min for ' + sid + '.'); return; }
+        rows.slice(0, 3).forEach(r => showPopup({ ...r, time: (r.remind_date || '') + ' ' + (r.remind_time || '') }));
+        log('Found ' + rows.length + ' due reminder(s) — popup shown for first ' + Math.min(3, rows.length) + '.');
+      } catch (e) { log('Check FAILED: ' + e.message); }
+    });
+
+    // helper — create a real reminder due in ~1 minute
+    $('btn-seed').addEventListener('click', async () => {
+      const sid = $('f-sid').value.trim();
+      if (!sid) { log('Enter a Student ID first.'); return; }
+      const due = new Date(Date.now() + 60 * 1000);
+      const date = due.toISOString().slice(0, 10);
+      const time = due.toTimeString().slice(0, 8);
+      try {
+        const d = await api('/api/reminders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: sid, title: 'Notification Test Reminder', description: 'Created by test-notification.html', remind_date: date, remind_time: time, priority: 'urgent' })
+        });
+        if (d && d.success) log('Test reminder created (id ' + d.data.id + ') due ' + date + ' ' + time + ' — press "Check Due Reminders" within the window.');
+        else log('Create FAILED: ' + (d && d.error || 'unknown'));
+      } catch (e) { log('Create FAILED: ' + e.message); }
+    });
+
+    log('Test page ready.');
+  </script>
+</body>
+</html>

@@ -213,8 +213,8 @@ body.light-theme .switch .slider {
 }
 body.light-theme .slider:before { background-color: #94a3b8; }
 body.light-theme input:checked + .slider {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
+  background-color: var(--primary-blue);
+  border-color: var(--primary-blue);
 }
 body.light-theme input:checked + .slider:before { background-color: #ffffff; }
 
@@ -222,4 +222,71 @@ body.light-theme .version-tag {
   background-color: #f1f5f9;
   border-color: #e2e8f0;
   color: #64748b;
+}
+
+/* =========================================
+   Accent Colour Picker
+   ========================================= */
+.setting-item--accent {
+  flex-wrap: wrap;
+}
+
+.accent-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.accent-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.accent-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s, border-color 0.15s;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.accent-swatch:hover { transform: scale(1.12); }
+
+.accent-swatch.active {
+  border-color: var(--text-main);
+  transform: scale(1.1);
+}
+
+.accent-custom-input {
+  width: 34px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-input);
+  cursor: pointer;
+}
+
+.accent-reset-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+
+.accent-reset-btn:hover {
+  color: var(--text-main);
+  border-color: var(--primary-blue);
 }

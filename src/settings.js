@@ -49,8 +49,14 @@ function initSettings() {
   function applyAnimation(enabled) {
     if (enabled) document.body.classList.remove('no-buddy-anim');
     else         document.body.classList.add('no-buddy-anim');
+
     window.__playAnimations = enabled;
     localStorage.setItem('uptm_anim', enabled ? 'on' : 'off');
+
+    // Pause / play Rive mascot
+    if (typeof window.setBuddyAnimation === 'function') {
+      window.setBuddyAnimation(enabled);
+    }
   }
 
   function applyTheme(dark) {
@@ -95,6 +101,59 @@ function initSettings() {
       saveSettings();
     });
   }
+
+  // ============ Accent colour picker (all roles) ============
+  const swatchWrap  = document.getElementById('accent-swatches');
+  const customInput = document.getElementById('accent-custom');
+  const resetBtn    = document.getElementById('accent-reset');
+
+  function getSavedAccent() {
+    return localStorage.getItem('uptm_accent') || window.Auth?.DEFAULT_ACCENT || '#3b82f6';
+  }
+
+  function markActiveSwatch(hex) {
+    const glow = window.Auth?.deriveAccent?.(hex)?.glow || hex;
+    swatchWrap?.querySelectorAll('.accent-swatch').forEach(btn => {
+      btn.classList.toggle('active', (btn.dataset.glow || '').toLowerCase() === glow.toLowerCase());
+    });
+  }
+
+  function applyAndSaveAccent(hex) {
+    if (!window.Auth?.applyAccentColor?.(hex)) return;
+    localStorage.setItem('uptm_accent', String(hex).toLowerCase());
+    markActiveSwatch(hex);
+    if (customInput) customInput.value = String(hex).toLowerCase();
+  }
+
+  if (swatchWrap && window.Auth?.ACCENT_PRESETS) {
+    window.Auth.ACCENT_PRESETS.forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'accent-swatch';
+      btn.dataset.glow = p.glow;
+      btn.title = p.name;
+      btn.style.background = `linear-gradient(135deg, ${p.glow} 0%, ${p.accent} 100%)`;
+      btn.addEventListener('click', () => applyAndSaveAccent(p.glow));
+      swatchWrap.appendChild(btn);
+    });
+  }
+
+  if (customInput) {
+    customInput.value = getSavedAccent();
+    customInput.addEventListener('input', () => applyAndSaveAccent(customInput.value));
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      localStorage.removeItem('uptm_accent');
+      window.Auth?.clearAccentColor?.();
+      markActiveSwatch(window.Auth?.DEFAULT_ACCENT || '#3b82f6');
+      if (customInput) customInput.value = window.Auth?.DEFAULT_ACCENT || '#3b82f6';
+    });
+  }
+
+  // Show current selection on load
+  markActiveSwatch(getSavedAccent());
 
   // ============ Init ============
   loadSettings();

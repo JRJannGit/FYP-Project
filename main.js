@@ -65,6 +65,7 @@ function createWindow() {
         minWidth: 500,
         minHeight: 400,
         autoHideMenuBar: true,
+        icon: path.join(__dirname, 'assets', 'icon.ico'),
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
@@ -111,6 +112,7 @@ function createNotificationWindow(data) {
     alwaysOnTop: true,
     focusable: true,
     show: false,
+    icon: path.join(__dirname, 'assets', 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -170,6 +172,7 @@ ipcMain.on('open-external', (event, url) => {
     minWidth: 500,
     minHeight: 400,
     autoHideMenuBar: true,
+    icon: path.join(__dirname, 'assets', 'icon.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

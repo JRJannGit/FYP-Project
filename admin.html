@@ -2,56 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UPTM Buddy — Admin</title>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body {
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0b0f17;
-      color: #f8fafc;
-    }
-    .placeholder {
-      text-align: center;
-      max-width: 400px;
-      padding: 40px;
-    }
-    .placeholder i {
-      font-size: 4rem;
-      color: #f59e0b;
-      margin-bottom: 20px;
-    }
-    .placeholder h1 {
-      font-size: 1.5rem;
-      margin-bottom: 10px;
-    }
-    .placeholder p {
-      color: #64748b;
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-    .placeholder button {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-  </style>
+
+  <link rel="stylesheet" href="styles/buddy.css">
+  <link rel="stylesheet" href="styles/sidebar.css">
+  <link rel="stylesheet" href="styles/dashboard.css">
+  <link rel="stylesheet" href="styles/calendar.css">
+  <link rel="stylesheet" href="styles/notes.css">
+  <link rel="stylesheet" href="styles/notifications.css">
+  <link rel="stylesheet" href="styles/settings.css">
+  <link rel="stylesheet" href="styles/reminders.css">
+  <link rel="stylesheet" href="styles/resources.css">
+  <link rel="stylesheet" href="styles/profile.css">
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
 <body>
-  <div class="placeholder">
-    <i class="fa-solid fa-user-shield"></i>
-    <h1>Admin Panel</h1>
-    <p>Coming soon. This view is under construction.</p>
-    <button onclick="localStorage.removeItem('uptm_session'); window.location.href='login.html';">
-      <i class="fa-solid fa-arrow-left"></i> Log Out
-    </button>
+  <div class="app-container">
+
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/uptm-logo.png" alt="UPTM Logo" class="logo">
+        <h2>UPTM <span>Buddy</span></h2>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-view="dashboard"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="#" class="nav-item" data-view="calendar"><i class="fa-solid fa-calendar-check"></i> Calendar</a>
+        <a href="#" class="nav-item" data-view="notes"><i class="fa-regular fa-note-sticky"></i> Notes</a>
+        <a href="#" class="nav-item" data-view="reminders"><i class="fa-regular fa-bell"></i> Reminders</a>
+        <a href="#" class="nav-item" data-view="resources"><i class="fa-solid fa-cubes"></i> Resources</a>
+        <a href="#" class="nav-item" data-view="settings"><i class="fa-solid fa-gear"></i> Settings</a>
+      </nav>
+
+      <div class="user-profile">
+        <div class="avatar"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="user-info">
+          <span class="user-name">Administrator</span>
+          <span class="student-id">Admin Panel</span>
+        </div>
+      </div>
+    </aside>
+
+    <main id="main-content" class="content-area"></main>
   </div>
+
+  <!-- Toast -->
+  <div class="toast-notification-overlay" id="reminder-toast" style="display:none;">
+    <div class="toast-card">
+      <div class="toast-header">
+        <div class="toast-brand">
+          <i class="fa-solid fa-bell toast-icon"></i>
+          <span>UPTM Buddy</span>
+        </div>
+        <button class="toast-close" id="close-toast"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="toast-body">
+        <div class="toast-badge">Reminder</div>
+        <span class="toast-time" id="toast-time"></span>
+        <h4 class="toast-title" id="toast-title"></h4>
+      </div>
+      <div class="toast-footer">
+        <button class="action-btn primary" id="toast-view-btn">View Now</button>
+        <button class="action-btn secondary" id="toast-dismiss-btn">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core -->
+  <script src="src/auth.js"></script>
+  <script src="src/storage.js"></script>
+  <script src="src/api.js"></script>
+
+  <!-- Shared scripts -->
+  <script src="src/notes.js"></script>
+  <script src="src/reminders.js"></script>
+  <script src="src/settings.js"></script>
+  <script src="src/profile.js"></script>
+  <script src="src/notifications.js"></script>
+
+  <!-- Admin specific -->
+  <script src="src/admin-dashboard.js"></script>
+  <script src="src/admin-calendar.js"></script>
+  <script src="src/admin-resources.js"></script>
+
+  <!-- Rive -->
+  <script src="https://unpkg.com/@rive-app/canvas@2.21.6"></script>
+  <script src="src/rive-buddy.js"></script>
+
+  <!-- Navigation -->
+  <script src="src/navigation-admin.js"></script>
+
+  <script>
+    (async function applyOnStartup() {
+      if (window.Auth && typeof window.Auth.applyUserSettings === 'function') {
+        await window.Auth.applyUserSettings();
+      }
+    })();
+  </script>
 </body>
 </html>

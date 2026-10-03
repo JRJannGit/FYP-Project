@@ -47,12 +47,20 @@
         </div>
       </div>
 
-      <!-- Academic Calendar View -->
+      <!-- Academic Calendar View (admin-managed) -->
       <div class="academic-view" id="academic-view" style="display:none;">
         <div class="academic-header">
           <h3>UPTM Academic Calendar</h3>
 
-          <div class="academic-zoom-controls">
+          <input type="file" id="academic-file-input" accept="image/*,application/pdf" style="display:none;">
+
+          <div class="academic-zoom-controls" style="display:flex;">
+            <button class="zoom-btn" id="btn-upload-academic" title="Upload academic calendar">
+              <i class="fa-solid fa-upload"></i>
+            </button>
+            <button class="zoom-btn" id="btn-delete-academic" title="Delete academic calendar">
+              <i class="fa-solid fa-trash"></i>
+            </button>
             <button class="zoom-btn" id="ac-zoom-out" title="Zoom out">
               <i class="fa-solid fa-magnifying-glass-minus"></i>
             </button>
@@ -66,7 +74,7 @@
           <div class="academic-placeholder">
             <i class="fa-regular fa-image"></i>
             <p>No academic calendar uploaded yet.</p>
-            <small>Admin will upload it soon.</small>
+            <small>Click the upload icon above.</small>
           </div>
         </div>
       </div>
@@ -131,7 +139,7 @@
 </div>
 
 <!-- =========================================
-     DELETE CONFIRM MODAL
+     DELETE EVENT CONFIRM MODAL
      ========================================= -->
 <div class="modal-overlay" id="delete-event-modal" style="display:none;">
   <div class="modal-box modal-box--small">
@@ -145,6 +153,25 @@
     <div class="modal-actions modal-actions--center">
       <button type="button" class="btn-danger" id="delete-event-yes">YES</button>
       <button type="button" class="btn-cancel" id="delete-event-no">NO</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     DELETE ACADEMIC CALENDAR CONFIRM MODAL
+     ========================================= -->
+<div class="modal-overlay" id="delete-academic-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>Delete Academic Calendar?</h3>
+      <button class="modal-close" id="delete-academic-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <p class="modal-text">The uploaded academic calendar will be permanently removed for all users.</p>
+
+    <div class="modal-actions modal-actions--center">
+      <button type="button" class="btn-danger" id="delete-academic-yes">DELETE</button>
+      <button type="button" class="btn-cancel" id="delete-academic-no">CANCEL</button>
     </div>
   </div>
 </div>

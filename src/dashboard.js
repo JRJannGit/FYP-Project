@@ -211,15 +211,6 @@ function setupModals() {
   });
 }
 
-  // Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
-      if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
-    }
-  });
-
-
 function renderScheduleModal() {
   const content = document.getElementById('schedule-modal-content');
   if (!content) return;

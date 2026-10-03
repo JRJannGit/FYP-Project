@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const db = require('./src/db.js');
 
 const app = express();
@@ -342,15 +343,8 @@ app.delete('/api/notes/:id', async (req, res) => {
 // =========================================
 // RESOURCES
 // =========================================
-function requireAdmin(req, res, next) {
-  const role = req.headers['x-user-role'];
-  if (role !== 'admin') {
-    // non-admin can still POST (own resource), but not edit/delete system resources
-    // actual ownership check done inside the route
-  }
-  next();
-}
 
+// Helper: check if user can modify resource
 function canModifyResource(role, userId, resource) {
   if (role === 'admin') return true;
   if (resource.is_system) return false;
@@ -366,14 +360,18 @@ app.get('/api/resources', async (req, res) => {
 
 app.post('/api/resources', async (req, res) => {
   try {
-    const { title, url_link, caption, icon, created_by } = req.body;
+    const { title, url_link, caption, icon, created_by, is_system } = req.body;
     const role = req.headers['x-user-role'];
     if (!role) return fail(res, 'Not authenticated', 401);
 
+    // Only admin can create system resources
+    const systemFlag = (role === 'admin' && is_system) ? 1 : 0;
+
     const [result] = await db.query(
       `INSERT INTO resources (title, url, url_link, caption, description, icon, created_by, is_system)
-       VALUES (?, ?, ?, ?, ?, ?, ?, FALSE)`,
-      [title, url_link || '', url_link || '', caption || '', caption || '', icon || 'fa-link', created_by || null]
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, url_link || '', url_link || '', caption || '', caption || '',
+       icon || 'fa-link', created_by || null, systemFlag]
     );
     ok(res, { id: result.insertId });
   } catch (err) { fail(res, err.message); }
@@ -388,14 +386,25 @@ app.put('/api/resources/:id', async (req, res) => {
     const [rows] = await db.query('SELECT * FROM resources WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return fail(res, 'Resource not found', 404);
 
-    if (!canModifyResource(role, userId, rows[0])) {
+    // Admin can edit all; non-admin can only edit own resources
+    if (role !== 'admin' && !canModifyResource(role, userId, rows[0])) {
       return fail(res, 'You cannot edit this resource', 403);
     }
 
-    const { title, url_link, caption, icon } = req.body;
+    const { title, url_link, caption, icon, is_system } = req.body;
+
+    // Only admin can toggle is_system; others keep original
+    let systemFlag = rows[0].is_system;
+    if (role === 'admin' && is_system !== undefined) {
+      systemFlag = is_system ? 1 : 0;
+    }
+
     await db.query(
-      'UPDATE resources SET title=?, url=?, url_link=?, caption=?, description=?, icon=? WHERE id=?',
-      [title, url_link || '', url_link || '', caption || '', caption || '', icon || 'fa-link', req.params.id]
+      `UPDATE resources
+       SET title=?, url=?, url_link=?, caption=?, description=?, icon=?, is_system=?
+       WHERE id=?`,
+      [title, url_link || '', url_link || '', caption || '', caption || '',
+       icon || 'fa-link', systemFlag, req.params.id]
     );
     ok(res, { updated: true });
   } catch (err) { fail(res, err.message); }
@@ -410,7 +419,8 @@ app.delete('/api/resources/:id', async (req, res) => {
     const [rows] = await db.query('SELECT * FROM resources WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return fail(res, 'Resource not found', 404);
 
-    if (!canModifyResource(role, userId, rows[0])) {
+    // Admin can delete all; non-admin only own resources
+    if (role !== 'admin' && !canModifyResource(role, userId, rows[0])) {
       return fail(res, 'You cannot delete this resource', 403);
     }
 
@@ -645,6 +655,41 @@ app.get('/api/admin/stats', async (req, res) => {
     const [recent] = await db.query('SELECT * FROM assignments ORDER BY created_at DESC LIMIT 5');
     ok(res, { studentCount, assignmentCount, resourceCount, timetableCount, recentAssignments: recent });
   } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// ADMIN — delete academic calendar
+// =========================================
+app.delete('/api/academic-calendar', async (req, res) => {
+  try {
+    await db.query('DELETE FROM academic_calendar');
+    ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// =========================================
+// NOTIFICATION TEST (works without Electron)
+// =========================================
+app.get('/api/health', (req, res) => {
+  ok(res, { status: 'up', service: 'uptm-buddy-api', time: new Date().toISOString() });
+});
+
+// Simulated push payload — lets test-notification.html show a popup
+// in any browser without needing the Electron shell.
+app.get('/api/test-notification', (req, res) => {
+  ok(res, {
+    id: 'TEST-' + Date.now(),
+    title: 'Server Test Reminder',
+    description: 'This popup was delivered by the API — no Electron involved.',
+    priority: 'high',
+    remind_date: new Date().toISOString().slice(0, 10),
+    remind_time: new Date().toTimeString().slice(0, 8)
+  });
+});
+
+// Standalone browser test page
+app.get('/test-notification.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-notification.html'));
 });
 
 // =========================================

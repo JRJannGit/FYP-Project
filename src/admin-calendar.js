@@ -1,8 +1,8 @@
 // =========================================
-// src/calendar.js — monthly grid + events CRUD + academic zoom
+// src/admin-calendar.js
 // =========================================
 
-function initCalendar() {
+function initAdminCalendar() {
   const eventsList   = document.getElementById('events-list');
   const monthTitle   = document.getElementById('events-month-title');
   const calDays      = document.getElementById('calendar-days');
@@ -13,6 +13,11 @@ function initCalendar() {
   const toggleMode   = document.getElementById('toggle-calendar-mode');
   const monthlyView  = document.getElementById('monthly-view');
   const academicView = document.getElementById('academic-view');
+  const academicWrap = document.getElementById('academic-image-wrapper');
+
+  const btnUpload    = document.getElementById('btn-upload-academic');
+  const btnDelete    = document.getElementById('btn-delete-academic');
+  const fileInput    = document.getElementById('academic-file-input');
 
   const modal       = document.getElementById('event-modal');
   const modalTitle  = document.getElementById('event-modal-title');
@@ -33,8 +38,10 @@ function initCalendar() {
   const delYes      = document.getElementById('delete-event-yes');
   const delNo       = document.getElementById('delete-event-no');
 
-  const _u = AppStorage.getUser();
-  const studentId = _u ? (_u.student_id || _u.lecturer_id || _u.admin_id || _u.identifier) : null;
+  const delAcModal  = document.getElementById('delete-academic-modal');
+  const delAcClose  = document.getElementById('delete-academic-close');
+  const delAcYes    = document.getElementById('delete-academic-yes');
+  const delAcNo     = document.getElementById('delete-academic-no');
 
   let allEvents = [];
   let currentMonth = new Date();
@@ -54,8 +61,7 @@ function initCalendar() {
   const zoomValBtn = document.getElementById('ac-zoom-value');
 
   function applyZoom() {
-    const wrapper = document.getElementById('academic-image-wrapper');
-    const img = wrapper?.querySelector('img');
+    const img = academicWrap?.querySelector('img');
     if (!img) return;
     img.style.setProperty('width', currentZoom + '%', 'important');
     img.style.setProperty('max-width', 'none', 'important');
@@ -73,7 +79,6 @@ function initCalendar() {
   if (zoomOutBtn) zoomOutBtn.addEventListener('click', zoomOut);
   if (zoomValBtn) zoomValBtn.addEventListener('click', zoomReset);
 
-  const academicWrap = document.getElementById('academic-image-wrapper');
   if (academicWrap) {
     academicWrap.addEventListener('wheel', (e) => {
       if (!e.ctrlKey) return;
@@ -91,10 +96,9 @@ function initCalendar() {
   }
 
   async function loadEvents() {
-    if (!studentId) { eventsList.innerHTML = '<p class="events-empty">Please log in.</p>'; return; }
-    const res = await API.get(`/api/events/${studentId}`);
+    const res = await API.get('/api/events/ADMIN');
     if (!res.success) {
-      eventsList.innerHTML = `<p class="events-empty" style="color:#f87171;">Failed: ${res.error}</p>`;
+      if (eventsList) eventsList.innerHTML = `<p class="events-empty" style="color:#f87171;">Failed: ${res.error}</p>`;
       return;
     }
     allEvents = res.data;
@@ -103,31 +107,31 @@ function initCalendar() {
   }
 
   async function loadAcademic() {
-    const wrapper = document.getElementById('academic-image-wrapper');
-    if (!wrapper) return;
+    if (!academicWrap) return;
     const res = await API.get('/api/academic-calendar');
     if (res.success && res.data && res.data.file_data) {
       if (res.data.file_type === 'pdf') {
-        wrapper.innerHTML = `<iframe src="${res.data.file_data}" style="width:100%;height:100%;border:none;"></iframe>`;
+        academicWrap.innerHTML = `<iframe src="${res.data.file_data}" style="width:100%;height:100%;border:none;"></iframe>`;
         document.querySelector('.academic-zoom-controls')?.style.setProperty('display', 'none');
       } else {
-        wrapper.innerHTML = `<img src="${res.data.file_data}" alt="Academic Calendar">`;
+        academicWrap.innerHTML = `<img src="${res.data.file_data}" alt="Academic Calendar">`;
         document.querySelector('.academic-zoom-controls')?.style.setProperty('display', 'flex');
         currentZoom = 100;
         applyZoom();
       }
     } else {
-      wrapper.innerHTML = `
+      academicWrap.innerHTML = `
         <div class="academic-placeholder">
           <i class="fa-regular fa-image"></i>
           <p>No academic calendar uploaded yet.</p>
-          <small>Admin will upload it soon.</small>
+          <small>Click the upload icon above.</small>
         </div>`;
       document.querySelector('.academic-zoom-controls')?.style.setProperty('display', 'none');
     }
   }
 
   function renderEventsPanel() {
+    if (!eventsList) return;
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
     monthTitle.innerText = `Events for ${MONTHS[m]} ${y}`;
@@ -157,6 +161,7 @@ function initCalendar() {
   }
 
   function renderGrid() {
+    if (!calDays) return;
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
     monthLabel.innerText = `${MONTHS[m]} ${y}`;
@@ -234,7 +239,7 @@ function initCalendar() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
-      student_id: studentId,
+      student_id: null,
       title: inputTopic.value.trim(),
       event_date: inputDate.value,
       start_time: inputStart.value + ':00',
@@ -260,7 +265,7 @@ function initCalendar() {
 
   function openDeleteModal(id, title) {
     pendingDeleteId = id;
-    delName.innerText = `Are you sure you want to delete "${title}"?`;
+    delName.innerText = `Delete "${title}"?`;
     delModal.style.display = 'flex';
   }
   function closeDeleteModal() {
@@ -276,19 +281,12 @@ function initCalendar() {
   });
   delNo.addEventListener('click', closeDeleteModal);
   delClose.addEventListener('click', closeDeleteModal);
+  delModal.addEventListener('click', (e) => { if (e.target === delModal) closeDeleteModal(); });
 
   addBtn.addEventListener('click', () => openModal('add'));
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-  delModal.addEventListener('click', (e) => { if (e.target === delModal) closeDeleteModal(); });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (modal.style.display === 'flex') closeModal();
-      if (delModal.style.display === 'flex') closeDeleteModal();
-    }
-  });
 
   eventsList.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="delete"]');
@@ -324,7 +322,52 @@ function initCalendar() {
     }
   });
 
+  btnUpload.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File too large. Max 10MB.');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const file_data = ev.target.result;
+      const file_type = file.type === 'application/pdf' ? 'pdf' : 'image';
+      const res = await API.post('/api/academic-calendar', { file_data, file_type });
+      if (res.success) {
+        toggleMode.checked = true;
+        toggleMode.dispatchEvent(new Event('change'));
+      } else {
+        alert('Upload failed: ' + res.error);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  btnDelete.addEventListener('click', () => { delAcModal.style.display = 'flex'; });
+  function closeDeleteAcademic() { delAcModal.style.display = 'none'; }
+
+  delAcYes.addEventListener('click', async () => {
+    const res = await API.delete('/api/academic-calendar');
+    if (res.success) { closeDeleteAcademic(); loadAcademic(); }
+    else alert('Delete failed: ' + res.error);
+  });
+  delAcNo.addEventListener('click', closeDeleteAcademic);
+  delAcClose.addEventListener('click', closeDeleteAcademic);
+  delAcModal.addEventListener('click', (e) => { if (e.target === delAcModal) closeDeleteAcademic(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (modal.style.display === 'flex') closeModal();
+    if (delModal.style.display === 'flex') closeDeleteModal();
+    if (delAcModal.style.display === 'flex') closeDeleteAcademic();
+  });
+
   loadEvents();
 }
 
-window.initCalendar = initCalendar;
+window.initAdminCalendar = initAdminCalendar;
