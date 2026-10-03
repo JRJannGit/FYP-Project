@@ -39,7 +39,6 @@ canvas.buddy-rive:active { transform: scale(0.97); }
 /* Respect "Play Buddy Animations" toggle */
 body.no-buddy-anim canvas.buddy-rive {
   pointer-events: none;
-  opacity: 0.5;
 }
 
 /* Toast container */

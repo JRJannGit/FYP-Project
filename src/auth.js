@@ -82,12 +82,19 @@ const Auth = {
       document.body.classList.remove('light-theme');
     }
 
-    const cachedAnim = localStorage.getItem('uptm_anim');
+        const cachedAnim = localStorage.getItem('uptm_anim');
     if (cachedAnim === 'off') {
       document.body.classList.add('no-buddy-anim');
     } else if (cachedAnim === 'on') {
       document.body.classList.remove('no-buddy-anim');
     }
+
+    // Apply cache to Rive if it's ready
+    setTimeout(() => {
+      if (typeof window.setBuddyAnimation === 'function') {
+        window.setBuddyAnimation(cachedAnim !== 'off');
+      }
+    }, 100);
 
     const cachedNotif = localStorage.getItem('uptm_notif');
     if (cachedNotif === 'off') window.__showNotifications = false;
@@ -114,9 +121,15 @@ const Auth = {
       if (darkMode) document.body.classList.remove('light-theme');
       else          document.body.classList.add('light-theme');
 
+      
       // Apply animation
       if (playAnim) document.body.classList.remove('no-buddy-anim');
       else          document.body.classList.add('no-buddy-anim');
+
+      // Pause/play Rive mascot if function available
+      if (typeof window.setBuddyAnimation === 'function') {
+        window.setBuddyAnimation(playAnim);
+      }
 
       // Cache to localStorage
       localStorage.setItem('uptm_theme', darkMode ? 'dark' : 'light');

@@ -49,8 +49,14 @@ function initSettings() {
   function applyAnimation(enabled) {
     if (enabled) document.body.classList.remove('no-buddy-anim');
     else         document.body.classList.add('no-buddy-anim');
+
     window.__playAnimations = enabled;
     localStorage.setItem('uptm_anim', enabled ? 'on' : 'off');
+
+    // Pause / play Rive mascot
+    if (typeof window.setBuddyAnimation === 'function') {
+      window.setBuddyAnimation(enabled);
+    }
   }
 
   function applyTheme(dark) {
