@@ -92,6 +92,32 @@
 }
 
 
+/* ---------- Modal form inputs: email & password ----------
+   Base styling for the account modals in views/admin-accounts.html
+   (Student/Lecturer Email + Password fields). Values match the
+   .modal-form input pattern used in calendar.css / resources.css. */
+
+.modal-form input[type="email"],
+.modal-form input[type="password"] {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #0d1420;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.modal-form input[type="email"]::placeholder,
+.modal-form input[type="password"]::placeholder {
+  color: var(--text-muted);
+}
+
+
 body.light-theme .icon-top-btn {
   background: #f8fafc;
   border-color: #e2e8f0;
@@ -117,4 +143,16 @@ body.light-theme .owner-badge {
 }
 body.light-theme .modal-form .checkbox-group label {
   color: #0f172a;
+}
+
+body.light-theme .modal-form input[type="email"],
+body.light-theme .modal-form input[type="password"] {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+body.light-theme .modal-form input[type="email"]::placeholder,
+body.light-theme .modal-form input[type="password"]::placeholder {
+  color: #94a3b8;
 }

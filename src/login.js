@@ -1,4 +1,3 @@
-
 (function () {
   const roleTabs      = document.querySelectorAll('.role-tab');
   const loginForm     = document.getElementById('login-form');
@@ -95,25 +94,19 @@
     setLoading(loginBtn, true, 'Signing in...');
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password, role: currentRole })
-      });
-      const data = await res.json();
-
+      const res = await API.post('/api/auth/login', { identifier, password, role: currentRole });
       setLoading(loginBtn, false);
 
-      if (!data.success) {
-        showError(data.error || 'Login failed');
+      if (!res.success) {
+        showError(res.error || 'Login failed');
         return;
       }
 
-      Auth.setSession(data.data.role, data.data.user);
+      Auth.setSession(res.data.role, res.data.user);
 
-      if (data.data.role === 'student')  window.location.href = 'index.html';
-      if (data.data.role === 'lecturer') window.location.href = 'lecturer.html';
-      if (data.data.role === 'admin')    window.location.href = 'admin.html';
+      if (res.data.role === 'student')  window.location.href = 'index.html';
+      if (res.data.role === 'lecturer') window.location.href = 'lecturer.html';
+      if (res.data.role === 'admin')    window.location.href = 'admin.html';
 
     } catch (err) {
       setLoading(loginBtn, false);
@@ -161,23 +154,17 @@
     setLoading(signupBtn, true, 'Creating account...');
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/student/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-
+      const res = await API.post('/api/auth/student/signup', data);
       setLoading(signupBtn, false);
 
-      if (!result.success) {
-        let msg = result.error || 'Sign up failed';
+      if (!res.success) {
+        let msg = res.error || 'Sign up failed';
         if (/duplicate|already/i.test(msg)) msg = 'This Student ID is already registered.';
         showError(msg);
         return;
       }
 
-      Auth.setSession('student', result.data);
+      Auth.setSession('student', res.data);
       window.location.href = 'index.html';
 
     } catch (err) {
@@ -204,5 +191,4 @@
   }
 
   updateRoleTab('student');
-
 })();

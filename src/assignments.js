@@ -1,4 +1,3 @@
-
 function initAssignments() {
   const list       = document.getElementById('assignments-list');
   const emptyState = document.getElementById('assignments-empty');
@@ -17,8 +16,19 @@ function initAssignments() {
   const inputDue    = document.getElementById('assignment-due');
   const inputExam   = document.getElementById('assignment-exam');
 
+  // Submission modal (new)
+  const submitModal    = document.getElementById('submit-modal');
+  const submitClose    = document.getElementById('submit-modal-close');
+  const submitCancel   = document.getElementById('submit-modal-cancel');
+  const submitForm     = document.getElementById('submit-form');
+  const submitFile     = document.getElementById('submit-file-input');
+  const submitFileName = document.getElementById('submit-file-name');
+  const submitBtn      = document.getElementById('submit-modal-save');
+  const submitTarget   = document.getElementById('submit-target-title');
+
   let currentFilter = 'all';
   let allAssignments = [];
+  let submitTargetId = null;
 
   function getUserId() {
     const user = AppStorage.getUser();
@@ -36,8 +46,7 @@ function initAssignments() {
 
   function daysUntil(dateStr) {
     if (!dateStr) return null;
-    const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
-    return diff;
+    return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
   }
 
   function badgeClass(days) {
@@ -99,6 +108,9 @@ function initAssignments() {
                 ${badge ? `<small>${badge}</small>` : ''}
               </div>
               <div class="assignment-actions">
+                <button class="icon-btn" data-action="submit" data-id="${a.id}" title="Submit">
+                  <i class="fa-solid fa-upload"></i>
+                </button>
                 <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Edit">
                   <i class="fa-solid fa-pen"></i>
                 </button>
@@ -150,6 +162,61 @@ function initAssignments() {
     inputId.value = '';
   }
 
+  function openSubmitModal(assignment) {
+    if (!submitModal) return;
+    submitTargetId = assignment.id;
+    if (submitTarget) submitTarget.innerText = assignment.subject;
+    if (submitForm) submitForm.reset();
+    if (submitFileName) submitFileName.innerText = 'No file chosen';
+    submitModal.style.display = 'flex';
+  }
+
+  function closeSubmitModal() {
+    if (!submitModal) return;
+    submitModal.style.display = 'none';
+    submitTargetId = null;
+  }
+
+  if (submitFile) {
+    submitFile.addEventListener('change', () => {
+      const f = submitFile.files[0];
+      if (submitFileName) submitFileName.innerText = f ? f.name : 'No file chosen';
+    });
+  }
+
+  if (submitForm) {
+    submitForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!submitTargetId) return;
+      const file = submitFile.files[0];
+      if (!file) { alert('Please choose a file to submit.'); return; }
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Max 10MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Submitting...';
+        const res = await API.post('/api/submissions', {
+          assignment_id: submitTargetId,
+          student_id: currentUserId,
+          file_name: file.name,
+          file_type: file.type,
+          file_data: ev.target.result
+        });
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit';
+        if (!res.success) { alert('Submit failed: ' + res.error); return; }
+        closeSubmitModal();
+        alert('Submitted successfully!');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -197,6 +264,10 @@ function initAssignments() {
       if (res.success) loadAssignments();
       else alert('Delete failed: ' + res.error);
     }
+    else if (action === 'submit') {
+      const assignment = allAssignments.find(a => String(a.id) === String(id));
+      if (assignment) openSubmitModal(assignment);
+    }
   });
 
   list.addEventListener('change', async (e) => {
@@ -216,6 +287,14 @@ function initAssignments() {
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
+  if (submitClose) submitClose.addEventListener('click', closeSubmitModal);
+  if (submitCancel) submitCancel.addEventListener('click', closeSubmitModal);
+  if (submitModal) {
+    submitModal.addEventListener('click', (e) => {
+      if (e.target === submitModal) closeSubmitModal();
+    });
+  }
+
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
@@ -223,7 +302,10 @@ function initAssignments() {
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeModal();
+    if (e.key === 'Escape') {
+      if (modal && modal.style.display === 'flex') closeModal();
+      if (submitModal && submitModal.style.display === 'flex') closeSubmitModal();
+    }
   });
 
   document.querySelectorAll('.tab-btn').forEach(tab => {

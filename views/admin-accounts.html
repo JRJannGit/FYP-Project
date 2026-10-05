@@ -1,0 +1,162 @@
+<div class="resources-container">
+
+  <div class="resources-header">
+    <div class="header-info">
+      <h3>Account Management</h3>
+      <p>Create, update and remove student &amp; lecturer accounts</p>
+    </div>
+  </div>
+
+  <div class="accounts-grid">
+
+    <!-- ============ Students box ============ -->
+    <div class="accounts-box">
+      <div class="accounts-box-header">
+        <div class="accounts-box-title">
+          <div class="accounts-box-icon students"><i class="fa-solid fa-user-graduate"></i></div>
+          <div>
+            <h4>Students</h4>
+            <span id="students-count">0 accounts</span>
+          </div>
+        </div>
+        <button class="add-resource-btn accounts-add-btn" id="btn-add-student">
+          <i class="fa-solid fa-plus"></i> Add
+        </button>
+      </div>
+
+      <div class="accounts-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="students-search" placeholder="Search by ID, name or email...">
+      </div>
+
+      <div class="accounts-list" id="students-list"></div>
+    </div>
+
+    <!-- ============ Lecturers box ============ -->
+    <div class="accounts-box">
+      <div class="accounts-box-header">
+        <div class="accounts-box-title">
+          <div class="accounts-box-icon lecturers"><i class="fa-solid fa-chalkboard-user"></i></div>
+          <div>
+            <h4>Lecturers</h4>
+            <span id="lecturers-count">0 accounts</span>
+          </div>
+        </div>
+        <button class="add-resource-btn accounts-add-btn" id="btn-add-lecturer">
+          <i class="fa-solid fa-plus"></i> Add
+        </button>
+      </div>
+
+      <div class="accounts-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="lecturers-search" placeholder="Search by ID, name or email...">
+      </div>
+
+      <div class="accounts-list" id="lecturers-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ Student add/edit modal ============ -->
+<div class="modal-overlay" id="student-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="student-modal-title">Add Student</h3>
+      <button class="modal-close" id="student-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="student-form" class="modal-form">
+      <input type="hidden" id="student-id">
+
+      <div class="form-group">
+        <label for="student-sid">Student ID</label>
+        <input type="text" id="student-sid" required placeholder="e.g. UPTM12345" maxlength="40">
+      </div>
+
+      <div class="form-group">
+        <label for="student-name">Full Name</label>
+        <input type="text" id="student-name" required placeholder="e.g. Ahmad bin Ali" maxlength="100">
+      </div>
+
+      <div class="form-group">
+        <label for="student-email">Email</label>
+        <input type="email" id="student-email" required placeholder="student@uptm.edu.my">
+      </div>
+
+      <div class="form-group">
+        <label for="student-password">Password <span class="password-hint" id="student-password-hint"></span></label>
+        <input type="password" id="student-password" placeholder="Minimum 6 characters" minlength="6">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="student-modal-cancel">Cancel</button>
+        <button type="submit" class="btn-save" id="student-modal-save">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ Lecturer add/edit modal ============ -->
+<div class="modal-overlay" id="lecturer-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="lecturer-modal-title">Add Lecturer</h3>
+      <button class="modal-close" id="lecturer-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="lecturer-form" class="modal-form">
+      <input type="hidden" id="lecturer-id">
+
+      <div class="form-group">
+        <label for="lecturer-lid">Lecturer ID</label>
+        <input type="text" id="lecturer-lid" required placeholder="e.g. LEC0099" maxlength="40">
+      </div>
+
+      <div class="form-group">
+        <label for="lecturer-name">Full Name</label>
+        <input type="text" id="lecturer-name" required placeholder="e.g. Dr. Siti Aminah" maxlength="100">
+      </div>
+
+      <div class="form-group">
+        <label for="lecturer-email">Email</label>
+        <input type="email" id="lecturer-email" required placeholder="lecturer@uptm.edu.my">
+      </div>
+
+      <div class="form-group">
+        <label for="lecturer-department">Department</label>
+        <input type="text" id="lecturer-department" placeholder="e.g. Faculty of Computing" maxlength="100">
+      </div>
+
+      <div class="form-group">
+        <label for="lecturer-password">Password <span class="password-hint" id="lecturer-password-hint"></span></label>
+        <input type="password" id="lecturer-password" placeholder="Minimum 6 characters" minlength="6">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="lecturer-modal-cancel">Cancel</button>
+        <button type="submit" class="btn-save" id="lecturer-modal-save">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ Delete account confirmation ============ -->
+<div class="modal-overlay" id="delete-account-modal" style="display:none;z-index:10000;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3 id="delete-account-title">Delete Account?</h3>
+      <button class="modal-close" id="delete-account-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="modal-text" id="delete-account-text">This account will be permanently deleted.</p>
+    <p class="modal-text modal-text--warn" id="delete-account-warn"></p>
+    <div class="modal-actions modal-actions--center">
+      <button type="button" class="btn-danger" id="delete-account-yes">DELETE</button>
+      <button type="button" class="btn-cancel" id="delete-account-no">CANCEL</button>
+    </div>
+  </div>
+</div>

@@ -58,4 +58,37 @@
       </div>
     </form>
   </div>
+
+  <!-- ================= SUBMIT ASSIGNMENT MODAL ================= -->
+<div class="modal-overlay" id="submit-modal" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-upload"></i> Submit Assignment</h3>
+      <button class="modal-close" id="submit-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="submit-form" class="modal-body">
+      <p style="margin-bottom:14px;color:var(--text-muted);font-size:0.85rem;">
+        Submitting for: <strong id="submit-target-title">—</strong>
+      </p>
+
+      <div class="form-group">
+        <label>Choose File (max 10MB)</label>
+        <input type="file" id="submit-file-input" required>
+        <small id="submit-file-name" style="display:block;margin-top:6px;color:var(--text-muted);font-size:0.75rem;">
+          No file chosen
+        </small>
+      </div>
+    </form>
+
+    <div class="modal-footer">
+      <button class="action-btn secondary" id="submit-modal-cancel">Cancel</button>
+      <button class="action-btn primary" id="submit-modal-save" form="submit-form" type="submit">
+        Submit
+      </button>
+    </div>
+  </div>
+</div>
 </div>

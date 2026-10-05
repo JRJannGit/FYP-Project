@@ -1,0 +1,242 @@
+
+/* ================= Admin: Account Management ================= */
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.accounts-box {
+  background: var(--bg-card, #161b22);
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 420px;
+}
+
+.accounts-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.accounts-box-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accounts-box-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.accounts-box-icon.students {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.accounts-box-icon.lecturers {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.accounts-box-title h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main, #e6edf3);
+}
+
+.accounts-box-title span {
+  font-size: 0.72rem;
+  color: var(--text-muted, #8b949e);
+}
+
+.accounts-add-btn {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
+
+.accounts-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-hover, #0d1117);
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: var(--text-muted, #8b949e);
+}
+
+.accounts-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-main, #e6edf3);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.accounts-search input::placeholder { color: var(--text-muted, #8b949e); }
+
+.accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 480px;
+  padding-right: 4px;
+}
+
+.accounts-list::-webkit-scrollbar { width: 6px; }
+.accounts-list::-webkit-scrollbar-track { background: transparent; }
+.accounts-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
+
+.accounts-empty {
+  text-align: center;
+  color: var(--text-muted, #8b949e);
+  font-size: 0.85rem;
+  padding: 34px 10px;
+  border: 1px dashed var(--border-color, #30363d);
+  border-radius: 10px;
+}
+
+.accounts-empty i {
+  display: block;
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 10px;
+  background: var(--bg-hover, #0d1117);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.account-row:hover {
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.account-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-info h5 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main, #e6edf3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-id-line {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #60a5fa;
+  letter-spacing: 0.3px;
+}
+
+.account-sub {
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  color: var(--text-muted, #8b949e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.password-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted, #8b949e);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.modal-text--warn {
+  color: #f87171;
+  font-size: 0.78rem;
+  margin-top: -6px;
+}
+
+/* ---------- Light theme ---------- */
+
+body.light-theme .accounts-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .accounts-box-title h4 { color: #0f172a; }
+
+body.light-theme .accounts-search {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+body.light-theme .accounts-search input { color: #0f172a; }
+body.light-theme .accounts-search input::placeholder { color: #94a3b8; }
+
+body.light-theme .account-row {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .account-row:hover { border-color: #3b82f6; }
+
+body.light-theme .account-info h5 { color: #0f172a; }
+body.light-theme .account-id-line { color: #2563eb; }
+body.light-theme .account-sub { color: #64748b; }
+
+body.light-theme .accounts-list::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+body.light-theme .accounts-empty {
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+body.light-theme .modal-text--warn { color: #dc2626; }

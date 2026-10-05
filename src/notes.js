@@ -48,6 +48,7 @@ function initNotes() {
   let isEditMode = false;
   let searchTerm = '';
   let currentZoom = 100;
+  let isNewUnsaved = false; // true while a brand-new note (from "Add Note") has never been saved
 
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({
@@ -198,9 +199,24 @@ function initNotes() {
   }
 
   function closeNoteModal() {
+    // A brand-new note that is closed without any edits is removed completely,
+    // so an empty "New Note" is never left behind in the list.
+    if (isNewUnsaved && activeId) {
+      const note = notes.find(n => n.id === activeId);
+      const titleNow = (modalTitle.value || '').trim();
+      const hasText  = (modalContent.textContent || '').trim().length > 0;
+      const hasMedia = modalContent.querySelector('.note-attachment, img');
+      if (note && titleNow === 'New Note' && !hasText && !hasMedia) {
+        const delId = activeId;
+        notes = notes.filter(n => n.id !== delId);
+        API.delete(`/api/notes/${delId}`);
+        renderList();
+      }
+    }
     noteModal.style.display = 'none';
     activeId = null;
     isEditMode = false;
+    isNewUnsaved = false;
     document.body.classList.remove('notes-edit-mode');
   }
 
@@ -224,6 +240,7 @@ function initNotes() {
       note.updated_at = new Date().toISOString();
       originalTitle = newTitle;
       originalContent = newContent;
+      isNewUnsaved = false; // note is now persisted — it is no longer "brand new"
       renderList();
       return true;
     }
@@ -387,10 +404,27 @@ function initNotes() {
     discardModal.style.display = 'flex';
   });
 
-  discardYes.addEventListener('click', () => {
+  discardYes.addEventListener('click', async () => {
+    discardModal.style.display = 'none';
+
+    // Discarding a brand-new note removes it entirely instead of keeping it.
+    if (isNewUnsaved && activeId) {
+      const delId = activeId;
+      isNewUnsaved = false;
+      activeId = null;
+      const res = await API.delete(`/api/notes/${delId}`);
+      if (res.success) {
+        notes = notes.filter(n => n.id !== delId);
+      } else {
+        alert('Could not discard note: ' + res.error);
+      }
+      closeNoteModal();
+      renderList();
+      return;
+    }
+
     modalTitle.value = originalTitle;
     modalContent.innerHTML = originalContent;
-    discardModal.style.display = 'none';
     enterViewMode();
     refreshEditorState();
   });
@@ -439,6 +473,7 @@ function initNotes() {
           renderList();
           openNoteModal(note);
           enterEditMode();
+          isNewUnsaved = true; // note only exists in DB as "New Note" until saved
         }
       } else {
         alert('Create failed: ' + res.error);

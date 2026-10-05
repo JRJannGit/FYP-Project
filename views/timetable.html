@@ -25,9 +25,19 @@
   </div>
 
   <div id="timetable-display-view" class="timetable-card display-card" style="display: none;">
-    <div class="timetable-preview-wrapper">
+    <div class="timetable-preview-wrapper" id="timetable-preview-wrapper">
       <img id="timetable-img-preview" src="" alt="Uploaded Timetable" style="display: none;">
       <iframe id="timetable-pdf-preview" src="" style="display: none;"></iframe>
+    </div>
+
+    <div class="timetable-zoom">
+      <button id="timetable-zoom-out" class="zoom-btn" title="Zoom out">
+        <i class="fa-solid fa-magnifying-glass-minus"></i>
+      </button>
+      <button id="timetable-zoom-value" class="zoom-value" title="Reset zoom">100%</button>
+      <button id="timetable-zoom-in" class="zoom-btn" title="Zoom in">
+        <i class="fa-solid fa-magnifying-glass-plus"></i>
+      </button>
     </div>
 
     <button id="btn-delete-timetable" class="delete-icon-btn" title="Delete Timetable">

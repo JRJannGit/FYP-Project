@@ -10,6 +10,8 @@ app.use(express.json({ limit: '50mb' }));
 const ok = (res, data) => res.json({ success: true, data });
 const fail = (res, msg, code = 500) => res.status(code).json({ success: false, error: msg });
 
+/* ================= AUTH ================= */
+
 app.post('/api/auth/login', async (req, res) => {
   const { identifier, password, role } = req.body || {};
   console.log(`[LOGIN] role=${role} id=${identifier}`);
@@ -70,6 +72,9 @@ app.post('/api/auth/student/signup', async (req, res) => {
   const { student_id, full_name, email, password } = req.body || {};
   try {
     if (!student_id || !full_name || !email || !password) return fail(res, 'All fields are required', 400);
+    if (!email.includes('@')) return fail(res, 'Invalid email format', 400);
+    if (password.length < 6) return fail(res, 'Password must be at least 6 characters', 400);
+
     const [result] = await db.query(
       'INSERT INTO students (student_id, full_name, email, password) VALUES (?, ?, ?, ?)',
       [student_id, full_name, email, password]
@@ -93,6 +98,8 @@ app.post('/api/auth/admin/login', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= ASSIGNMENTS ================= */
+
 app.get('/api/assignments', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM assignments ORDER BY due_date ASC');
@@ -100,16 +107,23 @@ app.get('/api/assignments', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+// STEP 3: Filter by enrollment
 app.get('/api/assignments/student/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT a.id, a.subject, a.description, a.due_date, a.is_exam,
+             c.class_code, c.class_name,
         CASE WHEN ac.id IS NOT NULL THEN TRUE ELSE FALSE END AS completed
       FROM assignments a
+      LEFT JOIN classes c ON c.id = a.class_id
       LEFT JOIN assignment_completions ac
         ON ac.assignment_id = a.id AND ac.student_id = ?
+      WHERE a.class_id IS NULL
+         OR a.class_id IN (
+              SELECT class_id FROM enrollments WHERE student_id = ?
+            )
       ORDER BY a.due_date ASC
-    `, [req.params.student_id]);
+    `, [req.params.student_id, req.params.student_id]);
     ok(res, rows);
   } catch (err) { fail(res, err.message); }
 });
@@ -121,6 +135,8 @@ app.post('/api/assignments', async (req, res) => {
       class_id, lecturer_id, start_time, end_time, status,
       file_name, file_type, file_data, url_link
     } = req.body;
+
+    if (!subject || !due_date) return fail(res, 'Subject and due_date are required', 400);
 
     const [result] = await db.query(
       `INSERT INTO assignments
@@ -174,6 +190,234 @@ app.post('/api/assignments/:id/toggle', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+// STEP 4: Add enrolled_count & submission_count
+app.get('/api/assignments/lecturer/:lecturer_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT a.*, c.class_code, c.class_name,
+              (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = a.class_id) AS enrolled_count,
+              (SELECT COUNT(*) FROM submissions s WHERE s.assignment_id = a.id) AS submission_count
+       FROM assignments a
+       LEFT JOIN classes c ON c.id = a.class_id
+       WHERE a.lecturer_id = ?
+       ORDER BY a.created_at DESC`,
+      [req.params.lecturer_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= CLASSES (LECTURER) ================= */
+
+app.get('/api/lecturer/classes/:lecturer_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM classes WHERE lecturer_id = ? ORDER BY class_code ASC',
+      [req.params.lecturer_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/lecturer/classes', async (req, res) => {
+  try {
+    const {
+      class_code, class_name, subject_code,
+      lecturer_id, description, semester
+    } = req.body || {};
+
+    if (!class_code || !class_name || !lecturer_id) {
+      return fail(res, 'class_code, class_name, and lecturer_id are required', 400);
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO classes
+         (class_code, class_name, subject_code, lecturer_id, description, semester)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        String(class_code).trim(),
+        String(class_name).trim(),
+        subject_code ? String(subject_code).trim() : null,
+        String(lecturer_id).trim(),
+        description ? String(description).trim() : null,
+        semester ? String(semester).trim() : null
+      ]
+    );
+    ok(res, { id: result.insertId });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return fail(res, 'This class code already exists', 400);
+    fail(res, err.message);
+  }
+});
+
+app.put('/api/lecturer/classes/:id', async (req, res) => {
+  try {
+    const {
+      class_code, class_name, subject_code,
+      description, semester
+    } = req.body || {};
+
+    if (!class_code || !class_name) {
+      return fail(res, 'class_code and class_name are required', 400);
+    }
+
+    await db.query(
+      `UPDATE classes
+       SET class_code=?, class_name=?, subject_code=?, description=?, semester=?
+       WHERE id=?`,
+      [
+        String(class_code).trim(),
+        String(class_name).trim(),
+        subject_code ? String(subject_code).trim() : null,
+        description ? String(description).trim() : null,
+        semester ? String(semester).trim() : null,
+        req.params.id
+      ]
+    );
+    ok(res, { updated: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.delete('/api/lecturer/classes/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM classes WHERE id = ?', [req.params.id]);
+    ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= ENROLLMENTS ================= */
+
+// Get all students enrolled in a class
+app.get('/api/enrollments/class/:class_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT e.id, e.class_id, e.student_id, e.enrolled_at,
+              s.full_name, s.email
+       FROM enrollments e
+       LEFT JOIN students s ON s.student_id = e.student_id
+       WHERE e.class_id = ?
+       ORDER BY s.full_name ASC`,
+      [req.params.class_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// Get all classes a student is enrolled in
+app.get('/api/enrollments/student/:student_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT e.id, e.class_id, e.enrolled_at,
+              c.class_code, c.class_name, c.subject_code, c.semester,
+              c.lecturer_id, l.full_name AS lecturer_name
+       FROM enrollments e
+       JOIN classes c ON c.id = e.class_id
+       LEFT JOIN lecturers l ON l.lecturer_id = c.lecturer_id
+       WHERE e.student_id = ?
+       ORDER BY c.class_code ASC`,
+      [req.params.student_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// Enroll a single student
+app.post('/api/enrollments', async (req, res) => {
+  try {
+    const { class_id, student_id } = req.body || {};
+    if (!class_id || !student_id) {
+      return fail(res, 'class_id and student_id are required', 400);
+    }
+
+    const [cls] = await db.query('SELECT id FROM classes WHERE id = ?', [class_id]);
+    if (cls.length === 0) return fail(res, 'Class not found', 404);
+
+    const [stu] = await db.query('SELECT id FROM students WHERE student_id = ?', [student_id]);
+    if (stu.length === 0) return fail(res, 'Student not found', 404);
+
+    await db.query(
+      'INSERT INTO enrollments (class_id, student_id) VALUES (?, ?)',
+      [class_id, student_id]
+    );
+    ok(res, { enrolled: true });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return fail(res, 'Student already enrolled in this class', 400);
+    fail(res, err.message);
+  }
+});
+
+// Remove student from class
+app.delete('/api/enrollments/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM enrollments WHERE id = ?', [req.params.id]);
+    ok(res, { removed: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+// Bulk enroll multiple students
+app.post('/api/enrollments/bulk', async (req, res) => {
+  try {
+    const { class_id, student_ids } = req.body || {};
+    if (!class_id || !Array.isArray(student_ids) || student_ids.length === 0) {
+      return fail(res, 'class_id and student_ids array required', 400);
+    }
+
+    const values = student_ids.map(sid => [class_id, sid]);
+    await db.query(
+      'INSERT IGNORE INTO enrollments (class_id, student_id) VALUES ?',
+      [values]
+    );
+    ok(res, { enrolled: student_ids.length });
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= SUBMISSIONS ================= */
+
+app.get('/api/submissions/:assignment_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT s.id, s.assignment_id, s.student_id, s.file_name, s.submitted_at,
+              st.email AS student_email
+       FROM submissions s
+       LEFT JOIN students st ON st.student_id = s.student_id
+       WHERE s.assignment_id = ?
+       ORDER BY s.submitted_at ASC`,
+      [req.params.assignment_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.get('/api/submissions/item/:submission_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM submissions WHERE id = ?',
+      [req.params.submission_id]
+    );
+    ok(res, rows[0] || null);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/submissions', async (req, res) => {
+  try {
+    const { assignment_id, student_id, file_name, file_type, file_data } = req.body;
+    if (!assignment_id || !student_id) return fail(res, 'assignment_id and student_id required', 400);
+    await db.query(
+      `INSERT INTO submissions (assignment_id, student_id, file_name, file_type, file_data)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         file_name=VALUES(file_name),
+         file_type=VALUES(file_type),
+         file_data=VALUES(file_data),
+         submitted_at=CURRENT_TIMESTAMP`,
+      [assignment_id, student_id, file_name, file_type, file_data]
+    );
+    ok(res, { uploaded: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= TIMETABLE ================= */
+
 app.get('/api/timetable/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -224,6 +468,8 @@ app.get('/api/timetable-entries/today', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= REMINDERS ================= */
+
 app.get('/api/reminders/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -250,6 +496,7 @@ app.get('/api/reminders/:student_id/due', async (req, res) => {
 app.post('/api/reminders', async (req, res) => {
   try {
     const { student_id, title, description, remind_date, remind_time, priority } = req.body;
+    if (!student_id || !title || !remind_date) return fail(res, 'Missing required fields', 400);
     const [result] = await db.query(
       `INSERT INTO reminders (student_id, title, description, remind_date, remind_time, priority)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -276,6 +523,8 @@ app.delete('/api/reminders/:id', async (req, res) => {
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
 });
+
+/* ================= NOTES ================= */
 
 app.get('/api/notes/:student_id', async (req, res) => {
   try {
@@ -313,6 +562,7 @@ app.delete('/api/notes/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= RESOURCES ================= */
 
 function canModifyResource(role, userId, resource) {
   if (role === 'admin') return true;
@@ -322,7 +572,32 @@ function canModifyResource(role, userId, resource) {
 
 app.get('/api/resources', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM resources ORDER BY is_system DESC, title ASC');
+    const role = req.headers['x-user-role'];
+    const userId = req.headers['x-user-id'];
+
+    // Kalau tak authenticated: pulangkan system resources sahaja
+    if (!role || !userId) {
+      const [rows] = await db.query(
+        'SELECT * FROM resources WHERE is_system = 1 ORDER BY id ASC'
+      );
+      return ok(res, rows);
+    }
+
+    // Admin nampak semua
+    if (role === 'admin') {
+      const [rows] = await db.query(
+        'SELECT * FROM resources ORDER BY is_system DESC, id ASC'
+      );
+      return ok(res, rows);
+    }
+
+    // Student / Lecturer: system resources + own resources sahaja
+    const [rows] = await db.query(
+      `SELECT * FROM resources
+       WHERE is_system = 1 OR created_by = ?
+       ORDER BY is_system DESC, id ASC`,
+      [userId]
+    );
     ok(res, rows);
   } catch (err) { fail(res, err.message); }
 });
@@ -333,6 +608,7 @@ app.post('/api/resources', async (req, res) => {
     const role = req.headers['x-user-role'];
     if (!role) return fail(res, 'Not authenticated', 401);
 
+    // Hanya admin boleh buat system resource
     const systemFlag = (role === 'admin' && is_system) ? 1 : 0;
 
     const [result] = await db.query(
@@ -394,6 +670,8 @@ app.delete('/api/resources/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= EVENTS ================= */
+
 app.get('/api/events/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -435,13 +713,23 @@ app.delete('/api/events/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= DASHBOARD ================= */
+
 app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
   try {
     const sid = req.params.student_id;
 
     const [assignments] = await db.query(
-      `SELECT id, subject AS title, description, due_date AS date, NULL AS time, 'assignment' AS type, is_exam
-       FROM assignments WHERE due_date >= CURDATE() ORDER BY due_date ASC`
+      `SELECT a.id, a.subject AS title, a.description, a.due_date AS date,
+              NULL AS time, 'assignment' AS type, a.is_exam
+       FROM assignments a
+       WHERE a.due_date >= CURDATE()
+         AND (
+           a.class_id IS NULL
+           OR a.class_id IN (SELECT class_id FROM enrollments WHERE student_id = ?)
+         )
+       ORDER BY a.due_date ASC`,
+      [sid]
     );
 
     const [reminders] = await db.query(
@@ -463,6 +751,8 @@ app.get('/api/dashboard/upcoming/:student_id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= ACADEMIC CALENDAR ================= */
+
 app.get('/api/academic-calendar', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -483,6 +773,15 @@ app.post('/api/academic-calendar', async (req, res) => {
     ok(res, { uploaded: true });
   } catch (err) { fail(res, err.message); }
 });
+
+app.delete('/api/academic-calendar', async (req, res) => {
+  try {
+    await db.query('DELETE FROM academic_calendar');
+    ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= SETTINGS ================= */
 
 app.get('/api/settings/:user_id/:role', async (req, res) => {
   try {
@@ -521,71 +820,7 @@ app.post('/api/settings', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-app.get('/api/lecturer/classes/:lecturer_id', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT * FROM classes WHERE lecturer_id = ? ORDER BY class_code ASC',
-      [req.params.lecturer_id]
-    );
-    ok(res, rows);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.get('/api/assignments/lecturer/:lecturer_id', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      `SELECT a.*, c.class_code, c.class_name
-       FROM assignments a
-       LEFT JOIN classes c ON c.id = a.class_id
-       WHERE a.lecturer_id = ?
-       ORDER BY a.created_at DESC`,
-      [req.params.lecturer_id]
-    );
-    ok(res, rows);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.get('/api/submissions/:assignment_id', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      `SELECT s.id, s.assignment_id, s.student_id, s.file_name, s.submitted_at,
-              st.email AS student_email
-       FROM submissions s
-       LEFT JOIN students st ON st.student_id = s.student_id
-       WHERE s.assignment_id = ?
-       ORDER BY s.submitted_at ASC`,
-      [req.params.assignment_id]
-    );
-    ok(res, rows);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.get('/api/submissions/item/:submission_id', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT * FROM submissions WHERE id = ?',
-      [req.params.submission_id]
-    );
-    ok(res, rows[0] || null);
-  } catch (err) { fail(res, err.message); }
-});
-
-app.post('/api/submissions', async (req, res) => {
-  try {
-    const { assignment_id, student_id, file_name, file_type, file_data } = req.body;
-    await db.query(
-      `INSERT INTO submissions (assignment_id, student_id, file_name, file_type, file_data)
-       VALUES (?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-         file_name=VALUES(file_name),
-         file_type=VALUES(file_type),
-         file_data=VALUES(file_data),
-         submitted_at=CURRENT_TIMESTAMP`,
-      [assignment_id, student_id, file_name, file_type, file_data]
-    );
-    ok(res, { uploaded: true });
-  } catch (err) { fail(res, err.message); }
-});
+/* ================= ADMIN STATS ================= */
 
 app.get('/api/admin/stats', async (req, res) => {
   try {
@@ -598,12 +833,179 @@ app.get('/api/admin/stats', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
-app.delete('/api/academic-calendar', async (req, res) => {
+/* ================= ADMIN ACCOUNTS ================= */
+
+function requireAdminRole(req) {
+  return req.headers['x-user-role'] === 'admin';
+}
+
+/* ---------- Students ---------- */
+app.get('/api/accounts/students', async (req, res) => {
   try {
-    await db.query('DELETE FROM academic_calendar');
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const [rows] = await db.query(
+      'SELECT id, student_id, full_name, email FROM students ORDER BY id ASC'
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/accounts/students', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const { student_id, full_name, email, password } = req.body || {};
+    if (!student_id || !full_name || !email || !password) {
+      return fail(res, 'Student ID, full name, email and password are required', 400);
+    }
+    if (!email.includes('@')) return fail(res, 'Invalid email format', 400);
+    if (password.length < 6) return fail(res, 'Password must be at least 6 characters', 400);
+
+    const [result] = await db.query(
+      'INSERT INTO students (student_id, full_name, email, password) VALUES (?, ?, ?, ?)',
+      [String(student_id).trim(), String(full_name).trim(), String(email).trim(), password]
+    );
+    ok(res, { id: result.insertId });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return fail(res, 'This Student ID is already registered', 400);
+    fail(res, err.message);
+  }
+});
+
+app.put('/api/accounts/students/:id', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const { full_name, email, password } = req.body || {};
+    if (!full_name || !email) return fail(res, 'Full name and email are required', 400);
+
+    const [rows] = await db.query('SELECT id FROM students WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return fail(res, 'Student not found', 404);
+
+    if (password) {
+      await db.query(
+        'UPDATE students SET full_name = ?, email = ?, password = ? WHERE id = ?',
+        [String(full_name).trim(), String(email).trim(), password, req.params.id]
+      );
+    } else {
+      await db.query(
+        'UPDATE students SET full_name = ?, email = ? WHERE id = ?',
+        [String(full_name).trim(), String(email).trim(), req.params.id]
+      );
+    }
+    ok(res, { updated: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.delete('/api/accounts/students/:id', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const [rows] = await db.query('SELECT id, student_id FROM students WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return fail(res, 'Student not found', 404);
+
+    const sid = rows[0].student_id;
+
+    const cleanups = [
+      ['DELETE FROM notes WHERE student_id = ?',                  [sid]],
+      ['DELETE FROM reminders WHERE student_id = ?',              [sid]],
+      ['DELETE FROM events WHERE student_id = ?',                 [sid]],
+      ['DELETE FROM timetable WHERE student_id = ?',              [sid]],
+      ['DELETE FROM submissions WHERE student_id = ?',            [sid]],
+      ['DELETE FROM assignment_completions WHERE student_id = ?', [sid]],
+      ['DELETE FROM enrollments WHERE student_id = ?',            [sid]],
+      ["DELETE FROM user_settings WHERE user_id = ? AND user_role = 'student'", [sid]]
+    ];
+    for (const [sql, params] of cleanups) {
+      try { await db.query(sql, params); }
+      catch (e) { console.warn('[ACCOUNTS] student cleanup skipped:', e.message); }
+    }
+
+    await db.query('DELETE FROM students WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
 });
+
+/* ---------- Lecturers ---------- */
+app.get('/api/accounts/lecturers', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const [rows] = await db.query(
+      'SELECT id, lecturer_id, full_name, email, department FROM lecturers ORDER BY id ASC'
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/accounts/lecturers', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const { lecturer_id, full_name, email, department, password } = req.body || {};
+    if (!lecturer_id || !full_name || !email || !password) {
+      return fail(res, 'Lecturer ID, full name, email and password are required', 400);
+    }
+    if (!email.includes('@')) return fail(res, 'Invalid email format', 400);
+    if (password.length < 6) return fail(res, 'Password must be at least 6 characters', 400);
+
+    const [result] = await db.query(
+      'INSERT INTO lecturers (lecturer_id, full_name, email, department, password) VALUES (?, ?, ?, ?, ?)',
+      [String(lecturer_id).trim(), String(full_name).trim(), String(email).trim(),
+       department ? String(department).trim() : '', password]
+    );
+    ok(res, { id: result.insertId });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return fail(res, 'This Lecturer ID or email is already registered', 400);
+    fail(res, err.message);
+  }
+});
+
+app.put('/api/accounts/lecturers/:id', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const { full_name, email, department, password } = req.body || {};
+    if (!full_name || !email) return fail(res, 'Full name and email are required', 400);
+
+    const [rows] = await db.query('SELECT id FROM lecturers WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return fail(res, 'Lecturer not found', 404);
+
+    if (password) {
+      await db.query(
+        'UPDATE lecturers SET full_name = ?, email = ?, department = ?, password = ? WHERE id = ?',
+        [String(full_name).trim(), String(email).trim(),
+         department ? String(department).trim() : '', password, req.params.id]
+      );
+    } else {
+      await db.query(
+        'UPDATE lecturers SET full_name = ?, email = ?, department = ? WHERE id = ?',
+        [String(full_name).trim(), String(email).trim(),
+         department ? String(department).trim() : '', req.params.id]
+      );
+    }
+    ok(res, { updated: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.delete('/api/accounts/lecturers/:id', async (req, res) => {
+  try {
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
+    const [rows] = await db.query('SELECT id, lecturer_id FROM lecturers WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return fail(res, 'Lecturer not found', 404);
+
+    const lid = rows[0].lecturer_id;
+
+    const cleanups = [
+      ['DELETE FROM assignments WHERE lecturer_id = ?', [lid]],
+      ['DELETE FROM classes WHERE lecturer_id = ?',     [lid]],
+      ["DELETE FROM user_settings WHERE user_id = ? AND user_role = 'lecturer'", [lid]]
+    ];
+    for (const [sql, params] of cleanups) {
+      try { await db.query(sql, params); }
+      catch (e) { console.warn('[ACCOUNTS] lecturer cleanup skipped:', e.message); }
+    }
+
+    await db.query('DELETE FROM lecturers WHERE id = ?', [req.params.id]);
+    ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= HEALTH & TEST ================= */
 
 app.get('/api/health', (req, res) => {
   ok(res, { status: 'up', service: 'uptm-buddy-api', time: new Date().toISOString() });
@@ -624,6 +1026,9 @@ app.get('/test-notification.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-notification.html'));
 });
 
-app.listen(3000, () => {
-  console.log('🚀 UPTM Buddy API running at http://localhost:3000');
+/* ================= START ================= */
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 UPTM Buddy API running at http://localhost:${PORT}`);
 });

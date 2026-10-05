@@ -9,6 +9,7 @@
 
   const INIT_MAP = {
     dashboard: 'initAdminDashboard',
+    accounts:  'initAdminAccounts',
     calendar:  'initAdminCalendar',
     notes:     'initNotes',
     reminders: 'initReminders',
@@ -20,6 +21,7 @@
   const FILE_MAP = {
     dashboard: 'admin-dashboard',
     calendar:  'admin-calendar',
+    accounts:  'admin-accounts',
     resources: 'admin-resources'
   };
 

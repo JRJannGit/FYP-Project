@@ -1,4 +1,3 @@
-
 function initAssignments() {
   console.log('[Lecturer Assignments] init');
 
@@ -46,6 +45,18 @@ function initAssignments() {
   const urlCancel = document.getElementById('url-input-cancel');
   const urlClose  = document.getElementById('url-input-close');
 
+  // Class management modal (new)
+  const classModal    = document.getElementById('class-modal');
+  const classForm     = document.getElementById('class-form');
+  const classClose    = document.getElementById('class-modal-close');
+  const classCancel   = document.getElementById('class-modal-cancel');
+  const classSave     = document.getElementById('class-modal-save');
+  const classCodeIn   = document.getElementById('class-code');
+  const classNameIn   = document.getElementById('class-name');
+  const classSubjectIn= document.getElementById('class-subject-code');
+  const classSemesterIn = document.getElementById('class-semester');
+  const classDescIn   = document.getElementById('class-description');
+
   let uploadedFile = null;
   let uploadedUrl  = '';
   let editingId    = null;
@@ -70,15 +81,88 @@ function initAssignments() {
   async function loadClasses() {
     if (!metaClass) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/lecturer/classes/${userId}`);
-      const data = await res.json();
-      if (!data.success) return;
+      const res = await API.get(`/api/lecturer/classes/${userId}`);
+      if (!res.success) return;
+      const classes = res.data || [];
+
       metaClass.innerHTML = '<option value="">Select class...</option>' +
-        data.data.map(c => `<option value="${c.id}">${c.class_code} — ${c.class_name}</option>`).join('');
+        classes.map(c => `<option value="${c.id}">${c.class_code} — ${c.class_name}</option>`).join('');
+
+      // Kalau tak ada class, tunjuk button "Create Class" dalam dropdown
+      if (classes.length === 0) {
+        metaClass.innerHTML = '<option value="">No classes yet — click "Manage Classes" to create</option>';
+      }
     } catch (err) {
       console.warn('[Classes] Load failed:', err);
     }
   }
+
+  /* ---------- Class Management Modal ---------- */
+
+  function openClassModal() {
+    if (!classModal) return;
+    if (classForm) classForm.reset();
+    classModal.style.display = 'flex';
+    setTimeout(() => classCodeIn?.focus(), 60);
+  }
+
+  function closeClassModal() {
+    if (!classModal) return;
+    classModal.style.display = 'none';
+    if (classForm) classForm.reset();
+  }
+
+  if (classForm) {
+    classForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        class_code: classCodeIn?.value.trim(),
+        class_name: classNameIn?.value.trim(),
+        subject_code: classSubjectIn?.value.trim() || null,
+        semester: classSemesterIn?.value.trim() || null,
+        description: classDescIn?.value.trim() || null,
+        lecturer_id: userId
+      };
+
+      if (!payload.class_code || !payload.class_name) {
+        alert('Class code and name are required');
+        return;
+      }
+
+      classSave.disabled = true;
+      classSave.innerText = 'Saving...';
+
+      const res = await API.post('/api/lecturer/classes', payload);
+
+      classSave.disabled = false;
+      classSave.innerText = 'Add Class';
+
+      if (!res.success) {
+        alert('Save failed: ' + res.error);
+        return;
+      }
+
+      closeClassModal();
+      await loadClasses();
+      alert('Class created successfully!');
+    });
+  }
+
+  if (classClose)  classClose.addEventListener('click', closeClassModal);
+  if (classCancel) classCancel.addEventListener('click', closeClassModal);
+  if (classModal) {
+    classModal.addEventListener('click', (e) => {
+      if (e.target === classModal) closeClassModal();
+    });
+  }
+
+  // Bind button "Manage Classes" (kalau ada dalam HTML)
+  const btnManageClasses = document.getElementById('btn-manage-classes');
+  if (btnManageClasses) {
+    btnManageClasses.addEventListener('click', openClassModal);
+  }
+
+  /* ---------- Description Edit ---------- */
 
   if (btnEditToggle && descInput) {
     descInput.setAttribute('contenteditable', 'false');
@@ -103,6 +187,8 @@ function initAssignments() {
       catch (err) { console.warn('execCommand failed:', err); }
     });
   });
+
+  /* ---------- File Upload ---------- */
 
   if (btnUploadFile && fileInput) {
     btnUploadFile.addEventListener('click', () => fileInput.click());
@@ -132,11 +218,10 @@ function initAssignments() {
     });
   }
 
+  /* ---------- URL Modal ---------- */
+
   function openUrlModal() {
-    if (!urlModal) {
-      console.error('[URL Modal] element not found');
-      return;
-    }
+    if (!urlModal) return;
     if (urlField) urlField.value = uploadedUrl || '';
     hideUrlError();
     urlModal.style.display = 'flex';
@@ -162,27 +247,15 @@ function initAssignments() {
 
   function saveUrl() {
     const url = (urlField?.value || '').trim();
-    if (!url) {
-      showUrlError('URL is required');
-      return;
-    }
-    if (!/^https?:\/\//i.test(url)) {
-      showUrlError('URL must start with http:// or https://');
-      return;
-    }
+    if (!url) { showUrlError('URL is required'); return; }
+    if (!/^https?:\/\//i.test(url)) { showUrlError('URL must start with http:// or https://'); return; }
     uploadedUrl = url;
     uploadedFile = null;
     showPreview(url, 'link');
     closeUrlModal();
   }
 
-  if (btnInsertUrl) {
-    btnInsertUrl.addEventListener('click', openUrlModal);
-    console.log('[URL Modal] button wired');
-  } else {
-    console.warn('[URL Modal] btn-insert-url not found');
-  }
-
+  if (btnInsertUrl) btnInsertUrl.addEventListener('click', openUrlModal);
   if (urlSave)   urlSave.addEventListener('click', saveUrl);
   if (urlCancel) urlCancel.addEventListener('click', closeUrlModal);
   if (urlClose)  urlClose.addEventListener('click', closeUrlModal);
@@ -205,9 +278,7 @@ function initAssignments() {
     uploadPreview.style.display = 'flex';
     if (previewName) previewName.innerText = name;
     const icon = uploadPreview.querySelector('i');
-    if (icon) {
-      icon.className = type === 'link' ? 'fa-solid fa-link' : 'fa-solid fa-paperclip';
-    }
+    if (icon) icon.className = type === 'link' ? 'fa-solid fa-link' : 'fa-solid fa-paperclip';
   }
 
   function hidePreview() {
@@ -223,6 +294,8 @@ function initAssignments() {
       hidePreview();
     });
   }
+
+  /* ---------- Reset ---------- */
 
   if (btnReset) {
     btnReset.addEventListener('click', () => {
@@ -242,6 +315,8 @@ function initAssignments() {
     });
   }
 
+  /* ---------- Release Assignment ---------- */
+
   if (btnRelease) {
     btnRelease.addEventListener('click', async () => {
       const topic = topicInput?.value.trim();
@@ -253,7 +328,7 @@ function initAssignments() {
 
       if (!topic)   { alert('Topic is required'); topicInput.focus(); return; }
       if (!dueDate) { alert('Due Date is required'); metaDueDate.focus(); return; }
-      if (!classId) { alert('Please select a class'); metaClass.focus(); return; }
+      if (!classId) { alert('Please select a class. If no class is listed, click "Manage Classes" to create one.'); metaClass.focus(); return; }
 
       const payload = {
         subject: topic,
@@ -294,6 +369,8 @@ function initAssignments() {
       loadAssignmentsList();
     });
   }
+
+  /* ---------- Assignments List ---------- */
 
   async function loadAssignmentsList() {
     const res = await API.get(`/api/assignments/lecturer/${userId}`);
@@ -336,6 +413,8 @@ function initAssignments() {
       }
     });
   }
+
+  /* ---------- Submissions ---------- */
 
   async function openSubmissionsModal(assignment) {
     if (!submissionsList || !submissionsModal) return;
@@ -393,10 +472,7 @@ function initAssignments() {
       if (!btn) return;
       const id = btn.dataset.id;
       const res = await API.get(`/api/submissions/item/${id}`);
-      if (!res.success || !res.data) {
-        alert('Failed to load submission');
-        return;
-      }
+      if (!res.success || !res.data) { alert('Failed to load submission'); return; }
       downloadFile(res.data.file_name, res.data.file_data);
     });
   }
@@ -410,14 +486,10 @@ function initAssignments() {
   }
 
   if (submissionsClose) {
-    submissionsClose.addEventListener('click', () => {
-      submissionsModal.style.display = 'none';
-    });
+    submissionsClose.addEventListener('click', () => { submissionsModal.style.display = 'none'; });
   }
   if (submissionsCloseBtn) {
-    submissionsCloseBtn.addEventListener('click', () => {
-      submissionsModal.style.display = 'none';
-    });
+    submissionsCloseBtn.addEventListener('click', () => { submissionsModal.style.display = 'none'; });
   }
   if (submissionsModal) {
     submissionsModal.addEventListener('click', (e) => {
@@ -430,10 +502,7 @@ function initAssignments() {
       if (!currentAssignmentForSubs) return;
 
       const res = await API.get(`/api/submissions/${currentAssignmentForSubs.id}`);
-      if (!res.success || res.data.length === 0) {
-        alert('No submissions to download');
-        return;
-      }
+      if (!res.success || res.data.length === 0) { alert('No submissions to download'); return; }
 
       if (typeof JSZip === 'undefined') {
         alert('ZIP library not loaded. Download individually.');

@@ -47,12 +47,83 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  margin: auto;
 }
 
 .timetable-preview-wrapper iframe {
   width: 100%;
   height: 100%;
   border: none;
+  margin: auto;
+}
+
+/* Zoomed state — allow panning/scrolling inside the preview box */
+.timetable-preview-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+.timetable-preview-wrapper::-webkit-scrollbar-track { background: transparent; }
+.timetable-preview-wrapper::-webkit-scrollbar-thumb {
+  background: #c9d1d9;
+  border-radius: 8px;
+}
+
+/* Zoom controls (bottom-left of the display card) */
+.timetable-zoom {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-main, #0d1117);
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 12px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+
+.timetable-zoom .zoom-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.timetable-zoom .zoom-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #60a5fa;
+}
+
+.timetable-zoom .zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.timetable-zoom .zoom-value {
+  min-width: 52px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.timetable-zoom .zoom-value:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 

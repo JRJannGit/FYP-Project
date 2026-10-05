@@ -1,4 +1,3 @@
-
 function initResources() {
   const grid = document.getElementById('resources-grid');
   const addBtn = document.getElementById('btn-add-resource');
@@ -97,12 +96,23 @@ function initResources() {
           </div>
         `;
 
-      const badge = !r.is_system && r.created_by === userId
-        ? '<span class="owner-badge">Yours</span>'
-        : '';
+      // Badge logic:
+      // - System resource → "System"
+      // - Own resource → "Yours"
+      // - Other people's resource (shouldn't happen in Option B) → "Shared"
+      let badge = '';
+      const isSystem = r.is_system === true || r.is_system === 1;
+
+      if (isSystem) {
+        badge = '<span class="system-badge">System</span>';
+      } else if (r.created_by === userId) {
+        badge = '<span class="owner-badge">Yours</span>';
+      } else {
+        badge = '<span class="other-badge">Shared</span>';
+      }
 
       return `
-        <div class="resource-card ${r.is_system ? 'system' : ''}" data-id="${r.id}" data-url="${escapeHtml(url)}">
+        <div class="resource-card ${isSystem ? 'system' : ''}" data-id="${r.id}" data-url="${escapeHtml(url)}">
           <div class="card-brand">
             <i class="fa-solid ${icon}"></i>
           </div>

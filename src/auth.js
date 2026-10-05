@@ -1,4 +1,3 @@
-
 const Auth = {
   KEY: 'uptm_session',
 
@@ -43,20 +42,13 @@ const Auth = {
   },
 
   setSession(role, user) {
-    const session = {
-      role,
-      user,
-      loginAt: new Date().toISOString()
-    };
+    const session = { role, user, loginAt: new Date().toISOString() };
     localStorage.setItem(this.KEY, JSON.stringify(session));
   },
 
   getSession() {
-    try {
-      return JSON.parse(localStorage.getItem(this.KEY));
-    } catch {
-      return null;
-    }
+    try { return JSON.parse(localStorage.getItem(this.KEY)); }
+    catch { return null; }
   },
 
   getUser() {
@@ -81,9 +73,7 @@ const Auth = {
     return s ? s.role : null;
   },
 
-  isRole(role) {
-    return this.getRole() === role;
-  },
+  isRole(role) { return this.getRole() === role; },
 
   logout() {
     localStorage.removeItem(this.KEY);
@@ -92,10 +82,7 @@ const Auth = {
 
   guard(expectedRole) {
     const s = this.getSession();
-    if (!s) {
-      window.location.href = 'login.html';
-      return false;
-    }
+    if (!s) { window.location.href = 'login.html'; return false; }
     if (expectedRole && s.role !== expectedRole) {
       console.warn(`Role mismatch: expected ${expectedRole}, got ${s.role}`);
       window.location.href = 'login.html';
@@ -109,18 +96,12 @@ const Auth = {
     if (!session || !session.user) return;
 
     const cachedTheme = localStorage.getItem('uptm_theme');
-    if (cachedTheme === 'light') {
-      document.body.classList.add('light-theme');
-    } else if (cachedTheme === 'dark') {
-      document.body.classList.remove('light-theme');
-    }
+    if (cachedTheme === 'light') document.body.classList.add('light-theme');
+    else if (cachedTheme === 'dark') document.body.classList.remove('light-theme');
 
-        const cachedAnim = localStorage.getItem('uptm_anim');
-    if (cachedAnim === 'off') {
-      document.body.classList.add('no-buddy-anim');
-    } else if (cachedAnim === 'on') {
-      document.body.classList.remove('no-buddy-anim');
-    }
+    const cachedAnim = localStorage.getItem('uptm_anim');
+    if (cachedAnim === 'off') document.body.classList.add('no-buddy-anim');
+    else if (cachedAnim === 'on') document.body.classList.remove('no-buddy-anim');
 
     setTimeout(() => {
       if (typeof window.setBuddyAnimation === 'function') {
@@ -141,9 +122,17 @@ const Auth = {
 
     if (!userId || !role) return;
 
+    // Use API if available, else fallback to fetch
     try {
-      const res = await fetch(`http://localhost:3000/api/settings/${userId}/${role}`);
-      const data = await res.json();
+      let data;
+      if (window.API && typeof window.API.get === 'function') {
+        const res = await API.get(`/api/settings/${userId}/${role}`);
+        if (!res.success) return;
+        data = { success: true, data: res.data };
+      } else {
+        const r = await fetch(`http://localhost:3000/api/settings/${userId}/${role}`);
+        data = await r.json();
+      }
       if (!data.success) return;
 
       const s = data.data;
@@ -154,7 +143,6 @@ const Auth = {
       if (darkMode) document.body.classList.remove('light-theme');
       else          document.body.classList.add('light-theme');
 
-      
       if (playAnim) document.body.classList.remove('no-buddy-anim');
       else          document.body.classList.add('no-buddy-anim');
 

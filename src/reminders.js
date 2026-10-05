@@ -136,7 +136,7 @@ function initReminders() {
       inputTitle.value = r.title || '';
       inputDesc.value  = r.description || '';
       inputDate.value  = r.remind_date ? r.remind_date.slice(0, 10) : '';
-      inputTime.value  = (r.remind_time || '09:00:00').slice(0, 5);
+      inputTime.value  = (r.remind_time || '00:00:00').slice(0, 5);
       inputPri.value   = r.priority || 'normal';
     } else {
       modalTitle.innerText = 'Add Reminder';
@@ -145,7 +145,7 @@ function initReminders() {
       inputId.value = '';
       const now = new Date();
       inputDate.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-      inputTime.value = '09:00';
+      inputTime.value = '00:00';
       inputPri.value = 'normal';
     }
     modal.style.display = 'flex';
