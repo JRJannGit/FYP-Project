@@ -3,6 +3,14 @@
   const CHECK_INTERVAL_MS = 30 * 1000;
   const DUE_WINDOW_MIN    = 5;
   const triggeredIds = new Set();
+  const MAX_TRIGGERED = 500;
+  function rememberTriggered(key) {
+    if (triggeredIds.size >= MAX_TRIGGERED) {
+      const first = triggeredIds.values().next().value;
+      if (first !== undefined) triggeredIds.delete(first);
+    }
+    triggeredIds.add(key);
+  }
 
   let ipcRenderer = null;
   if (window.require) {
@@ -13,10 +21,13 @@
     }
   }
 
+  /* [A5] Keys must match the values saved by views/reminders.html
+     (urgent / warning / normal). 'high' kept as a legacy alias. */
   const PRIORITY_STYLES = {
-    urgent: { label: 'URGENT', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.16)' },
-    high:   { label: 'HIGH',   color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)' },
-    normal: { label: 'NORMAL', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.16)' }
+    urgent:  { label: 'URGENT',  color: '#ef4444', bg: 'rgba(239, 68, 68, 0.16)' },
+    warning: { label: 'WARNING', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)' },
+    high:    { label: 'HIGH',    color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)' },
+    normal:  { label: 'NORMAL',  color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.16)' }
   };
 
   function formatTime(t) {
@@ -129,7 +140,7 @@
     const user = AppStorage.getUser();
     if (!user) return;
 
-    const studentId = user.student_id || user.identifier;
+    const studentId = user.student_id || user.lecturer_id || user.admin_id || user.identifier;
     if (!studentId) return;
 
     try {
@@ -139,7 +150,7 @@
       for (const r of res.data) {
         const key = `${r.id}@${r.remind_date}T${r.remind_time}`;
         if (triggeredIds.has(key)) continue;
-        triggeredIds.add(key);
+        rememberTriggered(key);
 
         console.log('[scheduler] Triggering popup for:', r.title);
         showNotification({

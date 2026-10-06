@@ -1,5 +1,3 @@
-
-
 .calendar-container {
   display: flex;
   flex-direction: column;
@@ -293,6 +291,8 @@ input:checked + .slider:before {
 .day-dot.yellow { background-color: #f59e0b; }
 
 
+/* ---------- Academic view ---------- */
+
 .academic-view {
   display: flex;
   flex-direction: column;
@@ -316,11 +316,16 @@ input:checked + .slider:before {
   margin: 0;
 }
 
-.academic-zoom-controls {
+/* NEW — always-visible toolbar that holds upload + delete + (conditionally) zoom */
+.academic-toolbar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  flex-shrink: 0;
 }
+
+/* NEW — upload/delete buttons share this style with the zoom buttons */
+.academic-toolbar .zoom-btn,
 .academic-zoom-controls .zoom-btn {
   width: 36px;
   height: 36px;
@@ -336,14 +341,23 @@ input:checked + .slider:before {
   transition: all 0.15s;
   font-family: inherit;
 }
+.academic-toolbar .zoom-btn:hover:not(:disabled),
 .academic-zoom-controls .zoom-btn:hover:not(:disabled) {
   color: #60a5fa;
   border-color: var(--primary-blue);
   background-color: rgba(59, 130, 246, 0.1);
 }
+.academic-toolbar .zoom-btn:disabled,
 .academic-zoom-controls .zoom-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* Zoom trio (hidden until a calendar is loaded) */
+.academic-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .academic-zoom-controls .zoom-value {
   min-width: 64px;
@@ -426,6 +440,8 @@ input:checked + .slider:before {
 .academic-placeholder p { font-size: 0.9rem; margin-bottom: 4px; }
 .academic-placeholder small { font-size: 0.75rem; }
 
+
+/* ---------- Modals ---------- */
 
 .modal-overlay {
   position: fixed;
@@ -564,6 +580,8 @@ input:checked + .slider:before {
 .btn-danger:hover { background-color: #dc2626; }
 
 
+/* ---------- Light theme ---------- */
+
 body.light-theme .calendar-topbar,
 body.light-theme .events-panel,
 body.light-theme .calendar-view {
@@ -608,11 +626,15 @@ body.light-theme .academic-image-wrapper {
   background-color: #f8fafc;
   border-color: #e2e8f0;
 }
+
+/* NEW — light-theme for toolbar buttons (both upload/delete and zoom) */
+body.light-theme .academic-toolbar .zoom-btn,
 body.light-theme .academic-zoom-controls .zoom-btn {
   background: #ffffff;
   border-color: #e2e8f0;
   color: #64748b;
 }
+body.light-theme .academic-toolbar .zoom-btn:hover:not(:disabled),
 body.light-theme .academic-zoom-controls .zoom-btn:hover:not(:disabled) {
   color: #2563eb;
   border-color: #3b82f6;
@@ -625,4 +647,26 @@ body.light-theme .academic-zoom-controls .zoom-value {
 }
 body.light-theme .academic-image-wrapper::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
+}
+
+/* Class rows in the events panel */
+.event-item.class-item { border-style: dashed; }
+.event-date-chip.class-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.event-date-chip.class-chip.dot-blue   { background-color: rgba(59,130,246,0.15); color: #60a5fa; border-color: rgba(59,130,246,0.4); }
+.event-date-chip.class-chip.dot-red    { background-color: rgba(239,68,68,0.15);  color: #f87171; border-color: rgba(239,68,68,0.4); }
+.event-date-chip.class-chip.dot-yellow { background-color: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.4); }
+
+/* Small section label between Events and Weekly Classes */
+.events-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  padding: 8px 4px 4px;
+  margin-top: 8px;
 }

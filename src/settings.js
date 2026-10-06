@@ -1,5 +1,9 @@
 
 function initSettings() {
+  function accentKey() {
+    return window.Auth?.scopedKey?.('uptm_accent') || 'uptm_accent';
+  }
+
   const notifToggle = document.getElementById('toggle-notifications');
   const animToggle  = document.getElementById('toggle-animations');
   const darkToggle  = document.getElementById('toggle-darkmode');
@@ -67,7 +71,8 @@ function initSettings() {
       user_role: role,
       show_notifications: notifToggle?.checked ?? true,
       play_animations:    animToggle?.checked  ?? true,
-      dark_mode:          darkToggle?.checked  ?? true
+      dark_mode:          darkToggle?.checked  ?? true,
+      accent_color: localStorage.getItem(accentKey()) || null
     };
     const res = await API.post('/api/settings', payload);
     if (!res.success) console.error('[Settings] Save failed:', res.error);
@@ -99,7 +104,7 @@ function initSettings() {
   const resetBtn    = document.getElementById('accent-reset');
 
   function getSavedAccent() {
-    return localStorage.getItem('uptm_accent') || window.Auth?.DEFAULT_ACCENT || '#3b82f6';
+    return localStorage.getItem(accentKey()) || window.Auth?.DEFAULT_ACCENT || '#3b82f6';
   }
 
   function markActiveSwatch(hex) {
@@ -111,7 +116,8 @@ function initSettings() {
 
   function applyAndSaveAccent(hex) {
     if (!window.Auth?.applyAccentColor?.(hex)) return;
-    localStorage.setItem('uptm_accent', String(hex).toLowerCase());
+    localStorage.setItem(accentKey(), String(hex).toLowerCase());
+    saveSettings();
     markActiveSwatch(hex);
     if (customInput) customInput.value = String(hex).toLowerCase();
   }
@@ -136,10 +142,11 @@ function initSettings() {
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      localStorage.removeItem('uptm_accent');
+      localStorage.removeItem(accentKey());
       window.Auth?.clearAccentColor?.();
       markActiveSwatch(window.Auth?.DEFAULT_ACCENT || '#3b82f6');
       if (customInput) customInput.value = window.Auth?.DEFAULT_ACCENT || '#3b82f6';
+      saveSettings();
     });
   }
 

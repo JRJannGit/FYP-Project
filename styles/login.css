@@ -41,10 +41,19 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* Replaced justify-content: center with auto-margins on the first
+     and last children — this centres the block when there's spare
+     space, but collapses to 0 when content overflows, so the top is
+     scrollable instead of clipped. */
   padding: 20px;
   overflow-y: auto;
+  box-sizing: border-box;
 }
+
+.login-wrapper > .login-brand   { margin-top: auto;    flex-shrink: 0; }
+/* .dev-shortcuts is the actual last direct child of .login-wrapper
+   (it sits after .login-footer in login.html). */
+.login-wrapper > .dev-shortcuts { margin-bottom: auto; flex-shrink: 0; }
 
 
 .login-brand {

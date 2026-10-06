@@ -512,3 +512,168 @@ body.light-theme .btn-cancel {
   color: #64748b;
   border-color: #e2e8f0;
 }
+
+
+/* ---------- Submit modal (file picker) ---------- */
+
+.submit-modal-file-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px 16px;
+  background-color: #0d1420;
+  border: 1.5px dashed var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.submit-modal-file-label:hover {
+  border-color: var(--primary-blue);
+  color: var(--text-main);
+  background-color: rgba(59, 130, 246, 0.06);
+}
+.submit-modal-file-label.has-file {
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+  background-color: rgba(34, 197, 94, 0.06);
+}
+.submit-modal-file-label i {
+  font-size: 1.8rem;
+  color: var(--primary-blue);
+  display: block;
+}
+.submit-modal-file-label.has-file i {
+  color: #4ade80;
+}
+
+/* Hide the native file input but keep it clickable via the label */
+.submit-modal-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.submit-modal-file-name {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 1em;
+}
+.submit-modal-file-name.has-file {
+  color: #4ade80;
+}
+
+/* Inline error notice inside the modal */
+.submit-modal-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.82rem;
+  margin-top: 10px;
+}
+
+/* Light-theme overrides */
+body.light-theme .submit-modal-file-label {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+body.light-theme .submit-modal-file-label:hover {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background-color: #eff6ff;
+}
+body.light-theme .submit-modal-file-label.has-file {
+  border-color: rgba(22, 163, 74, 0.5);
+  color: #16a34a;
+  background-color: rgba(34, 197, 94, 0.06);
+}
+body.light-theme .submit-modal-file-name {
+  color: #64748b;
+}
+body.light-theme .submit-modal-file-name.has-file {
+  color: #16a34a;
+}
+body.light-theme .submit-modal-error {
+  background-color: rgba(239, 68, 68, 0.06);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: #b91c1c;
+}
+
+
+/* ---------- In-page confirm dialog (delete confirmation) ----------
+   Scoped to #assignments-confirm-modal so the generic --small / -text /
+   -center / btn-danger helpers used by other views don't leak here.
+   assignments.css does not define those helpers unscoped. */
+#assignments-confirm-modal .modal-box--small {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+#assignments-confirm-modal .modal-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+#assignments-confirm-modal .modal-actions--center {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+#assignments-confirm-modal .btn-cancel,
+#assignments-confirm-modal .btn-danger {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+#assignments-confirm-modal .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+}
+#assignments-confirm-modal .btn-danger:hover {
+  filter: brightness(1.08);
+}
+#assignments-confirm-modal .btn-cancel:hover {
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.light-theme #assignments-confirm-modal .modal-box--small {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme #assignments-confirm-modal .modal-text {
+  color: #64748b;
+}
+body.light-theme #assignments-confirm-modal .btn-cancel {
+  background-color: transparent;
+  color: #64748b;
+  border-color: #e2e8f0;
+}

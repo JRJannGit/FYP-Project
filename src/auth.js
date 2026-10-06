@@ -46,6 +46,13 @@ const Auth = {
     localStorage.setItem(this.KEY, JSON.stringify(session));
   },
 
+  scopedKey(base) {
+    const u = this.getUser();
+    const id = u?.student_id || u?.lecturer_id || u?.admin_id
+             || u?.identifier || 'anon';
+    return `${base}_${id}`;
+  },
+
   getSession() {
     try { return JSON.parse(localStorage.getItem(this.KEY)); }
     catch { return null; }
@@ -113,7 +120,7 @@ const Auth = {
     if (cachedNotif === 'off') window.__showNotifications = false;
     else if (cachedNotif === 'on') window.__showNotifications = true;
 
-    const cachedAccent = localStorage.getItem('uptm_accent');
+    const cachedAccent = localStorage.getItem(this.scopedKey('uptm_accent'));
     if (cachedAccent) this.applyAccentColor(cachedAccent);
 
     const user = this.getUser();
@@ -153,6 +160,11 @@ const Auth = {
       localStorage.setItem('uptm_theme', darkMode ? 'dark' : 'light');
       localStorage.setItem('uptm_anim', playAnim ? 'on' : 'off');
       localStorage.setItem('uptm_notif', showNotif ? 'on' : 'off');
+
+      const dbAccent = s.accent_color;
+      if (dbAccent && this.applyAccentColor(dbAccent)) {
+        localStorage.setItem(this.scopedKey('uptm_accent'), dbAccent);
+      }
 
       window.__darkMode = darkMode;
       window.__playAnimations = playAnim;

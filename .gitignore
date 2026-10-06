@@ -5,3 +5,7 @@ node_modules/
 dist/
 out/
 build/
+
+# Ignore runtime logs (R10)
+*.log
+logs/

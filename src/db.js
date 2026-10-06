@@ -1,11 +1,15 @@
 const mysql = require('mysql2/promise');
 
+/* [R13] Credentials were hardcoded. Read them from environment variables
+   (DB_HOST / DB_PORT / DB_USER / DB_PASS / DB_NAME) with the previous local
+   values as fallbacks so existing dev setups keep working. */
 const db = mysql.createPool({
-  host: 'localhost',
-  port: '3307',
-  user: 'root',
-  password: '',
-  database: 'uptm_buddy',
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || '3307',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '',
+  database: process.env.DB_NAME || 'uptm_buddy',
+  dateStrings: true,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

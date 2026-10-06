@@ -1,4 +1,33 @@
 
+/* [A6] Key handlers bound once at module scope; initNotes() re-runs on every
+   visit to the view and previously stacked one document listener per visit. */
+if (!window.__notesKeysBound) {
+  window.__notesKeysBound = true;
+
+  /* Ctrl +/-/0 zooms the open note — simulates the zoom buttons so the
+     per-init closures stay the single source of truth for zoom state. */
+  document.addEventListener('keydown', (e) => {
+    if (!e.ctrlKey) return;
+    const noteModal = document.getElementById('note-modal');
+    if (!noteModal || noteModal.style.display !== 'flex') return;
+    if (e.key === '=' || e.key === '+') document.getElementById('zoom-in-btn')?.click();
+    else if (e.key === '-')             document.getElementById('zoom-out-btn')?.click();
+    else if (e.key === '0')             document.getElementById('zoom-value-btn')?.click();
+  });
+
+  /* Escape closes the top-most notes modal — clicking the real close button
+     keeps the full close semantics of the current init run. */
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const discardModal = document.getElementById('discard-modal');
+    const deleteModal  = document.getElementById('delete-modal');
+    if (discardModal?.style.display === 'flex') { discardModal.style.display = 'none'; return; }
+    if (deleteModal?.style.display === 'flex')  { deleteModal.style.display  = 'none'; return; }
+    const noteModal = document.getElementById('note-modal');
+    if (noteModal?.style.display === 'flex') document.getElementById('modal-close-btn')?.click();
+  });
+}
+
 function initNotes() {
   const notesList   = document.getElementById('notes-list');
   const searchInput = document.getElementById('search-notes');
@@ -114,13 +143,6 @@ function initNotes() {
     if (e.deltaY < 0) zoomIn();
     else zoomOut();
   }, { passive: false });
-
-  document.addEventListener('keydown', (e) => {
-    if (!e.ctrlKey || noteModal.style.display !== 'flex') return;
-    if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
-    if (e.key === '-')                   { e.preventDefault(); zoomOut(); }
-    if (e.key === '0')                   { e.preventDefault(); zoomReset(); }
-  });
 
   function enterViewMode() {
     isEditMode = false;
@@ -251,7 +273,8 @@ function initNotes() {
   notesList.addEventListener('click', (e) => {
     const item = e.target.closest('.note-item');
     if (!item) return;
-    const id = parseInt(item.dataset.id);
+    const id = parseInt(item.dataset.id, 10);
+    if (!Number.isFinite(id)) return;
     const note = notes.find(n => n.id === id);
     if (note) {
       activeId = id;
@@ -480,13 +503,6 @@ function initNotes() {
       }
     });
   }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (discardModal.style.display === 'flex') { discardModal.style.display = 'none'; return; }
-    if (deleteModal.style.display === 'flex')  { deleteModal.style.display = 'none';  return; }
-    if (noteModal.style.display === 'flex')    closeNoteModal();
-  });
 
   applyZoom();
   load();

@@ -41,6 +41,9 @@
         <button type="button" class="btn-view" id="btn-view-submissions">
           <i class="fa-solid fa-eye"></i> View
         </button>
+        <p class="received-hint" id="received-hint">
+          Select an assignment below to view its submissions.
+        </p>
       </div>
 
     </div>
@@ -94,6 +97,9 @@
         <select id="meta-class" class="meta-input">
           <option value="">Loading classes...</option>
         </select>
+        <button type="button" class="btn-manage-classes" id="btn-manage-classes">
+          <i class="fa-solid fa-people-group"></i> Manage Classes
+        </button>
       </div>
 
       <div class="meta-actions">
@@ -175,5 +181,48 @@
       </button>
     </div>
     <div class="pick-list" id="pick-assignment-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="class-modal" style="display:none;">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-people-group"></i> <span id="class-modal-title">Manage Classes</span></h3>
+      <button type="button" class="modal-close" id="class-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="class-form" class="modal-form">
+      <div class="form-group">
+        <label for="class-code">Class Code *</label>
+        <input type="text" id="class-code" required placeholder="e.g. BIT1233">
+      </div>
+
+      <div class="form-group">
+        <label for="class-name">Class Name *</label>
+        <input type="text" id="class-name" required placeholder="e.g. Database Systems Group A">
+      </div>
+
+      <div class="form-group">
+        <label for="class-subject-code">Subject Code</label>
+        <input type="text" id="class-subject-code" placeholder="e.g. ITS2333">
+      </div>
+
+      <div class="form-group">
+        <label for="class-semester">Semester</label>
+        <input type="text" id="class-semester" placeholder="e.g. 2025/1">
+      </div>
+
+      <div class="form-group">
+        <label for="class-description">Description</label>
+        <textarea id="class-description" rows="2" placeholder="Optional description"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="class-modal-cancel">Cancel</button>
+        <button type="submit" class="btn-save" id="class-modal-save">Add Class</button>
+      </div>
+    </form>
   </div>
 </div>

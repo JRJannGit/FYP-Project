@@ -1,4 +1,18 @@
 
+/* [A6] Escape-close bound once at module scope; initDashboard() re-runs on
+   every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__dashEscapeBound) {
+  window.__dashEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const scheduleModal = document.getElementById('schedule-modal');
+    const tasksModal    = document.getElementById('tasks-modal');
+    if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
+    if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
+  });
+}
+
 const LOCAL_QUOTES = [
   "Small progress every day leads to big results.",
   "Kejayaan tidak datang daripada apa yang anda buat sekali, tetapi apa yang anda buat secara konsisten.",
@@ -34,7 +48,7 @@ function fmtTime(t) {
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+  return Math.ceil((parseDateOnly(dateStr) - new Date()) / 86400000);
 }
 
 function badgeClass(days) {
@@ -122,10 +136,10 @@ function renderTodaySchedulePreview() {
   list.innerHTML = preview.map(c => `
     <li class="schedule-item ${c.color || 'blue'}">
       <div class="schedule-details">
-        <strong>${c.subject}</strong>
+        <strong>${escapeHtml(c.subject)}</strong>
         <small>${fmtTime(c.time_start)} - ${fmtTime(c.time_end)}</small>
       </div>
-      <span class="room-tag">${c.room || '—'}</span>
+      <span class="room-tag">${escapeHtml(c.room || '—')}</span>
     </li>
   `).join('');
 
@@ -148,7 +162,7 @@ function renderUpcomingTasksPreview() {
     const d = daysUntil(item.date);
     return `
       <li class="task-item">
-        <span class="task-title">${item.title}</span>
+        <span class="task-title">${escapeHtml(item.title)}</span>
         <span class="badge ${badgeClass(d)}">${badgeLabel(d)}</span>
       </li>
     `;
@@ -185,13 +199,6 @@ function setupModals() {
   tasksModal?.addEventListener('click', (e) => {
     if (e.target === tasksModal) tasksModal.style.display = 'none';
   });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
-      if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
-    }
-  });
 }
 
 function renderScheduleModal() {
@@ -205,10 +212,10 @@ function renderScheduleModal() {
 
   content.innerHTML = todayScheduleData.map(c => `
     <div class="modal-item ${c.color || 'blue'}">
-      <div class="modal-item__title">${c.subject}</div>
+      <div class="modal-item__title">${escapeHtml(c.subject)}</div>
       <div class="modal-item__meta">
         <span><i class="fa-regular fa-clock"></i> ${fmtTime(c.time_start)} - ${fmtTime(c.time_end)}</span>
-        <span><i class="fa-solid fa-location-dot"></i> ${c.room || '—'}</span>
+        <span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(c.room || '—')}</span>
       </div>
     </div>
   `).join('');
@@ -231,10 +238,10 @@ function renderTasksModal() {
     return `
       <div class="modal-item ${item.color || 'blue'}">
         <div class="modal-item__title">
-          ${item.title}
+          ${escapeHtml(item.title)}
           <span class="modal-item__type ${typeClass}">${typeLabel}</span>
         </div>
-        ${item.description ? `<div class="modal-item__desc">${item.description}</div>` : ''}
+        ${item.description ? `<div class="modal-item__desc">${escapeHtml(item.description)}</div>` : ''}
         <div class="modal-item__meta">
           <span><i class="fa-regular fa-calendar"></i> ${fmtDate(item.date)}</span>
           ${item.time ? `<span><i class="fa-regular fa-clock"></i> ${fmtTime(item.time)}</span>` : ''}

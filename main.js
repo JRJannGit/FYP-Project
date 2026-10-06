@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
+const APP_ICON = path.join(__dirname, 'assets', 'icon.ico');
+
 let mainWindow = null;
 let notificationWindow = null;
 
@@ -12,7 +14,7 @@ function createWindow() {
     minHeight: 600,
     autoHideMenuBar: true,
     show: false,
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
+    icon: APP_ICON,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -47,27 +49,11 @@ function createWindow() {
     if (input.type === 'mouseWheel') event.preventDefault();
   });
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('file://')) {
-      return { action: 'allow' };
-    }
-
-    return {
-      action: 'allow',
-      overrideBrowserWindowOptions: {
-        width: 700,
-        height: 500,
-        minWidth: 500,
-        minHeight: 400,
-        autoHideMenuBar: true,
-        icon: path.join(__dirname, 'assets', 'icon.ico'),
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          sandbox: true
-        }
-      }
-    };
+  // [R3] Every popup (file:// and remote) must get hardened defaults.
+  // file:// popups used to inherit the main window's privileged
+  // webPreferences (nodeIntegration: true, contextIsolation: false).
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'allow', overrideBrowserWindowOptions: createExternalWindowOptions() };
   });
 
   mainWindow.webContents.on('will-navigate', (event, url) => {
@@ -76,6 +62,24 @@ function createWindow() {
       mainWindow.webContents.send('force-external-open', url);
     }
   });
+}
+
+// [R3] Hardened defaults for every popup window. Node is never enabled in
+// renderer processes here; sandboxed + context isolated.
+function createExternalWindowOptions() {
+  return {
+    width: 700,
+    height: 500,
+    minWidth: 500,
+    minHeight: 400,
+    autoHideMenuBar: true,
+    icon: APP_ICON,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  };
 }
 
 function createNotificationWindow(data) {
@@ -90,7 +94,11 @@ function createNotificationWindow(data) {
   const popupHeight = 260;
   const margin = 20;
 
-  notificationWindow = new BrowserWindow({
+  // [R1] Keep a local reference to the NEW window. The async 'closed' handler
+  // of the OLD window used to fire after the shared field was re-pointed at
+  // the new window and nulled it, leaving notificationWindow === null, so
+  // the Dismiss/Close buttons and the 60s auto-close silently did nothing.
+  const win = new BrowserWindow({
     width: popupWidth,
     height: popupHeight,
     x: screenWidth - popupWidth - margin,
@@ -103,29 +111,30 @@ function createNotificationWindow(data) {
     alwaysOnTop: true,
     focusable: true,
     show: false,
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
+    icon: APP_ICON,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
     }
   });
+  notificationWindow = win;
 
-  notificationWindow.loadFile('notification.html');
+  win.loadFile('notification.html');
 
-  notificationWindow.once('ready-to-show', () => {
-    notificationWindow.show();
-    notificationWindow.webContents.send('reminder-data', data);
+  win.once('ready-to-show', () => {
+    win.show();
+    win.webContents.send('reminder-data', data);
   });
 
   const timeout = setTimeout(() => {
-    if (notificationWindow && !notificationWindow.isDestroyed()) {
-      notificationWindow.close();
+    if (win && !win.isDestroyed()) {
+      win.close();
     }
   }, 60000);
 
-  notificationWindow.on('closed', () => {
+  win.on('closed', () => {
     clearTimeout(timeout);
-    notificationWindow = null;
+    if (notificationWindow === win) notificationWindow = null;
   });
 }
 
@@ -153,19 +162,7 @@ ipcMain.on('view-reminder', () => {
 
 ipcMain.on('open-external', (event, url) => {
   if (!url) return;
-  const extWin = new BrowserWindow({
-    width: 700,
-    height: 500,
-    minWidth: 500,
-    minHeight: 400,
-    autoHideMenuBar: true,
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true
-    }
-  });
+  const extWin = new BrowserWindow(createExternalWindowOptions());
   extWin.loadURL(url);
 });
 

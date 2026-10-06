@@ -1,3 +1,42 @@
+/* [A6] Escape-close bound once at module scope; initAssignments() re-runs on
+   every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__assignmentsEscapeBound) {
+  window.__assignmentsEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const modal = document.getElementById('assignment-modal');
+    const submitModal = document.getElementById('submit-modal');
+    if (modal?.style.display === 'flex') {
+      modal.style.display = 'none';
+      document.getElementById('assignment-form')?.reset();
+      const inputId = document.getElementById('assignment-id');
+      if (inputId) inputId.value = '';
+    }
+    if (submitModal?.style.display === 'flex') submitModal.style.display = 'none';
+  });
+}
+
+/* [FIX 2] Overlay watchdog: a modal overlay that is hidden (display:none /
+   visibility:hidden) must never keep intercepting pointer events. Some
+   Chromium renderer states leave exactly that condition behind, making
+   subsequent clicks on inputs dead until a force reload. This sweep runs
+   every 400ms and neutralises any such overlay. */
+function ensureNoStuckOverlays() {
+  document.querySelectorAll('.modal-overlay').forEach(function (el) {
+    const hidden = el.style.display === 'none' ||
+                   getComputedStyle(el).display === 'none' ||
+                   el.style.visibility === 'hidden';
+    if (hidden) {
+      el.style.pointerEvents = 'none';
+      el.style.visibility = 'hidden';
+    } else {
+      el.style.pointerEvents = '';
+      el.style.visibility = '';
+    }
+  });
+}
+
 function initAssignments() {
   const list       = document.getElementById('assignments-list');
   const emptyState = document.getElementById('assignments-empty');
@@ -30,6 +69,122 @@ function initAssignments() {
   let allAssignments = [];
   let submitTargetId = null;
 
+  /* [FIX 1] Inline submit-failure notice (replaces the blocking alert). */
+  function showSubmitError(msg) {
+    const el = document.getElementById('submit-modal-error');
+    if (!el) { alert(msg); return; }
+    el.textContent = msg;
+    el.style.display = 'flex';
+    setTimeout(function () { el.style.display = 'none'; }, 8000);
+  }
+
+  /* [FIX 1] In-page confirm dialog — replaces the native browser confirm
+     dialog, which both looks wrong in the dark theme and leaves the
+     Chromium renderer in a state where later input clicks are swallowed
+     until a force reload. */
+  function showConfirmModal(opts) {
+    const existing = document.getElementById('assignments-confirm-modal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'assignments-confirm-modal';
+    overlay.className = 'modal-overlay';
+    overlay.style.display = 'flex';
+
+    const box = document.createElement('div');
+    box.className = 'modal-box modal-box--small';
+
+    const title = document.createElement('h3');
+    title.textContent = opts.title || 'Confirm';
+
+    const msg = document.createElement('p');
+    msg.className = 'modal-text';
+    msg.textContent = opts.message || '';
+
+    const actions = document.createElement('div');
+    actions.className = 'modal-actions modal-actions--center';
+
+    const btnNo = document.createElement('button');
+    btnNo.type = 'button';
+    btnNo.className = 'btn-cancel';
+    btnNo.textContent = opts.cancelLabel || 'Cancel';
+
+    const btnYes = document.createElement('button');
+    btnYes.type = 'button';
+    btnYes.className = 'btn-danger';
+    btnYes.textContent = opts.confirmLabel || 'Yes';
+
+    actions.appendChild(btnNo);
+    actions.appendChild(btnYes);
+
+    box.appendChild(title);
+    box.appendChild(msg);
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+    }
+
+    btnNo.addEventListener('click', close);
+    btnYes.addEventListener('click', function () {
+      close();
+      if (opts.onConfirm) opts.onConfirm();
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', onKey);
+
+    setTimeout(function () { btnYes.focus(); }, 30);
+  }
+
+  /* [FIX 3] The submit-modal markup lives in views/assignments.html (not
+     editable from this task), so the styled file-label wrapper and the
+     inline error element are injected at init time. Idempotent: safe on
+     every initAssignments() run. */
+  function ensureSubmitModalChrome() {
+    if (!submitModal || !submitFile) return;
+
+    if (!document.getElementById('submit-modal-error')) {
+      const err = document.createElement('div');
+      err.id = 'submit-modal-error';
+      err.className = 'submit-modal-error';
+      err.style.display = 'none';
+      const actions = submitModal.querySelector('.modal-actions');
+      if (actions && actions.parentNode) {
+        actions.parentNode.insertBefore(err, actions);
+      } else {
+        const box = submitModal.querySelector('.modal-box');
+        if (box) box.appendChild(err);
+      }
+    }
+
+    if (submitFileName) {
+      submitFileName.classList.add('submit-modal-file-name');
+      submitFileName.removeAttribute('style');
+      submitFileName.style.display = 'block';
+    }
+
+    if (!submitFile.classList.contains('submit-modal-file-input')) {
+      submitFile.classList.add('submit-modal-file-input');
+    }
+    if (!submitFile.parentElement.classList.contains('submit-modal-file-label')) {
+      const wrap = document.createElement('label');
+      wrap.className = 'submit-modal-file-label';
+      wrap.innerHTML = '<i class="fa-solid fa-upload"></i><span>Choose a file</span>';
+      submitFile.parentNode.insertBefore(wrap, submitFile);
+      wrap.appendChild(submitFile);
+    }
+  }
+
+  ensureSubmitModalChrome();
+
   function getUserId() {
     const user = AppStorage.getUser();
     if (!user) return null;
@@ -40,13 +195,13 @@ function initAssignments() {
 
   function formatDate(dateStr) {
     if (!dateStr) return '—';
-    const d = new Date(dateStr);
+    const d = parseDateOnly(dateStr);
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function daysUntil(dateStr) {
     if (!dateStr) return null;
-    return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+    return Math.ceil((parseDateOnly(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
   }
 
   function badgeClass(days) {
@@ -97,10 +252,10 @@ function initAssignments() {
                 <input type="checkbox" ${completed ? 'checked' : ''} data-action="toggle" data-id="${a.id}">
                 <div>
                   <h4>
-                    ${a.subject}
+                    ${escapeHtml(a.subject)}
                     ${a.is_exam ? '<span class="exam-tag">EXAM</span>' : ''}
                   </h4>
-                  <p>${a.description || ''}</p>
+                  <p>${escapeHtml(a.description || '')}</p>
                 </div>
               </div>
               <div class="assignment-due">
@@ -168,6 +323,9 @@ function initAssignments() {
     if (submitTarget) submitTarget.innerText = assignment.subject;
     if (submitForm) submitForm.reset();
     if (submitFileName) submitFileName.innerText = 'No file chosen';
+    const fileLabel = submitModal.querySelector('.submit-modal-file-label');
+    if (fileLabel) fileLabel.classList.remove('has-file');
+    if (submitFileName) submitFileName.classList.remove('has-file');
     submitModal.style.display = 'flex';
   }
 
@@ -177,10 +335,25 @@ function initAssignments() {
     submitTargetId = null;
   }
 
+  /* [FIX 2] Force-recover wrappers: run the overlay sweep right after
+     every known modal close. */
+  function closeModalSafely() {
+    closeModal();
+  }
+  function closeSubmitModalSafely() {
+    closeSubmitModal();
+  }
+
   if (submitFile) {
-    submitFile.addEventListener('change', () => {
+    submitFile.addEventListener('change', function () {
       const f = submitFile.files[0];
-      if (submitFileName) submitFileName.innerText = f ? f.name : 'No file chosen';
+      const labelEl = document.querySelector('.submit-modal-file-label');
+      const nameEl  = document.getElementById('submit-file-name');
+      if (labelEl) labelEl.classList.toggle('has-file', !!f);
+      if (nameEl) {
+        nameEl.textContent = f ? f.name : 'No file chosen';
+        nameEl.classList.toggle('has-file', !!f);
+      }
     });
   }
 
@@ -209,7 +382,7 @@ function initAssignments() {
         });
         submitBtn.disabled = false;
         submitBtn.innerText = 'Submit';
-        if (!res.success) { alert('Submit failed: ' + res.error); return; }
+        if (!res.success) { showSubmitError('Submit failed: ' + res.error); return; }
         closeSubmitModal();
         alert('Submitted successfully!');
       };
@@ -259,10 +432,16 @@ function initAssignments() {
       if (assignment) openModal('edit', assignment);
     }
     else if (action === 'delete') {
-      if (!confirm('Delete this assignment?')) return;
-      const res = await API.delete(`/api/assignments/${id}`);
-      if (res.success) loadAssignments();
-      else alert('Delete failed: ' + res.error);
+      showConfirmModal({
+        title: 'Delete this assignment?',
+        message: 'This cannot be undone.',
+        confirmLabel: 'Delete',
+        onConfirm: async function () {
+          const res = await API.delete(`/api/assignments/${id}`);
+          if (res.success) loadAssignments();
+          else alert('Delete failed: ' + res.error);
+        }
+      });
     }
     else if (action === 'submit') {
       const assignment = allAssignments.find(a => String(a.id) === String(id));
@@ -300,13 +479,6 @@ function initAssignments() {
       if (e.target === modal) closeModal();
     });
   }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (modal && modal.style.display === 'flex') closeModal();
-      if (submitModal && submitModal.style.display === 'flex') closeSubmitModal();
-    }
-  });
 
   document.querySelectorAll('.tab-btn').forEach(tab => {
     tab.addEventListener('click', () => {

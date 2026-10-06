@@ -303,3 +303,569 @@
 .btn-no:hover {
   background: var(--border-color, #30363d);
 }
+
+.btn-delete-all {
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  transition: all 0.15s;
+  align-self: flex-end;
+}
+.btn-delete-all:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.btn-delete-all:disabled { opacity: 0.5; cursor: not-allowed; }
+
+body.light-theme .btn-delete-all {
+  background: rgba(239, 68, 68, 0.06);
+  color: #dc2626;
+}
+
+/* Placement: .timetable-container is a row-flex card holder (already
+   position: relative), so anchor the button to its bottom-right —
+   align-self has no effect inside that container. */
+.timetable-container > .btn-delete-all {
+  position: absolute;
+  bottom: 24px;
+  right: 28px;
+}
+
+/* ---------- Quick Import (paste-import UI) ---------- */
+
+.timetable-import-section {
+  width: 100%;
+  max-width: 950px;
+  margin: 20px auto 0;
+  padding: 22px;
+  background-color: var(--bg-card, #161b22);
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+.timetable-import-section h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main, #e6edf3);
+  margin: 0;
+}
+.timetable-import-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted, #8b949e);
+  line-height: 1.5;
+  margin: 0;
+}
+.timetable-import-hint code {
+  background-color: rgba(59,130,246,0.12);
+  color: #60a5fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-family: 'Consolas', monospace;
+}
+.timetable-paste-input {
+  width: 100%;
+  min-height: 160px;
+  padding: 12px 14px;
+  background-color: #0d1420;
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 10px;
+  color: var(--text-main, #e6edf3);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.timetable-paste-input:focus { border-color: var(--primary-blue, #3b82f6); }
+.timetable-paste-input::placeholder { color: #475569; }
+.timetable-import-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.btn-import, .btn-import-secondary {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: inherit;
+  transition: all 0.15s;
+  border: none;
+}
+.btn-import {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+.btn-import:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59,130,246,0.45);
+}
+.btn-import:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-import-secondary {
+  background: transparent;
+  color: var(--text-muted, #8b949e);
+  border: 1px solid var(--border-color, #30363d);
+}
+.btn-import-secondary:hover {
+  color: var(--text-main, #e6edf3);
+  border-color: rgba(255,255,255,0.2);
+}
+.timetable-preview {
+  padding: 16px;
+  background-color: rgba(13,20,32,0.6);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.timetable-preview h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.timetable-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.preview-row {
+  display: grid;
+  grid-template-columns: 82px 1fr 100px 100px 1fr 32px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  background-color: rgba(13,20,32,0.8);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+}
+.preview-row input, .preview-row select {
+  padding: 6px 8px;
+  background-color: #0d1420;
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 6px;
+  color: var(--text-main, #e6edf3);
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.preview-row input:focus, .preview-row select:focus { border-color: #3b82f6; }
+.preview-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.15s;
+}
+.preview-remove:hover { background-color: rgba(239,68,68,0.15); }
+.timetable-saved { margin-top: 8px; }
+.timetable-saved h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #8b949e);
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.timetable-saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.saved-row {
+  display: grid;
+  grid-template-columns: 60px 120px 1fr 1fr 32px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #0d1420;
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+.saved-day { color: #60a5fa; font-weight: 700; }
+.saved-time {
+  color: var(--text-muted, #8b949e);
+  font-family: 'Consolas', monospace;
+  font-size: 0.78rem;
+}
+.saved-subject { color: var(--text-main, #e6edf3); font-weight: 600; }
+.saved-room { color: var(--text-muted, #8b949e); }
+.saved-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.2);
+  color: #f87171;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+}
+.saved-delete:hover {
+  background-color: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.5);
+}
+
+body.light-theme .timetable-import-section {
+  background-color: #fff;
+  border-color: #e2e8f0;
+}
+body.light-theme .timetable-import-section h3 { color: #0f172a; }
+body.light-theme .timetable-paste-input {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .timetable-preview { background-color: #f8fafc; }
+body.light-theme .preview-row {
+  background-color: #fff;
+  border-color: #e2e8f0;
+}
+body.light-theme .preview-row input, body.light-theme .preview-row select {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .saved-row {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+body.light-theme .saved-subject { color: #0f172a; }
+body.light-theme .saved-day { color: #2563eb; }
+
+/* Layout: .timetable-container is a single-line row-flex that vertically
+   centers one card — as a normal flex item the import section would be
+   squeezed beside the card instead of stacking under it (and the absolutely
+   anchored Delete-All button would cover the saved-classes list). Stack the
+   container vertically and let it grow with its content (the .content-area
+   shell scrolls); the bottom margin keeps the pinned button clear. */
+.timetable-container {
+  flex-direction: column;
+  height: auto;
+  min-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.timetable-container > .timetable-import-section {
+  margin-bottom: 72px;
+}
+
+/* ---------- Parse notice + Add Row button (Quick Import) ---------- */
+
+.timetable-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  animation: noticeSlide 0.2s ease-out;
+  position: relative;
+  z-index: 1;
+}
+@keyframes noticeSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.timetable-notice > i {
+  font-size: 1rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+.timetable-notice .notice-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.timetable-notice .notice-body strong {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.timetable-notice .notice-body span {
+  font-family: 'Consolas', monospace;
+  font-size: 0.75rem;
+  word-break: break-word;
+  line-height: 1.5;
+}
+.timetable-notice .notice-body code {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+.timetable-notice .notice-close {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  color: inherit;
+  opacity: 0.8;
+}
+.timetable-notice .notice-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+/* Error variant */
+.timetable-notice.notice-error {
+  background-color: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+.timetable-notice.notice-error .notice-body strong { color: #f87171; }
+.timetable-notice.notice-error .notice-body span   { color: #fca5a5; }
+
+/* Warning variant */
+.timetable-notice.notice-warning {
+  background-color: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+.timetable-notice.notice-warning .notice-body strong { color: #fbbf24; }
+.timetable-notice.notice-warning .notice-body span   { color: #fcd34d; }
+
+/* Success variant */
+.timetable-notice.notice-success {
+  background-color: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
+.timetable-notice.notice-success .notice-body strong { color: #4ade80; }
+.timetable-notice.notice-success .notice-body span   { color: #86efac; }
+
+/* Info variant */
+.timetable-notice.notice-info {
+  background-color: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+}
+.timetable-notice.notice-info .notice-body strong { color: #60a5fa; }
+.timetable-notice.notice-info .notice-body span   { color: #93c5fd; }
+
+.timetable-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.btn-add-row {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-add-row:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Light theme overrides */
+body.light-theme .timetable-notice.notice-error {
+  background-color: rgba(239, 68, 68, 0.06);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: #dc2626;
+}
+body.light-theme .timetable-notice.notice-error .notice-body strong { color: #dc2626; }
+body.light-theme .timetable-notice.notice-error .notice-body span   { color: #b91c1c; }
+
+body.light-theme .timetable-notice.notice-warning {
+  background-color: rgba(245, 158, 11, 0.08);
+  border-color: rgba(217, 119, 6, 0.4);
+  color: #b45309;
+}
+body.light-theme .timetable-notice.notice-warning .notice-body strong { color: #b45309; }
+body.light-theme .timetable-notice.notice-warning .notice-body span   { color: #92400e; }
+
+body.light-theme .timetable-notice.notice-success {
+  background-color: rgba(34, 197, 94, 0.08);
+  border-color: rgba(22, 163, 74, 0.4);
+  color: #16a34a;
+}
+body.light-theme .timetable-notice.notice-success .notice-body strong { color: #16a34a; }
+body.light-theme .timetable-notice.notice-success .notice-body span   { color: #15803d; }
+
+body.light-theme .timetable-notice.notice-info {
+  background-color: rgba(59, 130, 246, 0.08);
+  border-color: rgba(37, 99, 235, 0.4);
+  color: #2563eb;
+}
+body.light-theme .timetable-notice.notice-info .notice-body strong { color: #2563eb; }
+body.light-theme .timetable-notice.notice-info .notice-body span   { color: #1d4ed8; }
+
+body.light-theme .timetable-notice .notice-body code {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+body.light-theme .btn-add-row {
+  background: #eff6ff;
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #2563eb;
+}
+
+/* Positioning context for the in-page timetable notice/confirm overlays */
+.timetable-import-section { position: relative; }
+
+/* [FIX 4] In-page confirmation modal (replaces native window.confirm) */
+.tt-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: ttConfirmFade 0.15s ease-out;
+}
+@keyframes ttConfirmFade {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.tt-confirm-box {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px;
+  padding: 24px;
+  background: linear-gradient(180deg, #1a2236 0%, #151c2e 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  animation: ttConfirmSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes ttConfirmSlide {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.tt-confirm-box h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.tt-confirm-box p {
+  margin: 0 0 20px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+.tt-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.tt-confirm-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.tt-confirm-btn--cancel {
+  background: transparent;
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.tt-confirm-btn--cancel:hover {
+  color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.tt-confirm-btn--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+.tt-confirm-btn--danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+}
+.tt-confirm-btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+.tt-confirm-btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+body.light-theme .tt-confirm-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+body.light-theme .tt-confirm-box h3 { color: #0f172a; }
+body.light-theme .tt-confirm-box p  { color: #64748b; }
+body.light-theme .tt-confirm-btn--cancel {
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+body.light-theme .tt-confirm-btn--cancel:hover {
+  color: #0f172a;
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}

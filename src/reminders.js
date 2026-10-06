@@ -1,4 +1,23 @@
 
+/* [A6] Escape-close bound once at module scope; initReminders() re-runs on
+   every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__remindersEscapeBound) {
+  window.__remindersEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const deleteModal = document.getElementById('delete-reminder-modal');
+    if (deleteModal?.style.display === 'flex') { deleteModal.style.display = 'none'; return; }
+    const modal = document.getElementById('reminder-modal');
+    if (modal?.style.display === 'flex') {
+      modal.style.display = 'none';
+      document.getElementById('reminder-form')?.reset();
+      const inputId = document.getElementById('reminder-id');
+      if (inputId) inputId.value = '';
+    }
+  });
+}
+
 function initReminders() {
   const list = document.getElementById('reminders-list');
   const addBtn = document.getElementById('btn-add-reminder');
@@ -218,12 +237,6 @@ function initReminders() {
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (deleteModal.style.display === 'flex') { deleteModal.style.display = 'none'; pendingDeleteId = null; return; }
-    if (modal.style.display === 'flex') closeModal();
-  });
 
   load();
 }

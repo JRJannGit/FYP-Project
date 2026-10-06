@@ -1,4 +1,18 @@
 
+/* [A6] Escape-close bound once at module scope; initAdminDashboard() re-runs
+   on every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__adminDashEscapeBound) {
+  window.__adminDashEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const scheduleModal = document.getElementById('schedule-modal');
+    const tasksModal    = document.getElementById('tasks-modal');
+    if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
+    if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
+  });
+}
+
 const ADMIN_QUOTES = [
   "Small progress every day leads to big results.",
   "Leadership is about making others better.",
@@ -96,9 +110,9 @@ function renderAdminQuickAccess() {
   }
 
   grid.innerHTML = items.map(r => `
-    <a href="#" class="portal-btn" data-resource-id="${r.id}" data-url="${r.url_link || r.url || ''}">
-      <i class="fa-solid ${r.icon || 'fa-link'}"></i>
-      <span>${r.title}</span>
+    <a href="#" class="portal-btn" data-resource-id="${r.id}" data-url="${escapeHtml(r.url_link || r.url || '')}">
+      <i class="fa-solid ${/^fa-[a-z0-9-]+$/.test(r.icon || '') ? r.icon : 'fa-link'}"></i>
+      <span>${escapeHtml(r.title)}</span>
     </a>
   `).join('');
 
@@ -121,10 +135,10 @@ function renderAdminSchedulePreview() {
   list.innerHTML = adminScheduleData.slice(0, 3).map(c => `
     <li class="schedule-item ${c.color || 'blue'}">
       <div class="schedule-details">
-        <strong>${c.subject}</strong>
+        <strong>${escapeHtml(c.subject)}</strong>
         <small>${fmtTime(c.time_start)} - ${fmtTime(c.time_end)}</small>
       </div>
-      <span class="room-tag">${c.room || '—'}</span>
+      <span class="room-tag">${escapeHtml(c.room || '—')}</span>
     </li>
   `).join('');
 }
@@ -141,7 +155,7 @@ function renderAdminTasksPreview() {
     const badgeCls = days <= 3 ? 'due-soon' : days <= 7 ? 'due-medium' : 'due-normal';
     return `
       <li class="task-item">
-        <span class="task-title">${item.title}</span>
+        <span class="task-title">${escapeHtml(item.title)}</span>
         <span class="badge ${badgeCls}">${days} days</span>
       </li>
     `;
@@ -241,13 +255,6 @@ function setupAdminModals() {
   tasksModal?.addEventListener('click', (e) => {
     if (e.target === tasksModal) tasksModal.style.display = 'none';
   });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (scheduleModal?.style.display === 'flex') scheduleModal.style.display = 'none';
-      if (tasksModal?.style.display === 'flex')    tasksModal.style.display = 'none';
-    }
-  });
 }
 
 function renderScheduleModalContent() {
@@ -259,10 +266,10 @@ function renderScheduleModalContent() {
   }
   content.innerHTML = adminScheduleData.map(c => `
     <div class="modal-item ${c.color || 'blue'}">
-      <div class="modal-item__title">${c.subject}</div>
+      <div class="modal-item__title">${escapeHtml(c.subject)}</div>
       <div class="modal-item__meta">
         <span><i class="fa-regular fa-clock"></i> ${fmtTime(c.time_start)} - ${fmtTime(c.time_end)}</span>
-        <span><i class="fa-solid fa-location-dot"></i> ${c.room || '—'}</span>
+        <span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(c.room || '—')}</span>
       </div>
     </div>
   `).join('');
@@ -282,10 +289,10 @@ function renderTasksModalContent() {
     return `
       <div class="modal-item ${item.color || 'blue'}">
         <div class="modal-item__title">
-          ${item.title}
+          ${escapeHtml(item.title)}
           <span class="modal-item__type ${typeCls}">${typeLabel}</span>
         </div>
-        ${item.description ? `<div class="modal-item__desc">${item.description}</div>` : ''}
+        ${item.description ? `<div class="modal-item__desc">${escapeHtml(item.description)}</div>` : ''}
         <div class="modal-item__meta">
           <span><i class="fa-regular fa-calendar"></i> ${fmtDate(item.date)}</span>
           ${item.time ? `<span><i class="fa-regular fa-clock"></i> ${fmtTime(item.time)}</span>` : ''}

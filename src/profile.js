@@ -1,4 +1,16 @@
 
+/* [A6] Escape-close bound once at module scope; initProfile() re-runs on
+   every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__profileEscapeBound) {
+  window.__profileEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const logoutModal = document.getElementById('logout-modal');
+    if (logoutModal?.style.display === 'flex') logoutModal.style.display = 'none';
+  });
+}
+
 function updateSidebarProfile(user) {
   const name = document.querySelector('.user-name');
   const sid  = document.querySelector('.student-id');
@@ -219,12 +231,6 @@ function setupFormEvents() {
 
     logoutModal.addEventListener('click', (e) => {
       if (e.target === logoutModal) logoutModal.style.display = 'none';
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && logoutModal.style.display === 'flex') {
-        logoutModal.style.display = 'none';
-      }
     });
   } else if (btnLogout) {
     btnLogout.onclick = () => {

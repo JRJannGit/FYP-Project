@@ -46,20 +46,23 @@
 
           <input type="file" id="academic-file-input" accept="image/*,application/pdf" style="display:none;">
 
-          <div class="academic-zoom-controls" style="display:flex;">
+          <div class="academic-toolbar">
             <button class="zoom-btn" id="btn-upload-academic" title="Upload academic calendar">
               <i class="fa-solid fa-upload"></i>
             </button>
             <button class="zoom-btn" id="btn-delete-academic" title="Delete academic calendar">
               <i class="fa-solid fa-trash"></i>
             </button>
-            <button class="zoom-btn" id="ac-zoom-out" title="Zoom out">
-              <i class="fa-solid fa-magnifying-glass-minus"></i>
-            </button>
-            <button class="zoom-value" id="ac-zoom-value" title="Reset zoom">100%</button>
-            <button class="zoom-btn" id="ac-zoom-in" title="Zoom in">
-              <i class="fa-solid fa-magnifying-glass-plus"></i>
-            </button>
+
+            <div class="academic-zoom-controls" style="display:none;">
+              <button class="zoom-btn" id="ac-zoom-out" title="Zoom out">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+              </button>
+              <button class="zoom-value" id="ac-zoom-value" title="Reset zoom">100%</button>
+              <button class="zoom-btn" id="ac-zoom-in" title="Zoom in">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+              </button>
+            </div>
           </div>
         </div>
         <div class="academic-image-wrapper" id="academic-image-wrapper">

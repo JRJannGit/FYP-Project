@@ -1,4 +1,32 @@
 
+/* [A6] Escape-close bound once at module scope; initAdminAccounts() re-runs
+   on every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__adminAccountsEscapeBound) {
+  window.__adminAccountsEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const deleteModal = document.getElementById('delete-account-modal');
+    if (deleteModal?.style.display === 'flex') { deleteModal.style.display = 'none'; return; }
+
+    const studentModal = document.getElementById('student-modal');
+    if (studentModal?.style.display === 'flex') {
+      studentModal.style.display = 'none';
+      document.getElementById('student-form')?.reset();
+      const idField = document.getElementById('student-id');
+      if (idField) idField.value = '';
+    }
+
+    const lecturerModal = document.getElementById('lecturer-modal');
+    if (lecturerModal?.style.display === 'flex') {
+      lecturerModal.style.display = 'none';
+      document.getElementById('lecturer-form')?.reset();
+      const idField = document.getElementById('lecturer-id');
+      if (idField) idField.value = '';
+    }
+  });
+}
+
 function initAdminAccounts() {
   console.log('[Admin Accounts] init');
 
@@ -51,6 +79,8 @@ function initAdminAccounts() {
   const deleteNo     = document.getElementById('delete-account-no');
 
   if (!studentsList || !lecturersList) return;
+  if (!studentForm)  { console.warn('[admin-accounts] student-form missing');  return; }
+  if (!lecturerForm) { console.warn('[admin-accounts] lecturer-form missing'); return; }
 
   let students  = [];
   let lecturers = [];
@@ -332,24 +362,17 @@ function initAdminAccounts() {
   addStudentBtn?.addEventListener('click', () => openStudentModal('add'));
   addLecturerBtn?.addEventListener('click', () => openLecturerModal('add'));
 
-  studentClose.addEventListener('click', closeStudentModal);
-  studentCancel.addEventListener('click', closeStudentModal);
-  studentModal.addEventListener('click', (e) => { if (e.target === studentModal) closeStudentModal(); });
+  studentClose?.addEventListener('click', closeStudentModal);
+  studentCancel?.addEventListener('click', closeStudentModal);
+  studentModal?.addEventListener('click', (e) => { if (e.target === studentModal) closeStudentModal(); });
 
-  lecturerClose.addEventListener('click', closeLecturerModal);
-  lecturerCancel.addEventListener('click', closeLecturerModal);
-  lecturerModal.addEventListener('click', (e) => { if (e.target === lecturerModal) closeLecturerModal(); });
+  lecturerClose?.addEventListener('click', closeLecturerModal);
+  lecturerCancel?.addEventListener('click', closeLecturerModal);
+  lecturerModal?.addEventListener('click', (e) => { if (e.target === lecturerModal) closeLecturerModal(); });
 
-  deleteClose.addEventListener('click', closeDeleteModal);
-  deleteNo.addEventListener('click', closeDeleteModal);
-  deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) closeDeleteModal(); });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (deleteModal.style.display === 'flex')   { closeDeleteModal();   return; }
-    if (studentModal.style.display === 'flex')  closeStudentModal();
-    if (lecturerModal.style.display === 'flex') closeLecturerModal();
-  });
+  deleteClose?.addEventListener('click', closeDeleteModal);
+  deleteNo?.addEventListener('click', closeDeleteModal);
+  deleteModal?.addEventListener('click', (e) => { if (e.target === deleteModal) closeDeleteModal(); });
 
   loadStudents();
   loadLecturers();

@@ -1,4 +1,29 @@
 
+/* [A6] Escape-close bound once at module scope; initAdminCalendar() re-runs
+   on every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__adminCalendarEscapeBound) {
+  window.__adminCalendarEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const modal      = document.getElementById('event-modal');
+    const delModal   = document.getElementById('delete-event-modal');
+    const delAcModal = document.getElementById('delete-academic-modal');
+    if (modal && modal.style.display === 'flex') {
+      document.getElementById('event-modal-cancel')?.click();
+      return;
+    }
+    if (delModal && delModal.style.display === 'flex') {
+      document.getElementById('delete-event-no')?.click();
+      return;
+    }
+    if (delAcModal && delAcModal.style.display === 'flex') {
+      document.getElementById('delete-academic-no')?.click();
+      return;
+    }
+  });
+}
+
 function initAdminCalendar() {
   const eventsList   = document.getElementById('events-list');
   const monthTitle   = document.getElementById('events-month-title');
@@ -134,7 +159,7 @@ function initAdminCalendar() {
     monthTitle.innerText = `Events for ${MONTHS[m]} ${y}`;
 
     const monthly = allEvents.filter(e => {
-      const d = new Date(e.event_date);
+      const d = parseDateOnly(e.event_date);
       return d.getFullYear() === y && d.getMonth() === m;
     }).sort((a, b) => a.event_date.localeCompare(b.event_date));
 
@@ -147,7 +172,7 @@ function initAdminCalendar() {
       <div class="event-item" data-id="${e.id}">
         <div class="event-date-chip">${fmtDateBadge(e.event_date)}</div>
         <div class="event-info">
-          <h5>${e.title}</h5>
+          <h5>${escapeHtml(e.title)}</h5>
           <p><i class="fa-regular fa-clock"></i> ${fmtTime(e.start_time)} - ${fmtTime(e.end_time)}</p>
         </div>
         <button class="event-delete-btn" data-action="delete" data-id="${e.id}" title="Delete">
@@ -174,7 +199,7 @@ function initAdminCalendar() {
     for (let d = 1; d <= daysInMonth; d++) {
       const dateObj = new Date(y, m, d);
       const dayEvents = allEvents.filter(e => {
-        const ed = new Date(e.event_date);
+        const ed = parseDateOnly(e.event_date);
         return ed.getFullYear() === y && ed.getMonth() === m && ed.getDate() === d;
       });
       cells.push({
@@ -276,14 +301,14 @@ function initAdminCalendar() {
     if (res.success) { closeDeleteModal(); loadEvents(); }
     else alert('Delete failed: ' + res.error);
   });
-  delNo.addEventListener('click', closeDeleteModal);
-  delClose.addEventListener('click', closeDeleteModal);
-  delModal.addEventListener('click', (e) => { if (e.target === delModal) closeDeleteModal(); });
+  delNo?.addEventListener('click', closeDeleteModal);
+  delClose?.addEventListener('click', closeDeleteModal);
+  delModal?.addEventListener('click', (e) => { if (e.target === delModal) closeDeleteModal(); });
 
-  addBtn.addEventListener('click', () => openModal('add'));
-  closeBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  addBtn?.addEventListener('click', () => openModal('add'));
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
   eventsList.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="delete"]');
@@ -299,16 +324,16 @@ function initAdminCalendar() {
     openModal('add', null, cell.dataset.date);
   });
 
-  prevBtn.addEventListener('click', () => {
+  prevBtn?.addEventListener('click', () => {
     currentMonth.setMonth(currentMonth.getMonth() - 1);
     renderEventsPanel(); renderGrid();
   });
-  nextBtn.addEventListener('click', () => {
+  nextBtn?.addEventListener('click', () => {
     currentMonth.setMonth(currentMonth.getMonth() + 1);
     renderEventsPanel(); renderGrid();
   });
 
-  toggleMode.addEventListener('change', () => {
+  toggleMode?.addEventListener('change', () => {
     if (toggleMode.checked) {
       monthlyView.style.display = 'none';
       academicView.style.display = 'flex';
@@ -319,9 +344,9 @@ function initAdminCalendar() {
     }
   });
 
-  btnUpload.addEventListener('click', () => fileInput.click());
+  btnUpload?.addEventListener('click', () => fileInput?.click());
 
-  fileInput.addEventListener('change', (e) => {
+  fileInput?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
@@ -345,7 +370,7 @@ function initAdminCalendar() {
     e.target.value = '';
   });
 
-  btnDelete.addEventListener('click', () => { delAcModal.style.display = 'flex'; });
+  btnDelete?.addEventListener('click', () => { delAcModal.style.display = 'flex'; });
   function closeDeleteAcademic() { delAcModal.style.display = 'none'; }
 
   delAcYes.addEventListener('click', async () => {
@@ -353,16 +378,9 @@ function initAdminCalendar() {
     if (res.success) { closeDeleteAcademic(); loadAcademic(); }
     else alert('Delete failed: ' + res.error);
   });
-  delAcNo.addEventListener('click', closeDeleteAcademic);
-  delAcClose.addEventListener('click', closeDeleteAcademic);
-  delAcModal.addEventListener('click', (e) => { if (e.target === delAcModal) closeDeleteAcademic(); });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (modal.style.display === 'flex') closeModal();
-    if (delModal.style.display === 'flex') closeDeleteModal();
-    if (delAcModal.style.display === 'flex') closeDeleteAcademic();
-  });
+  delAcNo?.addEventListener('click', closeDeleteAcademic);
+  delAcClose?.addEventListener('click', closeDeleteAcademic);
+  delAcModal?.addEventListener('click', (e) => { if (e.target === delAcModal) closeDeleteAcademic(); });
 
   loadEvents();
 }

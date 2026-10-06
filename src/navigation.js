@@ -69,6 +69,11 @@
   window.loadView = loadView;
 
   document.addEventListener('DOMContentLoaded', () => {
+    // [A4] Student shell was the only one without a session guard
+    // (lecturer/admin navigation files already call Auth.guard).
+    if (window.Auth && typeof window.Auth.guard === 'function') {
+      if (!window.Auth.guard('student')) return;
+    }
     loadView('dashboard');
   });
 

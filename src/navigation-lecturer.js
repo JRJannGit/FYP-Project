@@ -10,7 +10,7 @@
   const INIT_MAP = {
     dashboard:     'initDashboard',
     timetable:     'initTimetable',
-    assignments:   'initAssignments',
+    assignments:   'initLecturerAssignments',
     calendar:      'initCalendar',
     notes:         'initNotes',
     reminders:     'initReminders',

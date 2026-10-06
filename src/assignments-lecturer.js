@@ -1,4 +1,4 @@
-function initAssignments() {
+function initLecturerAssignments() {
   console.log('[Lecturer Assignments] init');
 
   const user = AppStorage.getUser();
@@ -59,7 +59,6 @@ function initAssignments() {
 
   let uploadedFile = null;
   let uploadedUrl  = '';
-  let editingId    = null;
   let currentAssignmentForSubs = null;
   let allAssignments = [];
 
@@ -80,6 +79,10 @@ function initAssignments() {
 
   async function loadClasses() {
     if (!metaClass) return;
+    if (!userId) {
+      metaClass.innerHTML = '<option value="">Please log in</option>';
+      return;
+    }
     try {
       const res = await API.get(`/api/lecturer/classes/${userId}`);
       if (!res.success) return;
@@ -129,6 +132,7 @@ function initAssignments() {
         return;
       }
 
+      if (!classSave) return;
       classSave.disabled = true;
       classSave.innerText = 'Saving...';
 
@@ -309,7 +313,6 @@ function initAssignments() {
       if (metaClass) metaClass.value = '';
       uploadedFile = null;
       uploadedUrl = '';
-      editingId = null;
       hidePreview();
       if (receivedHint) receivedHint.innerText = 'Select or create an assignment to view submissions.';
     });
@@ -348,12 +351,7 @@ function initAssignments() {
       btnRelease.disabled = true;
       btnRelease.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Releasing...';
 
-      let res;
-      if (editingId) {
-        res = await API.put(`/api/assignments/${editingId}`, payload);
-      } else {
-        res = await API.post('/api/assignments', payload);
-      }
+      const res = await API.post('/api/assignments', payload);
 
       btnRelease.disabled = false;
       btnRelease.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Release';
@@ -363,8 +361,7 @@ function initAssignments() {
         return;
       }
 
-      alert(editingId ? 'Assignment updated!' : 'Assignment released!');
-      editingId = null;
+      alert('Assignment released!');
       if (receivedHint) receivedHint.innerText = `Assignment "${topic}" published. Click View to see submissions.`;
       loadAssignmentsList();
     });
@@ -388,7 +385,7 @@ function initAssignments() {
       if (!pickList || !pickModal) return;
       pickList.innerHTML = allAssignments.map(a => `
         <div class="pick-item" data-id="${a.id}">
-          ${a.subject}
+          ${escapeHtml(a.subject)}
           <small>Due ${new Date(a.due_date).toLocaleDateString('en-GB')}</small>
         </div>
       `).join('');
@@ -456,7 +453,7 @@ function initAssignments() {
       <div class="submission-row">
         <div class="submission-email">
           <span class="row-num">${index + 1}.</span>
-          <span>${s.student_email || s.student_id}</span>
+          <span>${escapeHtml(s.student_email || s.student_id)}</span>
         </div>
         <div class="submission-time">${fmtTimeOnly(s.submitted_at)}</div>
         <button class="submission-download" data-id="${s.id}" title="Download">
@@ -547,4 +544,4 @@ function initAssignments() {
   console.log('[Lecturer Assignments] initialized');
 }
 
-window.initAssignments = initAssignments;
+window.initLecturerAssignments = initLecturerAssignments;

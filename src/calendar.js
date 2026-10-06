@@ -1,5 +1,39 @@
 
+/* [A6] Escape-close bound once at module scope; initCalendar() re-runs on
+   every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__calendarEscapeBound) {
+  window.__calendarEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const modal    = document.getElementById('event-modal');
+    const delModal = document.getElementById('delete-event-modal');
+    if (modal && modal.style.display === 'flex') {
+      document.getElementById('event-modal-cancel')?.click();
+      return;
+    }
+    if (delModal && delModal.style.display === 'flex') {
+      document.getElementById('delete-event-no')?.click();
+      return;
+    }
+  });
+}
+
 function initCalendar() {
+  /* Subject→color hash — mirrors server.js subjectColor() exactly so the
+     same subject always gets the same color on dashboard and calendar. */
+  function subjectColor(subject) {
+    if (!subject) return 'blue';
+    let hash = 0;
+    const s = String(subject);
+    for (let i = 0; i < s.length; i++) {
+      hash = ((hash << 5) - hash) + s.charCodeAt(i);
+      hash |= 0;
+    }
+    const palette = ['blue', 'red', 'yellow'];
+    return palette[Math.abs(hash) % palette.length];
+  }
+
   const eventsList   = document.getElementById('events-list');
   const monthTitle   = document.getElementById('events-month-title');
   const calDays      = document.getElementById('calendar-days');
@@ -34,6 +68,7 @@ function initCalendar() {
   const studentId = _u ? (_u.student_id || _u.lecturer_id || _u.admin_id || _u.identifier) : null;
 
   let allEvents = [];
+  let allTimetableEntries = [];
   let currentMonth = new Date();
   currentMonth.setDate(1);
   let pendingDeleteId = null;
@@ -88,13 +123,21 @@ function initCalendar() {
   }
 
   async function loadEvents() {
-    if (!studentId) { eventsList.innerHTML = '<p class="events-empty">Please log in.</p>'; return; }
-    const res = await API.get(`/api/events/${studentId}`);
-    if (!res.success) {
-      eventsList.innerHTML = `<p class="events-empty" style="color:#f87171;">Failed: ${res.error}</p>`;
+    if (!studentId) {
+      allEvents = [];
+      allTimetableEntries = [];
+      eventsList.innerHTML = '<p class="events-empty">Please log in.</p>';
+      renderGrid();
       return;
     }
-    allEvents = res.data;
+    /* Events (dated) + weekly classes (timetable entries) load together so
+       the grid and the side panel can render both sources. */
+    const [eventsRes, ttRes] = await Promise.all([
+      API.get(`/api/events/${studentId}`),
+      API.get(`/api/timetable-entries/user/${studentId}`)
+    ]);
+    allEvents = eventsRes.success ? eventsRes.data : [];
+    allTimetableEntries = ttRes.success ? ttRes.data : [];
     renderEventsPanel();
     renderGrid();
   }
@@ -127,30 +170,56 @@ function initCalendar() {
   function renderEventsPanel() {
     const y = currentMonth.getFullYear();
     const m = currentMonth.getMonth();
-    monthTitle.innerText = `Events for ${MONTHS[m]} ${y}`;
+    monthTitle.innerText = `Events & Classes for ${MONTHS[m]} ${y}`;
 
     const monthly = allEvents.filter(e => {
-      const d = new Date(e.event_date);
+      const d = parseDateOnly(e.event_date);
       return d.getFullYear() === y && d.getMonth() === m;
     }).sort((a, b) => a.event_date.localeCompare(b.event_date));
 
-    if (monthly.length === 0) {
-      eventsList.innerHTML = '<p class="events-empty">No events this month.</p>';
+    /* Weekly classes repeat every week — show each entry once per month,
+       grouped Mon→Sun at the bottom of the panel. */
+    const DAY_SHORT = { Mon: 'Mo', Tue: 'Tu', Wed: 'We', Thu: 'Th', Fri: 'Fr', Sat: 'Sa', Sun: 'Su' };
+    const DAY_ORDER = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+    const classes = allTimetableEntries.slice().sort((a, b) =>
+      DAY_ORDER[a.day_of_week] - DAY_ORDER[b.day_of_week] ||
+      String(a.time_start).localeCompare(String(b.time_start))
+    );
+
+    if (monthly.length === 0 && classes.length === 0) {
+      eventsList.innerHTML = '<p class="events-empty">No events or classes this month.</p>';
       return;
     }
 
-    eventsList.innerHTML = monthly.map(e => `
-      <div class="event-item" data-id="${e.id}">
-        <div class="event-date-chip">${fmtDateBadge(e.event_date)}</div>
-        <div class="event-info">
-          <h5>${e.title}</h5>
-          <p><i class="fa-regular fa-clock"></i> ${fmtTime(e.start_time)} - ${fmtTime(e.end_time)}</p>
+    let html = '';
+    if (monthly.length > 0) {
+      html += '<div class="events-section-label">Events</div>';
+      html += monthly.map(e => `
+        <div class="event-item" data-id="${e.id}">
+          <div class="event-date-chip">${fmtDateBadge(e.event_date)}</div>
+          <div class="event-info">
+            <h5>${escapeHtml(e.title)}</h5>
+            <p><i class="fa-regular fa-clock"></i> ${fmtTime(e.start_time)} - ${fmtTime(e.end_time)}</p>
+          </div>
+          <button class="event-delete-btn" data-action="delete" data-id="${e.id}" title="Delete">
+            <i class="fa-solid fa-trash"></i>
+          </button>
         </div>
-        <button class="event-delete-btn" data-action="delete" data-id="${e.id}" title="Delete">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </div>
-    `).join('');
+      `).join('');
+    }
+    if (classes.length > 0) {
+      html += '<div class="events-section-label">Weekly Classes</div>';
+      html += classes.map(t => `
+        <div class="event-item class-item">
+          <div class="event-date-chip class-chip dot-${subjectColor(t.subject)}">${DAY_SHORT[t.day_of_week] || t.day_of_week}</div>
+          <div class="event-info">
+            <h5>${escapeHtml(t.subject)}</h5>
+            <p><i class="fa-regular fa-clock"></i> ${fmtTime(t.time_start)} - ${fmtTime(t.time_end)} · ${escapeHtml(t.room || '—')}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    eventsList.innerHTML = html;
   }
 
   function renderGrid() {
@@ -166,17 +235,21 @@ function initCalendar() {
     const cells = [];
     for (let i = startDay - 1; i >= 0; i--) cells.push({ day: prevMonthDays - i, muted: true });
 
+    const DAY_MAP = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     for (let d = 1; d <= daysInMonth; d++) {
       const dateObj = new Date(y, m, d);
+      const cellDow = DAY_MAP[dateObj.getDay()];
       const dayEvents = allEvents.filter(e => {
-        const ed = new Date(e.event_date);
+        const ed = parseDateOnly(e.event_date);
         return ed.getFullYear() === y && ed.getMonth() === m && ed.getDate() === d;
       });
+      const dayClasses = allTimetableEntries.filter(t => t.day_of_week === cellDow);
       cells.push({
         day: d,
         date: `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
         isToday: sameDay(dateObj, new Date()),
         events: dayEvents,
+        classes: dayClasses,
         muted: false
       });
     }
@@ -184,7 +257,11 @@ function initCalendar() {
 
     calDays.innerHTML = cells.map(c => {
       if (c.muted) return `<div class="day-cell muted"><span class="day-num">${c.day}</span></div>`;
-      const dots = (c.events || []).map(e => `<span class="day-dot ${e.color || 'blue'}"></span>`).join('');
+      /* 1 dot per event on this date + 1 dot per weekly class on this weekday */
+      const dots = [
+        ...(c.events || []).map(e => `<span class="day-dot ${e.color || 'blue'}"></span>`),
+        ...(c.classes || []).map(t => `<span class="day-dot ${subjectColor(t.subject)}"></span>`)
+      ].join('');
       return `
         <div class="day-cell ${c.isToday ? 'today' : ''}" data-date="${c.date}">
           <span class="day-num">${c.day}</span>
@@ -279,13 +356,6 @@ function initCalendar() {
   cancelBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   delModal.addEventListener('click', (e) => { if (e.target === delModal) closeDeleteModal(); });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (modal.style.display === 'flex') closeModal();
-      if (delModal.style.display === 'flex') closeDeleteModal();
-    }
-  });
 
   eventsList.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action="delete"]');

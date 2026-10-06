@@ -1,4 +1,23 @@
 
+/* [A6] Escape-close bound once at module scope; initAdminResources() re-runs
+   on every visit to the view and previously stacked one document listener
+   per visit. */
+if (!window.__adminResourcesEscapeBound) {
+  window.__adminResourcesEscapeBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const deleteModal = document.getElementById('delete-resource-modal');
+    if (deleteModal?.style.display === 'flex') { deleteModal.style.display = 'none'; return; }
+    const modal = document.getElementById('resource-modal');
+    if (modal?.style.display === 'flex') {
+      modal.style.display = 'none';
+      document.getElementById('resource-form')?.reset();
+      const inputId = document.getElementById('resource-id');
+      if (inputId) inputId.value = '';
+    }
+  });
+}
+
 function initAdminResources() {
   console.log('[Admin Resources] init');
 
@@ -225,12 +244,6 @@ function initAdminResources() {
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (deleteModal.style.display === 'flex') { closeDeleteModal(); return; }
-    if (modal.style.display === 'flex') closeModal();
-  });
 
   load();
 }

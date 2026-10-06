@@ -195,6 +195,7 @@
 .schedule-item.yellow { border-left-color: #f59e0b; }
 .schedule-item.red    { border-left-color: #ef4444; }
 .schedule-item.purple { border-left-color: #8b5cf6; }
+.schedule-item.blue   { border-left-color: #3b82f6; }
 
 .schedule-details {
   display: flex;

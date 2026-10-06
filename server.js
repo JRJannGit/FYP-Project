@@ -10,6 +10,61 @@ app.use(express.json({ limit: '50mb' }));
 const ok = (res, data) => res.json({ success: true, data });
 const fail = (res, msg, code = 500) => res.status(code).json({ success: false, error: msg });
 
+/* ================= [R7] MINIMAL AUTH HELPERS =================
+   The client (src/api.js) already sends x-user-role / x-user-id on every
+   call. These are self-declared headers (signed-token auth is planned as a
+   follow-up), but enforcing presence, role and ownership here closes the
+   widest holes: unauthenticated writes, and editing/deleting someone
+   else's notes, reminders, events, classes or submissions. */
+function getAuth(req) {
+  return {
+    role: req.headers['x-user-role'] || '',
+    id: req.headers['x-user-id'] || ''
+  };
+}
+
+function requireAuth(req, res) {
+  const { role, id } = getAuth(req);
+  if (!role || !id) { fail(res, 'Not authenticated', 401); return null; }
+  return { role, id };
+}
+
+function requireRoles(req, res, ...roles) {
+  const auth = requireAuth(req, res);
+  if (!auth) return null;
+  if (!roles.includes(auth.role)) { fail(res, 'Forbidden', 403); return null; }
+  return auth;
+}
+
+/* Weekly timetable classes share one subject→color hash with the calendar
+   (src/calendar.js subjectColor) so the same subject always gets the same
+   color on the dashboard and the calendar. */
+function subjectColor(subject) {
+  if (!subject) return 'blue';
+  let hash = 0;
+  const s = String(subject);
+  for (let i = 0; i < s.length; i++) {
+    hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    hash |= 0;
+  }
+  const palette = ['blue', 'red', 'yellow'];
+  return palette[Math.abs(hash) % palette.length];
+}
+
+/* Shape a timetable_entries row for the client (color is computed per
+   subject, not read from the legacy color column). */
+function ttEntryToClient(row) {
+  return {
+    id: row.id,
+    day_of_week: row.day_of_week,
+    subject: row.subject,
+    room: row.room || '',
+    time_start: row.time_start,
+    time_end: row.time_end,
+    color: subjectColor(row.subject)
+  };
+}
+
 /* ================= AUTH ================= */
 
 app.post('/api/auth/login', async (req, res) => {
@@ -130,6 +185,10 @@ app.get('/api/assignments/student/:student_id', async (req, res) => {
 
 app.post('/api/assignments', async (req, res) => {
   try {
+    // [R7] Writes require a logged-in user; lecturers cannot release as someone else
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const {
       subject, description, due_date, is_exam,
       class_id, lecturer_id, start_time, end_time, status,
@@ -137,6 +196,9 @@ app.post('/api/assignments', async (req, res) => {
     } = req.body;
 
     if (!subject || !due_date) return fail(res, 'Subject and due_date are required', 400);
+    if (lecturer_id && lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You cannot release assignments as another lecturer', 403);
+    }
 
     const [result] = await db.query(
       `INSERT INTO assignments
@@ -154,19 +216,63 @@ app.post('/api/assignments', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+// Update assignment (edit). Supports both the student edit form
+// (subject/description/due_date/is_exam) and the lecturer editor
+// (class_id/start_time/end_time/status/file fields). Only fields
+// present in the request body are written, so one client never
+// resets the other's data (previously this hard-clobbered is_exam
+// and silently dropped class_id/start_time/end_time/status).
 app.put('/api/assignments/:id', async (req, res) => {
   try {
-    const { subject, description, due_date, is_exam } = req.body;
-    await db.query(
-      'UPDATE assignments SET subject=?, description=?, due_date=?, is_exam=? WHERE id=?',
-      [subject, description, due_date, is_exam ? 1 : 0, req.params.id]
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
+    const [existing] = await db.query(
+      'SELECT lecturer_id FROM assignments WHERE id = ?', [req.params.id]
     );
+    if (existing.length === 0) return fail(res, 'Assignment not found', 404);
+    if (existing[0].lecturer_id && existing[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this assignment', 403);
+    }
+
+    const allowed = [
+      'subject', 'description', 'due_date', 'is_exam',
+      'class_id', 'lecturer_id', 'start_time', 'end_time', 'status',
+      'file_name', 'file_type', 'file_data', 'url_link'
+    ];
+    const nullable = new Set([
+      'class_id', 'lecturer_id', 'file_name', 'file_type', 'file_data', 'url_link'
+    ]);
+    const sets = [];
+    const values = [];
+    for (const key of allowed) {
+      if (!(key in req.body)) continue;
+      let value = req.body[key];
+      if (key === 'is_exam') value = value ? 1 : 0;
+      if (nullable.has(key) && (value === undefined || value === '')) value = null;
+      sets.push(`${key} = ?`);
+      values.push(value);
+    }
+    if (sets.length === 0) return fail(res, 'No valid fields to update', 400);
+    values.push(req.params.id);
+    await db.query(`UPDATE assignments SET ${sets.join(', ')} WHERE id = ?`, values);
     ok(res, { updated: true });
   } catch (err) { fail(res, err.message); }
 });
 
 app.delete('/api/assignments/:id', async (req, res) => {
   try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
+    const [existing] = await db.query(
+      'SELECT lecturer_id FROM assignments WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Assignment not found', 404);
+    if (existing[0].lecturer_id && existing[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this assignment', 403);
+    }
+
     await db.query('DELETE FROM assignments WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
@@ -221,6 +327,10 @@ app.get('/api/lecturer/classes/:lecturer_id', async (req, res) => {
 
 app.post('/api/lecturer/classes', async (req, res) => {
   try {
+    // [R7] Only lecturers/admins manage classes, and only for themselves
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
     const {
       class_code, class_name, subject_code,
       lecturer_id, description, semester
@@ -228,6 +338,9 @@ app.post('/api/lecturer/classes', async (req, res) => {
 
     if (!class_code || !class_name || !lecturer_id) {
       return fail(res, 'class_code, class_name, and lecturer_id are required', 400);
+    }
+    if (lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You cannot create classes for another lecturer', 403);
     }
 
     const [result] = await db.query(
@@ -252,6 +365,18 @@ app.post('/api/lecturer/classes', async (req, res) => {
 
 app.put('/api/lecturer/classes/:id', async (req, res) => {
   try {
+    // [R7] Only the owning lecturer (or an admin) may edit a class
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
+    const [existing] = await db.query(
+      'SELECT lecturer_id FROM classes WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Class not found', 404);
+    if (existing[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this class', 403);
+    }
+
     const {
       class_code, class_name, subject_code,
       description, semester
@@ -280,7 +405,35 @@ app.put('/api/lecturer/classes/:id', async (req, res) => {
 
 app.delete('/api/lecturer/classes/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM classes WHERE id = ?', [req.params.id]);
+    // [R7] Only the owning lecturer (or an admin) may delete a class
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
+    const [existing] = await db.query(
+      'SELECT id, lecturer_id FROM classes WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Class not found', 404);
+    if (existing[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this class', 403);
+    }
+
+    // [R4] Deleting a class used to orphan its enrollments and leave its
+    // assignments visible but dangling. Remove dependents first, in one
+    // transaction, so it is all-or-nothing.
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.query('DELETE FROM enrollments WHERE class_id = ?', [req.params.id]);
+      await conn.query('DELETE FROM assignments WHERE class_id = ?', [req.params.id]);
+      await conn.query('DELETE FROM classes WHERE id = ?', [req.params.id]);
+      await conn.commit();
+    } catch (txErr) {
+      await conn.rollback();
+      throw txErr;
+    } finally {
+      conn.release();
+    }
+
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
 });
@@ -324,13 +477,20 @@ app.get('/api/enrollments/student/:student_id', async (req, res) => {
 // Enroll a single student
 app.post('/api/enrollments', async (req, res) => {
   try {
+    // [R7] Only lecturers/admins manage enrollments
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
     const { class_id, student_id } = req.body || {};
     if (!class_id || !student_id) {
       return fail(res, 'class_id and student_id are required', 400);
     }
 
-    const [cls] = await db.query('SELECT id FROM classes WHERE id = ?', [class_id]);
+    const [cls] = await db.query('SELECT id, lecturer_id FROM classes WHERE id = ?', [class_id]);
     if (cls.length === 0) return fail(res, 'Class not found', 404);
+    if (cls[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this class', 403);
+    }
 
     const [stu] = await db.query('SELECT id FROM students WHERE student_id = ?', [student_id]);
     if (stu.length === 0) return fail(res, 'Student not found', 404);
@@ -349,6 +509,10 @@ app.post('/api/enrollments', async (req, res) => {
 // Remove student from class
 app.delete('/api/enrollments/:id', async (req, res) => {
   try {
+    // [R7] Only lecturers/admins manage enrollments
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
     await db.query('DELETE FROM enrollments WHERE id = ?', [req.params.id]);
     ok(res, { removed: true });
   } catch (err) { fail(res, err.message); }
@@ -357,9 +521,19 @@ app.delete('/api/enrollments/:id', async (req, res) => {
 // Bulk enroll multiple students
 app.post('/api/enrollments/bulk', async (req, res) => {
   try {
+    // [R7] Only lecturers/admins manage enrollments, for classes they own
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
     const { class_id, student_ids } = req.body || {};
     if (!class_id || !Array.isArray(student_ids) || student_ids.length === 0) {
       return fail(res, 'class_id and student_ids array required', 400);
+    }
+
+    const [cls] = await db.query('SELECT id, lecturer_id FROM classes WHERE id = ?', [class_id]);
+    if (cls.length === 0) return fail(res, 'Class not found', 404);
+    if (cls[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this class', 403);
     }
 
     const values = student_ids.map(sid => [class_id, sid]);
@@ -375,6 +549,18 @@ app.post('/api/enrollments/bulk', async (req, res) => {
 
 app.get('/api/submissions/:assignment_id', async (req, res) => {
   try {
+    // [R7] Only the assignment's lecturer (or an admin) may view submissions
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
+    const [asg] = await db.query(
+      'SELECT lecturer_id FROM assignments WHERE id = ?', [req.params.assignment_id]
+    );
+    if (asg.length === 0) return fail(res, 'Assignment not found', 404);
+    if (auth.role !== 'admin' && asg[0].lecturer_id !== auth.id) {
+      return fail(res, 'You do not own this assignment', 403);
+    }
+
     const [rows] = await db.query(
       `SELECT s.id, s.assignment_id, s.student_id, s.file_name, s.submitted_at,
               st.email AS student_email
@@ -390,18 +576,40 @@ app.get('/api/submissions/:assignment_id', async (req, res) => {
 
 app.get('/api/submissions/item/:submission_id', async (req, res) => {
   try {
+    // [R7] Only the submitting student, the assignment's lecturer or an admin
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const [rows] = await db.query(
-      'SELECT * FROM submissions WHERE id = ?',
+      `SELECT s.*, a.lecturer_id
+         FROM submissions s
+         LEFT JOIN assignments a ON a.id = s.assignment_id
+        WHERE s.id = ?`,
       [req.params.submission_id]
     );
-    ok(res, rows[0] || null);
+    if (rows.length === 0) return fail(res, 'Submission not found', 404);
+
+    const sub = rows[0];
+    const allowed = sub.student_id === auth.id ||
+                    sub.lecturer_id === auth.id ||
+                    auth.role === 'admin';
+    if (!allowed) return fail(res, 'Forbidden', 403);
+
+    ok(res, sub);
   } catch (err) { fail(res, err.message); }
 });
 
 app.post('/api/submissions', async (req, res) => {
   try {
+    // [R7] Students may only upload submissions as themselves
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const { assignment_id, student_id, file_name, file_type, file_data } = req.body;
     if (!assignment_id || !student_id) return fail(res, 'assignment_id and student_id required', 400);
+    if (auth.role !== 'student' || student_id !== auth.id) {
+      return fail(res, 'You can only submit as yourself', 403);
+    }
     await db.query(
       `INSERT INTO submissions (assignment_id, student_id, file_name, file_type, file_data)
        VALUES (?, ?, ?, ?, ?)
@@ -420,6 +628,13 @@ app.post('/api/submissions', async (req, res) => {
 
 app.get('/api/timetable/:student_id', async (req, res) => {
   try {
+    // [R7] Users may only read their own timetable
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    if (auth.id !== req.params.student_id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     const [rows] = await db.query(
       'SELECT * FROM timetable WHERE student_id = ? ORDER BY uploaded_at DESC LIMIT 1',
       [req.params.student_id]
@@ -430,18 +645,47 @@ app.get('/api/timetable/:student_id', async (req, res) => {
 
 app.post('/api/timetable', async (req, res) => {
   try {
+    // [R7] Users may only upload their own timetable
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const { student_id, file_data, file_type } = req.body;
-    await db.query('DELETE FROM timetable WHERE student_id = ?', [student_id]);
-    await db.query(
-      'INSERT INTO timetable (student_id, file_data, file_type) VALUES (?, ?, ?)',
-      [student_id, file_data, file_type]
-    );
+    if (!student_id || !file_data) return fail(res, 'student_id and file_data are required', 400);
+    if (auth.id !== student_id && auth.role !== 'admin') {
+      return fail(res, 'You can only manage your own timetable', 403);
+    }
+
+    // [R6] DELETE-then-INSERT used to run as two independent statements — a
+    // failure between them could wipe a student's timetable and save nothing.
+    // Run it as one all-or-nothing transaction instead.
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.query('DELETE FROM timetable WHERE student_id = ?', [student_id]);
+      await conn.query(
+        'INSERT INTO timetable (student_id, file_data, file_type) VALUES (?, ?, ?)',
+        [student_id, file_data, file_type]
+      );
+      await conn.commit();
+    } catch (txErr) {
+      await conn.rollback();
+      throw txErr;
+    } finally {
+      conn.release();
+    }
     ok(res, { uploaded: true });
   } catch (err) { fail(res, err.message); }
 });
 
 app.delete('/api/timetable/:student_id', async (req, res) => {
   try {
+    // [R7] Users may only delete their own timetable
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    if (auth.id !== req.params.student_id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     await db.query('DELETE FROM timetable WHERE student_id = ?', [req.params.student_id]);
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
@@ -449,6 +693,10 @@ app.delete('/api/timetable/:student_id', async (req, res) => {
 
 app.get('/api/timetable-entries', async (req, res) => {
   try {
+    // Admin-only bulk listing; users read their own rows via
+    // /api/timetable-entries/user/:userId (entries are per-user private).
+    const auth = requireRoles(req, res, 'admin');
+    if (!auth) return;
     const [rows] = await db.query(
       'SELECT * FROM timetable_entries ORDER BY FIELD(day_of_week, "Mon","Tue","Wed","Thu","Fri","Sat","Sun"), time_start ASC'
     );
@@ -458,13 +706,110 @@ app.get('/api/timetable-entries', async (req, res) => {
 
 app.get('/api/timetable-entries/today', async (req, res) => {
   try {
+    // Per-user: each account only ever sees its own classes.
+    const auth = requireAuth(req, res);
+    if (!auth) return;
     const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const today = days[new Date().getDay()];
     const [rows] = await db.query(
-      'SELECT * FROM timetable_entries WHERE day_of_week = ? ORDER BY time_start ASC',
-      [today]
+      'SELECT id, day_of_week, subject, room, time_start, time_end FROM timetable_entries WHERE day_of_week = ? AND user_id = ? ORDER BY time_start ASC',
+      [today, auth.id]
     );
-    ok(res, rows);
+    ok(res, rows.map(ttEntryToClient));
+  } catch (err) { fail(res, err.message); }
+});
+
+app.get('/api/timetable-entries/user/:userId', async (req, res) => {
+  try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    if (auth.id !== req.params.userId) return fail(res, 'Forbidden', 403);
+    const [rows] = await db.query(
+      'SELECT id, day_of_week, subject, room, time_start, time_end FROM timetable_entries WHERE user_id = ? ORDER BY FIELD(day_of_week, "Mon","Tue","Wed","Thu","Fri","Sat","Sun"), time_start ASC',
+      [req.params.userId]
+    );
+    ok(res, rows.map(ttEntryToClient));
+  } catch (err) { fail(res, err.message); }
+});
+
+app.post('/api/timetable-entries/bulk', async (req, res) => {
+  try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
+    const { user_id, entries } = req.body || {};
+    if (!user_id || !Array.isArray(entries)) return fail(res, 'user_id and entries array are required', 400);
+    if (auth.id !== user_id) return fail(res, 'You can only save your own classes', 403);
+    if (entries.length < 1 || entries.length > 100) return fail(res, 'entries must contain between 1 and 100 items', 400);
+
+    const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const normTime = (t) => { const s = String(t || '').trim(); return s.length === 5 ? `${s}:00` : s; };
+    const timeOk = (t) => /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(t);
+    const rows = [];
+    for (const e of entries) {
+      const { day_of_week, start_time, end_time, subject, room } = e || {};
+      if (!DAYS.includes(day_of_week)) return fail(res, 'Invalid day_of_week', 400);
+      if (!subject || !timeOk(normTime(start_time)) || !timeOk(normTime(end_time))) {
+        return fail(res, 'Each entry needs subject, start_time and end_time (HH:MM)', 400);
+      }
+      const start = normTime(start_time);
+      const end = normTime(end_time);
+      if (start >= end) return fail(res, 'end_time must be after start_time', 400);
+      rows.push([
+        user_id,
+        day_of_week,
+        String(subject).slice(0, 150),
+        room ? String(room).slice(0, 50) : null,
+        start,
+        end
+      ]);
+    }
+
+    // [R6] One all-or-nothing transaction — a partial import must never
+    // leave a half-populated weekly schedule behind.
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      for (const row of rows) {
+        await conn.query(
+          'INSERT INTO timetable_entries (user_id, day_of_week, subject, room, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)',
+          row
+        );
+      }
+      await conn.commit();
+    } catch (txErr) {
+      await conn.rollback();
+      throw txErr;
+    } finally {
+      conn.release();
+    }
+    ok(res, { inserted: rows.length });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.delete('/api/timetable-entries/all/:userId', async (req, res) => {
+  try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    if (auth.id !== req.params.userId) return fail(res, 'Forbidden', 403);
+    const [result] = await db.query('DELETE FROM timetable_entries WHERE user_id = ?', [req.params.userId]);
+    ok(res, { deleted: result.affectedRows || 0 });
+  } catch (err) { fail(res, err.message); }
+});
+
+app.delete('/api/timetable-entries/:id', async (req, res) => {
+  try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT user_id FROM timetable_entries WHERE id = ?',
+      [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Timetable entry not found', 404);
+    // Row-level ownership: a user may only delete their own entries.
+    if (existing[0].user_id !== auth.id) return fail(res, 'Forbidden', 403);
+    await db.query('DELETE FROM timetable_entries WHERE id = ?', [req.params.id]);
+    ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
 });
 
@@ -495,8 +840,15 @@ app.get('/api/reminders/:student_id/due', async (req, res) => {
 
 app.post('/api/reminders', async (req, res) => {
   try {
+    // [R7] Users can only create reminders for themselves
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const { student_id, title, description, remind_date, remind_time, priority } = req.body;
     if (!student_id || !title || !remind_date) return fail(res, 'Missing required fields', 400);
+    if (student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
     const [result] = await db.query(
       `INSERT INTO reminders (student_id, title, description, remind_date, remind_time, priority)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -508,6 +860,17 @@ app.post('/api/reminders', async (req, res) => {
 
 app.put('/api/reminders/:id', async (req, res) => {
   try {
+    // [R7] Only the owner (or an admin) may edit a reminder
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT student_id FROM reminders WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Reminder not found', 404);
+    if (existing[0].student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     const { title, description, remind_date, remind_time, priority } = req.body;
     await db.query(
       `UPDATE reminders SET title=?, description=?, remind_date=?, remind_time=?, priority=? WHERE id=?`,
@@ -519,6 +882,17 @@ app.put('/api/reminders/:id', async (req, res) => {
 
 app.delete('/api/reminders/:id', async (req, res) => {
   try {
+    // [R7] Only the owner (or an admin) may delete a reminder
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT student_id FROM reminders WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Reminder not found', 404);
+    if (existing[0].student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     await db.query('DELETE FROM reminders WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
@@ -538,7 +912,12 @@ app.get('/api/notes/:student_id', async (req, res) => {
 
 app.post('/api/notes', async (req, res) => {
   try {
+    // [R7] Users can only create notes for themselves
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const { student_id, title, content } = req.body;
+    if (student_id !== auth.id) return fail(res, 'Forbidden', 403);
     const [result] = await db.query(
       'INSERT INTO notes (student_id, title, content) VALUES (?, ?, ?)',
       [student_id, title || 'Untitled', content || '']
@@ -549,6 +928,17 @@ app.post('/api/notes', async (req, res) => {
 
 app.put('/api/notes/:id', async (req, res) => {
   try {
+    // [R7] Only the owner (or an admin) may edit a note
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT student_id FROM notes WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Note not found', 404);
+    if (existing[0].student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     const { title, content } = req.body;
     await db.query('UPDATE notes SET title=?, content=? WHERE id=?', [title, content, req.params.id]);
     ok(res, { updated: true });
@@ -557,6 +947,17 @@ app.put('/api/notes/:id', async (req, res) => {
 
 app.delete('/api/notes/:id', async (req, res) => {
   try {
+    // [R7] Only the owner (or an admin) may delete a note
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT student_id FROM notes WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Note not found', 404);
+    if (existing[0].student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     await db.query('DELETE FROM notes WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
@@ -606,7 +1007,15 @@ app.post('/api/resources', async (req, res) => {
   try {
     const { title, url_link, caption, icon, created_by, is_system } = req.body;
     const role = req.headers['x-user-role'];
-    if (!role) return fail(res, 'Not authenticated', 401);
+    const userId = req.headers['x-user-id'];
+    if (!role || !userId) return fail(res, 'Not authenticated', 401);
+
+    // [R5] The server used to accept empty titles and arbitrary URLs
+    if (!title || !String(title).trim()) return fail(res, 'Title is required', 400);
+    if (!url_link || !/^https?:\/\//i.test(String(url_link).trim())) {
+      return fail(res, 'A valid http(s) URL is required', 400);
+    }
+    if (!created_by) return fail(res, 'created_by is required', 400);
 
     // Hanya admin boleh buat system resource
     const systemFlag = (role === 'admin' && is_system) ? 1 : 0;
@@ -635,6 +1044,14 @@ app.put('/api/resources/:id', async (req, res) => {
     }
 
     const { title, url_link, caption, icon, is_system } = req.body;
+
+    // [R5] Validate the fields that are actually being written
+    if (title !== undefined && !String(title).trim()) {
+      return fail(res, 'Title cannot be empty', 400);
+    }
+    if (url_link !== undefined && !/^https?:\/\//i.test(String(url_link).trim())) {
+      return fail(res, 'A valid http(s) URL is required', 400);
+    }
 
     let systemFlag = rows[0].is_system;
     if (role === 'admin' && is_system !== undefined) {
@@ -684,7 +1101,15 @@ app.get('/api/events/:student_id', async (req, res) => {
 
 app.post('/api/events', async (req, res) => {
   try {
+    // [R7] Users can only create personal events for themselves; global
+    // events (student_id null) are admin-only.
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
     const { student_id, title, event_date, description, color, start_time, end_time } = req.body;
+    if (student_id && student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
     const [result] = await db.query(
       `INSERT INTO events (student_id, title, event_date, description, color, start_time, end_time)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -697,6 +1122,18 @@ app.post('/api/events', async (req, res) => {
 
 app.put('/api/events/:id', async (req, res) => {
   try {
+    // [R7] Only the owner (or an admin) may edit an event; global events
+    // (student_id null) are admin-only.
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT student_id FROM events WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Event not found', 404);
+    if (existing[0].student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     const { title, event_date, description, color, start_time, end_time } = req.body;
     await db.query(
       `UPDATE events SET title=?, event_date=?, description=?, color=?, start_time=?, end_time=? WHERE id=?`,
@@ -708,6 +1145,18 @@ app.put('/api/events/:id', async (req, res) => {
 
 app.delete('/api/events/:id', async (req, res) => {
   try {
+    // [R7] Only the owner (or an admin) may delete an event; global events
+    // (student_id null) are admin-only.
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    const [existing] = await db.query(
+      'SELECT student_id FROM events WHERE id = ?', [req.params.id]
+    );
+    if (existing.length === 0) return fail(res, 'Event not found', 404);
+    if (existing[0].student_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'Forbidden', 403);
+    }
+
     await db.query('DELETE FROM events WHERE id = ?', [req.params.id]);
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
@@ -764,18 +1213,38 @@ app.get('/api/academic-calendar', async (req, res) => {
 
 app.post('/api/academic-calendar', async (req, res) => {
   try {
+    // [R7] Only admins may replace the academic calendar
+    const auth = requireRoles(req, res, 'admin');
+    if (!auth) return;
+
     const { file_data, file_type } = req.body;
-    await db.query('DELETE FROM academic_calendar');
-    await db.query(
-      'INSERT INTO academic_calendar (file_data, file_type) VALUES (?, ?)',
-      [file_data, file_type || 'image']
-    );
+    if (!file_data) return fail(res, 'file_data is required', 400);
+
+    // [R6] DELETE + INSERT as one all-or-nothing transaction
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.query('DELETE FROM academic_calendar');
+      await conn.query(
+        'INSERT INTO academic_calendar (file_data, file_type) VALUES (?, ?)',
+        [file_data, file_type || 'image']
+      );
+      await conn.commit();
+    } catch (txErr) {
+      await conn.rollback();
+      throw txErr;
+    } finally {
+      conn.release();
+    }
     ok(res, { uploaded: true });
   } catch (err) { fail(res, err.message); }
 });
 
 app.delete('/api/academic-calendar', async (req, res) => {
   try {
+    // [R7] Only admins may delete the academic calendar
+    const auth = requireRoles(req, res, 'admin');
+    if (!auth) return;
     await db.query('DELETE FROM academic_calendar');
     ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
@@ -786,6 +1255,14 @@ app.delete('/api/academic-calendar', async (req, res) => {
 app.get('/api/settings/:user_id/:role', async (req, res) => {
   try {
     const { user_id, role } = req.params;
+
+    // [R7] Users may only read their own settings
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    if (auth.id !== user_id || auth.role !== role) {
+      return fail(res, 'Forbidden', 403);
+    }
+
     const [rows] = await db.query(
       'SELECT * FROM user_settings WHERE user_id = ? AND user_role = ?',
       [user_id, role]
@@ -807,14 +1284,22 @@ app.post('/api/settings', async (req, res) => {
     const { user_id, user_role, show_notifications, play_animations, dark_mode } = req.body;
     if (!user_id || !user_role) return fail(res, 'user_id and user_role are required', 400);
 
+    // [R7] Users may only save their own settings
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+    if (auth.id !== user_id || auth.role !== user_role) {
+      return fail(res, 'You can only save your own settings', 403);
+    }
+
     await db.query(
-      `INSERT INTO user_settings (user_id, user_role, show_notifications, play_animations, dark_mode)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO user_settings (user_id, user_role, show_notifications, play_animations, dark_mode, accent_color)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          show_notifications = VALUES(show_notifications),
          play_animations    = VALUES(play_animations),
-         dark_mode          = VALUES(dark_mode)`,
-      [user_id, user_role, show_notifications ? 1 : 0, play_animations ? 1 : 0, dark_mode ? 1 : 0]
+         dark_mode          = VALUES(dark_mode),
+         accent_color       = VALUES(accent_color)`,
+      [user_id, user_role, show_notifications ? 1 : 0, play_animations ? 1 : 0, dark_mode ? 1 : 0, req.body.accent_color ?? null]
     );
     ok(res, { saved: true });
   } catch (err) { fail(res, err.message); }
@@ -824,6 +1309,8 @@ app.post('/api/settings', async (req, res) => {
 
 app.get('/api/admin/stats', async (req, res) => {
   try {
+    // [R7] Admin-only
+    if (!requireAdminRole(req)) return fail(res, 'Admin access required', 403);
     const [[{ studentCount }]]    = await db.query('SELECT COUNT(*) AS studentCount FROM students');
     const [[{ assignmentCount }]] = await db.query('SELECT COUNT(*) AS assignmentCount FROM assignments');
     const [[{ resourceCount }]]   = await db.query('SELECT COUNT(*) AS resourceCount FROM resources');

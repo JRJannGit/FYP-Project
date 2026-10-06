@@ -40,37 +40,64 @@
   }
 
   function updateRoleTab(role) {
-    currentRole = role;
+    console.log('[login] updateRoleTab called with:', role);
 
-    roleTabs.forEach(t => {
-      t.classList.toggle('active', t.dataset.role === role);
-    });
-
-    if (role === 'student') {
-      loginLabel.innerText = 'Student ID';
-      loginIcon.className = 'fa-solid fa-id-card';
-      loginInput.placeholder = 'e.g. AM1234567890';
-      signupHint.style.display = 'block';
-    } else if (role === 'lecturer') {
-      loginLabel.innerText = 'UPTM Email';
-      loginIcon.className = 'fa-solid fa-envelope';
-      loginInput.placeholder = 'e.g. ahmad@uptm.edu.my';
-      signupHint.style.display = 'none';
-    } else if (role === 'admin') {
-      loginLabel.innerText = 'Admin ID';
-      loginIcon.className = 'fa-solid fa-user-shield';
-      loginInput.placeholder = 'e.g. ADMIN001';
-      signupHint.style.display = 'none';
+    if (!loginLabel || !loginIcon || !loginInput || !loginPassword) {
+      console.warn('[login] role-tab elements missing', {
+        label: !!loginLabel, icon: !!loginIcon,
+        input: !!loginInput, password: !!loginPassword
+      });
+      return;
     }
 
-    hideError();
-    loginInput.value = '';
-    loginPassword.value = '';
-    loginInput.focus();
+    try {
+      currentRole = role;
+
+      roleTabs.forEach(t => {
+        t.classList.toggle('active', t.dataset.role === role);
+      });
+
+      if (role === 'student') {
+        loginLabel.textContent = 'Student ID';
+        loginIcon.className = 'fa-solid fa-id-card';
+        loginInput.placeholder = 'e.g. AM1234567890';
+        signupHint.style.display = 'block';
+      } else if (role === 'lecturer') {
+        loginLabel.textContent = 'UPTM Email';
+        loginIcon.className = 'fa-solid fa-envelope';
+        loginInput.placeholder = 'e.g. lectureremail@uptm.edu.my';
+        signupHint.style.display = 'none';
+      } else if (role === 'admin') {
+        loginLabel.textContent = 'Admin ID';
+        loginIcon.className = 'fa-solid fa-user-shield';
+        loginInput.placeholder = 'e.g. ADMIN001';
+        signupHint.style.display = 'none';
+      }
+
+      hideError();
+      loginInput.value = '';
+      loginPassword.value = '';
+      loginInput.focus();
+
+      // Only students can sign up. Any role change resets the view to 
+      // the login form so a non-student role never lands on the signup 
+      // screen.
+      if (typeof loginForm !== 'undefined' && typeof signupForm !== 'undefined') {
+        if (role !== 'student') {
+          loginForm.style.display = 'block';
+          signupForm.style.display = 'none';
+        }
+      }
+    } catch (err) {
+      console.error('[login] updateRoleTab failed:', err);
+    }
   }
 
   roleTabs.forEach(tab => {
-    tab.addEventListener('click', () => updateRoleTab(tab.dataset.role));
+    tab.addEventListener('click', () => {
+      console.log('[login] tab clicked:', tab.dataset.role);
+      updateRoleTab(tab.dataset.role);
+    });
   });
 
   togglePw.addEventListener('click', () => {

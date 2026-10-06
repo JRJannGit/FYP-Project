@@ -111,7 +111,20 @@
   document.addEventListener('DOMContentLoaded', () => {
     initAll();
 
-    const observer = new MutationObserver(() => initAll());
+    // [R12] The observer used to re-scan the whole document on every DOM
+    // mutation. Only react to actually added nodes now.
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (!node || node.nodeType !== 1) continue;
+          if (node.matches('canvas.buddy-rive')) {
+            initRiveCanvas(node);
+          } else if (node.querySelectorAll) {
+            node.querySelectorAll('canvas.buddy-rive').forEach(initRiveCanvas);
+          }
+        }
+      }
+    });
     observer.observe(document.body, { childList: true, subtree: true });
   });
 
