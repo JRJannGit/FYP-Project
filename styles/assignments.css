@@ -677,3 +677,92 @@ body.light-theme #assignments-confirm-modal .btn-cancel {
   color: #64748b;
   border-color: #e2e8f0;
 }
+
+/* ---------- Join a Class (student self-enrolment) ---------- */
+.assignments-enrolment-section {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.assignments-enrolment-section h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+.assignments-enrolment-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+.enrol-input-row {
+  display: flex;
+  gap: 10px;
+}
+.enrol-class-code {
+  flex: 1;
+  padding: 10px 14px;
+  background-color: #0d1420;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.enrol-class-code:focus { border-color: var(--primary-blue); }
+.enrol-sections {
+  padding: 14px 16px;
+  background-color: rgba(13,20,32,0.6);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 10px;
+}
+.enrol-sections h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #60a5fa;
+  margin: 0 0 10px;
+}
+.enrol-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.enrol-section-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.enrol-section-info strong {
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+.enrol-section-info small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.enrol-section-btn { padding: 6px 14px; font-size: 0.78rem; }
+
+body.light-theme .assignments-enrolment-section {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+body.light-theme .enrol-class-code {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+body.light-theme .enrol-sections { background-color: #f8fafc; }
+body.light-theme .enrol-section-row { border-color: #e2e8f0; }

@@ -37,7 +37,7 @@ function ensureNoStuckOverlays() {
   });
 }
 
-function initAssignments() {
+async function initAssignments() {
   const list       = document.getElementById('assignments-list');
   const emptyState = document.getElementById('assignments-empty');
   const addBtn     = document.getElementById('open-add-modal');
@@ -76,6 +76,52 @@ function initAssignments() {
     el.textContent = msg;
     el.style.display = 'flex';
     setTimeout(function () { el.style.display = 'none'; }, 8000);
+  }
+
+  /* [ENROL] In-page notice popup for the enrolment flow. Local copy of the
+     timetable view's showNotice (no showNotice exists in this file).
+     Anchored inside the enrolment section so it scrolls with the content. */
+  function showNotice(type, title, message, durationMs) {
+    const old = document.getElementById('assignments-notice');
+    if (old) old.remove();
+    const notice = document.createElement('div');
+    notice.id = 'assignments-notice';
+    notice.className = 'timetable-notice notice-' + (type || 'info');
+    const iconName = {
+      error: 'fa-circle-exclamation',
+      warning: 'fa-triangle-exclamation',
+      success: 'fa-circle-check',
+      info: 'fa-circle-info'
+    }[type] || 'fa-circle-info';
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid ' + iconName;
+    const body = document.createElement('div');
+    body.className = 'notice-body';
+    const strong = document.createElement('strong');
+    strong.textContent = title || '';
+    body.appendChild(strong);
+    if (message) {
+      const span = document.createElement('span');
+      span.innerHTML = message;
+      body.appendChild(span);
+    }
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'notice-close';
+    close.innerHTML = '&times;';
+    close.addEventListener('click', function () { notice.remove(); });
+    notice.appendChild(icon);
+    notice.appendChild(body);
+    notice.appendChild(close);
+    const section = document.querySelector('.assignments-enrolment-section');
+    if (section) section.insertBefore(notice, section.firstChild);
+    else document.body.appendChild(notice);
+    const dur = (typeof durationMs === 'number') ? durationMs : 8000;
+    if (dur > 0) {
+      setTimeout(function () {
+        if (notice.parentNode) notice.remove();
+      }, dur);
+    }
   }
 
   /* [FIX 1] In-page confirm dialog — replaces the native browser confirm
@@ -266,12 +312,6 @@ function initAssignments() {
                 <button class="icon-btn" data-action="submit" data-id="${a.id}" title="Submit">
                   <i class="fa-solid fa-upload"></i>
                 </button>
-                <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Edit">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="icon-btn danger" data-action="delete" data-id="${a.id}" title="Delete">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
               </div>
             </div>
           `;
@@ -427,23 +467,7 @@ function initAssignments() {
     const action = btn.dataset.action;
     const id     = btn.dataset.id;
 
-    if (action === 'edit') {
-      const assignment = allAssignments.find(a => String(a.id) === String(id));
-      if (assignment) openModal('edit', assignment);
-    }
-    else if (action === 'delete') {
-      showConfirmModal({
-        title: 'Delete this assignment?',
-        message: 'This cannot be undone.',
-        confirmLabel: 'Delete',
-        onConfirm: async function () {
-          const res = await API.delete(`/api/assignments/${id}`);
-          if (res.success) loadAssignments();
-          else alert('Delete failed: ' + res.error);
-        }
-      });
-    }
-    else if (action === 'submit') {
+    if (action === 'submit') {
       const assignment = allAssignments.find(a => String(a.id) === String(id));
       if (assignment) openSubmitModal(assignment);
     }
@@ -491,6 +515,116 @@ function initAssignments() {
 
   currentUserId = getUserId();
   loadAssignments();
+
+  /* ---------- Student enrolment ---------- */
+  const enrolInput     = document.getElementById('enrol-class-code');
+  const btnFindClass   = document.getElementById('btn-find-class');
+  const sectionsBox    = document.getElementById('enrol-sections');
+  const sectionsList   = document.getElementById('enrol-sections-list');
+  const classTitle     = document.getElementById('enrol-class-title');
+  const enrolledList   = document.getElementById('timetable-enrolled-list');
+
+  async function loadEnrolledClasses() {
+    if (!enrolledList) return;
+    const uid = currentUserId;
+    if (!uid) {
+      enrolledList.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;">Please log in.</p>';
+      return;
+    }
+    const res = await API.get('/api/enrollments/student/' + uid);
+    if (!res.success || !res.data || res.data.length === 0) {
+      enrolledList.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;">No classes enrolled yet.</p>';
+      return;
+    }
+    enrolledList.innerHTML = res.data.map(function (c) {
+      return '<div class="saved-row enrolled-row" data-enrol-id="' + c.enrollment_id + '">' +
+        '<span class="saved-day">' + escapeHtml(c.class_code || '—') + '</span>' +
+        '<span class="saved-time">' + escapeHtml(c.section_name || 'No section') + '</span>' +
+        '<span class="saved-subject">' + escapeHtml(c.class_name || '') + '</span>' +
+        '<span class="saved-room">' + escapeHtml(c.lecturer_name || '') + '</span>' +
+        '<button class="saved-delete" data-enrol-id="' + c.enrollment_id + '" title="Leave">' +
+        '<i class="fa-solid fa-right-from-bracket"></i></button></div>';
+    }).join('');
+  }
+
+  if (enrolInput && btnFindClass) {
+    btnFindClass.addEventListener('click', async function () {
+      const code = (enrolInput.value || '').trim().toUpperCase();
+      if (!code) return;
+      btnFindClass.disabled = true;
+      btnFindClass.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      const res = await API.get('/api/classes/by-code/' + encodeURIComponent(code));
+      btnFindClass.disabled = false;
+      btnFindClass.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Find';
+
+      if (!res.success) {
+        showNotice('error', 'Class not found',
+          'No class with code "' + escapeHtml(code) + '". Check the code and try again.', 0);
+        sectionsBox.style.display = 'none';
+        return;
+      }
+
+      const data = res.data;
+      classTitle.textContent = data.class_code + ' — ' + data.class_name +
+        (data.lecturer_name ? ' · ' + data.lecturer_name : '');
+
+      if (!data.sections || data.sections.length === 0) {
+        sectionsList.innerHTML =
+          '<p style="color:var(--text-muted);font-size:0.82rem;">' +
+          'This class has no sections yet. Ask your lecturer to create one.</p>';
+      } else {
+        sectionsList.innerHTML = data.sections.map(function (s) {
+          return '<div class="enrol-section-row">' +
+            '<div class="enrol-section-info">' +
+              '<strong>' + escapeHtml(s.section_name) + '</strong>' +
+              '<small>' + s.enrolled_count + ' / ' + s.capacity + ' enrolled</small>' +
+            '</div>' +
+            '<button class="btn-import enrol-section-btn" data-section-id="' + s.id + '">' +
+              'Join</button>' +
+          '</div>';
+        }).join('');
+      }
+      sectionsBox.style.display = 'block';
+    });
+  }
+
+  if (sectionsList) {
+    sectionsList.addEventListener('click', async function (e) {
+      const btn = e.target.closest('.enrol-section-btn');
+      if (!btn) return;
+      const sectionId = btn.dataset.sectionId;
+      const code = (enrolInput.value || '').trim().toUpperCase();
+      if (!code) return;
+      btn.disabled = true;
+      const res = await API.post('/api/enrollments/by-code', {
+        class_code: code,
+        section_id: parseInt(sectionId, 10)
+      });
+      btn.disabled = false;
+      if (!res.success) {
+        showNotice('error', 'Enrolment failed', escapeHtml(res.error || 'Unknown error'), 0);
+        return;
+      }
+      showNotice('success', 'Joined ' + escapeHtml(code),
+        'You are now enrolled in this class.', 5000);
+      sectionsBox.style.display = 'none';
+      enrolInput.value = '';
+      await loadEnrolledClasses();
+    });
+  }
+
+  if (enrolledList) {
+    enrolledList.addEventListener('click', async function (e) {
+      const btn = e.target.closest('.saved-delete');
+      if (!btn) return;
+      if (!confirm('Leave this class?')) return;
+      const res = await API.delete('/api/enrollments/self/' + btn.dataset.enrolId);
+      if (res.success) loadEnrolledClasses();
+      else showNotice('error', 'Leave failed', escapeHtml(res.error || 'Unknown error'), 0);
+    });
+  }
+
+  await loadEnrolledClasses();
 }
 
 window.initAssignments = initAssignments;

@@ -18,6 +18,40 @@
     <h4>No assignments yet</h4>
     <p>Click "Add New" to create your first assignment.</p>
   </div>
+
+  <div class="assignments-enrolment-section">
+    <h3>Join a Class</h3>
+    <p class="assignments-enrolment-hint">
+      Enter the class code your lecturer shared. Once joined, any
+      assignment your lecturer releases for this class appears in your
+      list above.
+    </p>
+
+    <div class="enrol-input-row">
+      <input
+        type="text"
+        id="enrol-class-code"
+        class="enrol-class-code"
+        placeholder="e.g. CSC301"
+        autocomplete="off">
+      <button
+        type="button"
+        class="btn-import"
+        id="btn-find-class">
+        <i class="fa-solid fa-magnifying-glass"></i> Find
+      </button>
+    </div>
+
+    <div class="enrol-sections" id="enrol-sections" style="display:none;">
+      <h4 id="enrol-class-title">Class Name</h4>
+      <div id="enrol-sections-list"></div>
+    </div>
+
+    <div class="timetable-saved" id="timetable-enrolled">
+      <h4>My Enrolled Classes</h4>
+      <div id="timetable-enrolled-list" class="timetable-saved-list"></div>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="assignment-modal" style="display:none;">

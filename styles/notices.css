@@ -1,0 +1,222 @@
+/* ============================================================
+   Unified notice / confirm / inline message system
+   ============================================================ */
+
+.app-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  animation: appNoticeSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes appNoticeSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.app-notice > i {
+  font-size: 1.05rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+.app-notice .notice-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.app-notice .notice-body strong { font-weight: 700; font-size: 0.88rem; }
+.app-notice .notice-body span   { font-size: 0.8rem; opacity: 0.9; word-break: break-word; }
+.app-notice .notice-close {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.75;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; line-height: 1;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.app-notice .notice-close:hover { opacity: 1; background-color: rgba(255,255,255,0.08); }
+
+.app-notice.notice-error   { background-color: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.35);  color: #f87171; }
+.app-notice.notice-error   .notice-body strong { color: #f87171; }
+.app-notice.notice-warning { background-color: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.35); color: #fbbf24; }
+.app-notice.notice-warning .notice-body strong { color: #fbbf24; }
+.app-notice.notice-success { background-color: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.35);  color: #4ade80; }
+.app-notice.notice-success .notice-body strong { color: #4ade80; }
+.app-notice.notice-info    { background-color: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.35); color: #60a5fa; }
+.app-notice.notice-info    .notice-body strong { color: #60a5fa; }
+
+/* Confirmation modal */
+.app-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  animation: appConfirmFade 0.15s ease-out;
+}
+@keyframes appConfirmFade { from { opacity: 0; } to { opacity: 1; } }
+.app-confirm-box {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px;
+  padding: 24px;
+  background: linear-gradient(180deg, #1a2236 0%, #151c2e 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  animation: appConfirmSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes appConfirmSlide {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.app-confirm-box h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.app-confirm-box p {
+  margin: 0 0 20px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+.app-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.app-confirm-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.app-confirm-btn--cancel {
+  background: transparent;
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.app-confirm-btn--cancel:hover {
+  color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.app-confirm-btn--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+.app-confirm-btn--danger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(239,68,68,0.5); }
+.app-confirm-btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+.app-confirm-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59,130,246,0.5); }
+
+/* ============================================================
+   Shared inline message / error / success elements
+   (existing IDs / classes get unified styling)
+   ============================================================ */
+
+/* Login + signup error banner (login.html, profile view) */
+.login-error,
+.form-banner,
+.form-banner--error,
+.url-error,
+.submit-modal-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  animation: appNoticeSlide 0.2s ease-out;
+}
+
+.form-banner--success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #86efac;
+}
+
+/* Legacy per-view alert styling already in files — keep them 
+   consistent if any survive */
+.alert,
+.alert-error,
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 0.84rem;
+}
+
+/* Light theme */
+body.light-theme .app-notice.notice-error   { color: #dc2626; border-color: rgba(220,38,38,0.35); background-color: rgba(239,68,68,0.06); }
+body.light-theme .app-notice.notice-error   .notice-body strong { color: #dc2626; }
+body.light-theme .app-notice.notice-warning { color: #b45309; background-color: rgba(245,158,11,0.08); }
+body.light-theme .app-notice.notice-warning .notice-body strong { color: #b45309; }
+body.light-theme .app-notice.notice-success { color: #16a34a; background-color: rgba(34,197,94,0.08); }
+body.light-theme .app-notice.notice-success .notice-body strong { color: #16a34a; }
+body.light-theme .app-notice.notice-info    { color: #2563eb; background-color: rgba(59,130,246,0.08); }
+body.light-theme .app-notice.notice-info    .notice-body strong { color: #2563eb; }
+body.light-theme .app-notice .notice-close:hover { background-color: rgba(0,0,0,0.06); }
+
+body.light-theme .app-confirm-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+body.light-theme .app-confirm-box h3 { color: #0f172a; }
+body.light-theme .app-confirm-box p  { color: #64748b; }
+body.light-theme .app-confirm-btn--cancel { color: #64748b; border-color: #e2e8f0; }
+body.light-theme .app-confirm-btn--cancel:hover { color: #0f172a; background-color: #f8fafc; }
+
+body.light-theme .login-error,
+body.light-theme .form-banner,
+body.light-theme .form-banner--error,
+body.light-theme .url-error,
+body.light-theme .submit-modal-error {
+  background-color: rgba(239, 68, 68, 0.06);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: #b91c1c;
+}
+body.light-theme .form-banner--success {
+  background-color: rgba(34, 197, 94, 0.08);
+  border-color: rgba(22, 163, 74, 0.4);
+  color: #15803d;
+}
+body.light-theme .submit-modal-error {
+  background-color: rgba(239, 68, 68, 0.06);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: #b91c1c;
+}
+body.light-theme .form-banner--success {
+  background-color: rgba(34, 197, 94, 0.08);
+  border-color: rgba(22, 163, 74, 0.4);
+  color: #15803d;
+}

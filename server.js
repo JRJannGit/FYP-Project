@@ -438,6 +438,112 @@ app.delete('/api/lecturer/classes/:id', async (req, res) => {
   } catch (err) { fail(res, err.message); }
 });
 
+/* ================= CLASS LOOKUP & SECTIONS ================= */
+
+// Look up a class by its (unique) class code. Students use this to preview a
+// class and its sections before self-enrolling; any logged-in user may look up.
+app.get('/api/classes/by-code/:class_code', async (req, res) => {
+  try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
+    const [rows] = await db.query(
+      `SELECT c.id, c.class_code, c.class_name, c.subject_code, c.semester,
+              l.full_name AS lecturer_name
+       FROM classes c
+       LEFT JOIN lecturers l ON l.lecturer_id = c.lecturer_id
+       WHERE c.class_code = ?`,
+      [String(req.params.class_code || '').trim()]
+    );
+    if (rows.length === 0) return fail(res, 'No class found with that code', 404);
+
+    const [sections] = await db.query(
+      `SELECT s.id, s.section_name, s.capacity,
+              (SELECT COUNT(*) FROM enrollments e WHERE e.section_id = s.id) AS enrolled_count
+       FROM class_sections s
+       WHERE s.class_id = ?
+       ORDER BY s.id ASC`,
+      [rows[0].id]
+    );
+
+    ok(res, { ...rows[0], sections });
+  } catch (err) { fail(res, err.message); }
+});
+
+// Create a section for a class — lecturer/admin only, owner-enforced.
+app.post('/api/classes/:class_id/sections', async (req, res) => {
+  try {
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
+    const { section_name, capacity } = req.body || {};
+    if (!section_name || !String(section_name).trim()) {
+      return fail(res, 'section_name is required', 400);
+    }
+
+    const [cls] = await db.query('SELECT id, lecturer_id FROM classes WHERE id = ?', [req.params.class_id]);
+    if (cls.length === 0) return fail(res, 'Class not found', 404);
+    if (cls[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this class', 403);
+    }
+
+    const cap = (capacity === undefined || capacity === null || capacity === '')
+      ? 1000
+      : parseInt(capacity, 10);
+    if (isNaN(cap) || cap < 1) return fail(res, 'capacity must be a positive number', 400);
+
+    const [result] = await db.query(
+      'INSERT INTO class_sections (class_id, section_name, capacity) VALUES (?, ?, ?)',
+      [req.params.class_id, String(section_name).trim(), cap]
+    );
+    ok(res, { id: result.insertId });
+  } catch (err) { fail(res, err.message); }
+});
+
+// List a class's sections with live enrolled counts. Any logged-in user may
+// view — students need this when choosing a section to join.
+app.get('/api/classes/:class_id/sections', async (req, res) => {
+  try {
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
+    const [rows] = await db.query(
+      `SELECT s.id, s.section_name, s.capacity,
+              (SELECT COUNT(*) FROM enrollments e WHERE e.section_id = s.id) AS enrolled_count
+       FROM class_sections s
+       WHERE s.class_id = ?
+       ORDER BY s.id ASC`,
+      [req.params.class_id]
+    );
+    ok(res, rows);
+  } catch (err) { fail(res, err.message); }
+});
+
+// Delete a section — lecturer/admin only, owner-enforced. enrollments.section_id
+// is FK ON DELETE SET NULL, so existing enrollees keep their enrolment and just
+// lose the section reference.
+app.delete('/api/sections/:id', async (req, res) => {
+  try {
+    const auth = requireRoles(req, res, 'lecturer', 'admin');
+    if (!auth) return;
+
+    const [rows] = await db.query(
+      `SELECT s.id, c.lecturer_id
+       FROM class_sections s
+       JOIN classes c ON c.id = s.class_id
+       WHERE s.id = ?`,
+      [req.params.id]
+    );
+    if (rows.length === 0) return fail(res, 'Section not found', 404);
+    if (rows[0].lecturer_id !== auth.id && auth.role !== 'admin') {
+      return fail(res, 'You do not own this class', 403);
+    }
+
+    await db.query('DELETE FROM class_sections WHERE id = ?', [req.params.id]);
+    ok(res, { deleted: true });
+  } catch (err) { fail(res, err.message); }
+});
+
 /* ================= ENROLLMENTS ================= */
 
 // Get all students enrolled in a class
@@ -460,12 +566,14 @@ app.get('/api/enrollments/class/:class_id', async (req, res) => {
 app.get('/api/enrollments/student/:student_id', async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT e.id, e.class_id, e.enrolled_at,
+      `SELECT e.id, e.id AS enrollment_id, e.class_id, e.enrolled_at,
               c.class_code, c.class_name, c.subject_code, c.semester,
-              c.lecturer_id, l.full_name AS lecturer_name
+              c.lecturer_id, l.full_name AS lecturer_name,
+              sec.section_name
        FROM enrollments e
        JOIN classes c ON c.id = e.class_id
        LEFT JOIN lecturers l ON l.lecturer_id = c.lecturer_id
+       LEFT JOIN class_sections sec ON sec.id = e.section_id
        WHERE e.student_id = ?
        ORDER BY c.class_code ASC`,
       [req.params.student_id]
@@ -542,6 +650,67 @@ app.post('/api/enrollments/bulk', async (req, res) => {
       [values]
     );
     ok(res, { enrolled: student_ids.length });
+  } catch (err) { fail(res, err.message); }
+});
+
+/* ================= STUDENT SELF-ENROLMENT ================= */
+
+// A student joins a class by the class code their lecturer shared. Students
+// only — lecturers/admins manage enrolments via the endpoints above.
+app.post('/api/enrollments/by-code', async (req, res) => {
+  try {
+    const auth = requireRoles(req, res, 'student');
+    if (!auth) return;
+
+    const { class_code, section_id } = req.body || {};
+    if (!class_code || !String(class_code).trim()) {
+      return fail(res, 'class_code is required', 400);
+    }
+
+    const [cls] = await db.query(
+      'SELECT id FROM classes WHERE class_code = ?',
+      [String(class_code).trim()]
+    );
+    if (cls.length === 0) return fail(res, 'No class found with that code', 404);
+
+    let secId = null;
+    if (section_id !== undefined && section_id !== null && section_id !== '') {
+      const [sec] = await db.query(
+        'SELECT id FROM class_sections WHERE id = ? AND class_id = ?',
+        [section_id, cls[0].id]
+      );
+      if (sec.length === 0) return fail(res, 'That section does not belong to this class', 400);
+      secId = sec[0].id;
+    }
+
+    const [result] = await db.query(
+      'INSERT INTO enrollments (class_id, student_id, section_id) VALUES (?, ?, ?)',
+      [cls[0].id, auth.id, secId]
+    );
+    ok(res, { enrollment_id: result.insertId, class_id: cls[0].id });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return fail(res, 'You are already enrolled in this class', 400);
+    fail(res, err.message);
+  }
+});
+
+// A student leaves a class — only rows that belong to them.
+app.delete('/api/enrollments/self/:id', async (req, res) => {
+  try {
+    const auth = requireRoles(req, res, 'student');
+    if (!auth) return;
+
+    const [rows] = await db.query(
+      'SELECT id, student_id FROM enrollments WHERE id = ?',
+      [req.params.id]
+    );
+    if (rows.length === 0) return fail(res, 'Enrollment not found', 404);
+    if (rows[0].student_id !== auth.id) {
+      return fail(res, 'You can only leave your own enrolments', 403);
+    }
+
+    await db.query('DELETE FROM enrollments WHERE id = ?', [req.params.id]);
+    ok(res, { deleted: true });
   } catch (err) { fail(res, err.message); }
 });
 

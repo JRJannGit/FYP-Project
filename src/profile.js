@@ -233,8 +233,13 @@ function setupFormEvents() {
       if (e.target === logoutModal) logoutModal.style.display = 'none';
     });
   } else if (btnLogout) {
-    btnLogout.onclick = () => {
-      if (!confirm('Log out?')) return;
+    btnLogout.onclick = async () => {
+      if (!(await window.appConfirm({
+        title: 'Log out?',
+        message: 'You will be returned to the login screen.',
+        confirmLabel: 'Log out',
+        danger: true
+      }))) return;
       localStorage.removeItem('uptm_session');
       window.location.href = 'login.html';
     };

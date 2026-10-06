@@ -302,8 +302,13 @@ function initLecturerAssignments() {
   /* ---------- Reset ---------- */
 
   if (btnReset) {
-    btnReset.addEventListener('click', () => {
-      if (!confirm('Reset all fields?')) return;
+    btnReset.addEventListener('click', async () => {
+      if (!(await window.appConfirm({
+        title: 'Reset form?',
+        message: 'All fields will be cleared.',
+        confirmLabel: 'Reset',
+        danger: true
+      }))) return;
       if (topicInput) topicInput.value = '';
       if (descInput) descInput.innerHTML = '';
       if (metaDate) metaDate.value = todayISO();
@@ -375,6 +380,25 @@ function initLecturerAssignments() {
     allAssignments = res.data;
   }
 
+  function renderPickItems() {
+    pickList.innerHTML = allAssignments.map(a => `
+      <div class="pick-item" data-id="${a.id}">
+        <div class="pick-item__info">
+          <div class="pick-item__title">${escapeHtml(a.subject)}</div>
+          <small>Due ${new Date(a.due_date).toLocaleDateString('en-GB')}</small>
+        </div>
+        <button
+          type="button"
+          class="pick-item__delete"
+          data-action="delete-pick"
+          data-id="${a.id}"
+          title="Delete assignment">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
   if (btnViewSubs) {
     btnViewSubs.addEventListener('click', async () => {
       await loadAssignmentsList();
@@ -383,12 +407,7 @@ function initLecturerAssignments() {
         return;
       }
       if (!pickList || !pickModal) return;
-      pickList.innerHTML = allAssignments.map(a => `
-        <div class="pick-item" data-id="${a.id}">
-          ${escapeHtml(a.subject)}
-          <small>Due ${new Date(a.due_date).toLocaleDateString('en-GB')}</small>
-        </div>
-      `).join('');
+      renderPickItems();
       pickModal.style.display = 'flex';
     });
   }
@@ -398,7 +417,36 @@ function initLecturerAssignments() {
   }
 
   if (pickList) {
-    pickList.addEventListener('click', (e) => {
+    pickList.addEventListener('click', async (e) => {
+      const delBtn = e.target.closest('.pick-item__delete');
+      if (delBtn) {
+        e.stopPropagation();
+        const id = delBtn.dataset.id;
+        const assignment = allAssignments.find(a => String(a.id) === String(id));
+        if (!assignment) return;
+        const ok = await window.appConfirm({
+          title: 'Delete assignment?',
+          message: '"' + assignment.subject + '" and its submissions will be removed.',
+          confirmLabel: 'Delete',
+          danger: true
+        });
+        if (!ok) return;
+        const res = await API.delete('/api/assignments/' + id);
+        if (!res.success) {
+          if (window.showAppNotice) window.showAppNotice('error', 'Delete failed', res.error || 'Unknown error', 0);
+          else alert('Delete failed: ' + res.error);
+          return;
+        }
+        if (window.showAppNotice) window.showAppNotice('success', 'Deleted', 'Assignment removed.', 4000);
+        await loadAssignmentsList();
+        if (allAssignments.length === 0) {
+          pickModal.style.display = 'none';
+        } else {
+          renderPickItems();
+        }
+        return;
+      }
+
       const item = e.target.closest('.pick-item');
       if (!item) return;
       const id = item.dataset.id;
