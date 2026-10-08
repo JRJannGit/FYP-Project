@@ -100,6 +100,12 @@
         <button type="button" class="btn-manage-classes" id="btn-manage-classes">
           <i class="fa-solid fa-people-group"></i> Manage Classes
         </button>
+        <button
+          type="button"
+          class="btn-manage-classes"
+          id="btn-manage-sections">
+          <i class="fa-solid fa-layer-group"></i> Manage Sections
+        </button>
       </div>
 
       <div class="meta-actions">
@@ -224,5 +230,54 @@
         <button type="submit" class="btn-save" id="class-modal-save">Add Class</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sections-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Manage Sections</h3>
+      <button class="modal-close" id="sections-modal-close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label for="sections-class-select">Class</label>
+      <select id="sections-class-select" class="meta-input"></select>
+    </div>
+
+    <div id="sections-list-wrapper">
+      <h4 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin:16px 0 8px;">Existing Sections</h4>
+      <div id="sections-list"></div>
+    </div>
+
+    <div class="form-group" style="margin-top:20px;border-top:1px solid var(--border-color);padding-top:16px;">
+      <label>Add New Section</label>
+      <div style="display:flex;gap:8px;">
+        <input
+          type="text"
+          id="new-section-name"
+          class="meta-input"
+          placeholder="e.g. Section A — Morning"
+          style="flex:1;">
+        <input
+          type="number"
+          id="new-section-capacity"
+          class="meta-input"
+          placeholder="Capacity"
+          value="1000"
+          style="width:120px;">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="sections-modal-cancel">
+        Close
+      </button>
+      <button type="button" class="btn-save" id="sections-modal-add">
+        <i class="fa-solid fa-plus"></i> Add Section
+      </button>
+    </div>
   </div>
 </div>

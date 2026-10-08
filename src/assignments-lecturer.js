@@ -57,6 +57,17 @@ function initLecturerAssignments() {
   const classSemesterIn = document.getElementById('class-semester');
   const classDescIn   = document.getElementById('class-description');
 
+  // Sections management modal (new)
+  const btnManageSections = document.getElementById('btn-manage-sections');
+  const sectionsModal     = document.getElementById('sections-modal');
+  const sectionsClose     = document.getElementById('sections-modal-close');
+  const sectionsCancel    = document.getElementById('sections-modal-cancel');
+  const sectionsClassSel  = document.getElementById('sections-class-select');
+  const sectionsList      = document.getElementById('sections-list');
+  const newSectionName    = document.getElementById('new-section-name');
+  const newSectionCap     = document.getElementById('new-section-capacity');
+  const sectionsAdd       = document.getElementById('sections-modal-add');
+
   let uploadedFile = null;
   let uploadedUrl  = '';
   let currentAssignmentForSubs = null;
@@ -164,6 +175,130 @@ function initLecturerAssignments() {
   const btnManageClasses = document.getElementById('btn-manage-classes');
   if (btnManageClasses) {
     btnManageClasses.addEventListener('click', openClassModal);
+  }
+
+  /* ---------- Sections Management Modal ---------- */
+
+  // Private helpers — showNotice and escapeHtml are not globals in this app;
+  // every module keeps its own copy (see timetable.js, assignments.js).
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function showNotice(type, title, message, durationMs) {
+    if (window.showAppNotice) {
+      window.showAppNotice(type, title, message, durationMs);
+    } else {
+      alert(title + (message ? ': ' + message : ''));
+    }
+  }
+
+  async function openSectionsModal() {
+    if (!sectionsModal) return;
+    // Populate class dropdown
+    const res = await API.get('/api/lecturer/classes/' + userId);
+    if (!res.success || !res.data.length) {
+      showNotice('info', 'No classes yet', 'Create a class first.', 4000);
+      return;
+    }
+    sectionsClassSel.innerHTML = res.data.map(function (c) {
+      return '<option value="' + c.id + '">' +
+        escapeHtml(c.class_code) + ' — ' + escapeHtml(c.class_name) +
+        '</option>';
+    }).join('');
+    sectionsModal.style.display = 'flex';
+    await loadSectionsFor(sectionsClassSel.value);
+  }
+
+  async function loadSectionsFor(classId) {
+    if (!classId) return;
+    sectionsList.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Loading…</p>';
+    const res = await API.get('/api/classes/' + classId + '/sections');
+    if (!res.success || !res.data.length) {
+      sectionsList.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">No sections yet.</p>';
+      return;
+    }
+    sectionsList.innerHTML = res.data.map(function (s) {
+      return '<div class="section-row" data-section-id="' + s.id + '">' +
+        '<div>' +
+          '<strong>' + escapeHtml(s.section_name) + '</strong>' +
+          '<small>' + s.enrolled_count + ' / ' + s.capacity + ' enrolled</small>' +
+        '</div>' +
+        '<button class="section-delete-btn" data-id="' + s.id + '" title="Delete">' +
+          '<i class="fa-solid fa-trash"></i>' +
+        '</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  if (btnManageSections) {
+    btnManageSections.addEventListener('click', openSectionsModal);
+  }
+
+  if (sectionsClassSel) {
+    sectionsClassSel.addEventListener('change', function () {
+      loadSectionsFor(sectionsClassSel.value);
+    });
+  }
+
+  if (sectionsAdd) {
+    sectionsAdd.addEventListener('click', async function () {
+      const classId = sectionsClassSel.value;
+      const name = (newSectionName.value || '').trim();
+      const cap = parseInt(newSectionCap.value, 10) || 1000;
+      if (!name) {
+        showNotice('error', 'Section name required', 'Enter a name for the section.', 0);
+        return;
+      }
+      sectionsAdd.disabled = true;
+      const res = await API.post('/api/classes/' + classId + '/sections', {
+        section_name: name,
+        capacity: cap
+      });
+      sectionsAdd.disabled = false;
+      if (!res.success) {
+        showNotice('error', 'Could not add section', res.error || 'Unknown error', 0);
+        return;
+      }
+      showNotice('success', 'Section added', '', 3000);
+      newSectionName.value = '';
+      newSectionCap.value = '1000';
+      await loadSectionsFor(classId);
+    });
+  }
+
+  if (sectionsList) {
+    sectionsList.addEventListener('click', async function (e) {
+      const btn = e.target.closest('.section-delete-btn');
+      if (!btn) return;
+      const ok = await window.appConfirm({
+        title: 'Delete section?',
+        message: 'Students enrolled in this section will keep their class enrolment.',
+        confirmLabel: 'Delete',
+        danger: true
+      });
+      if (!ok) return;
+      const res = await API.delete('/api/sections/' + btn.dataset.id);
+      if (!res.success) {
+        showNotice('error', 'Delete failed', res.error || 'Unknown error', 0);
+        return;
+      }
+      showNotice('success', 'Section deleted', '', 3000);
+      await loadSectionsFor(sectionsClassSel.value);
+    });
+  }
+
+  function closeSectionsModal() {
+    if (sectionsModal) sectionsModal.style.display = 'none';
+  }
+  if (sectionsClose)  sectionsClose.addEventListener('click', closeSectionsModal);
+  if (sectionsCancel) sectionsCancel.addEventListener('click', closeSectionsModal);
+  if (sectionsModal) {
+    sectionsModal.addEventListener('click', function (e) {
+      if (e.target === sectionsModal) closeSectionsModal();
+    });
   }
 
   /* ---------- Description Edit ---------- */

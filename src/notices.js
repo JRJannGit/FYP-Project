@@ -5,8 +5,15 @@
   function classify(message, explicitType) {
     if (explicitType) return explicitType;
     const m = String(message || '').toLowerCase();
-    if (/^(success|saved|deleted|updated|created|submitted|joined|left|done)\b/.test(m)) return 'success';
-    if (/^(please|choose|pick|no |nothing|not enough|missing)\b/.test(m)) return 'warning';
+
+    if (/\b(success|successful|successfully|saved|created|added|updated|deleted|removed|submitted|released|joined|left|enrolled|done|complete|completed)\b/.test(m)) {
+      return 'success';
+    }
+
+    if (/\b(please|choose|pick|select|missing|required|empty|no file|too large|too big)\b/.test(m)) {
+      return 'warning';
+    }
+
     return 'error';
   }
 
