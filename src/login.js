@@ -177,6 +177,10 @@
       showError('Please enter a valid email');
       return;
     }
+    if (!/@student\.uptm\.edu\.my$/i.test(data.email.trim())) {
+      showError('Only @student.uptm.edu.my emails are accepted.');
+      return;
+    }
 
     setLoading(signupBtn, true, 'Creating account...');
 

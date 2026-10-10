@@ -218,6 +218,10 @@ function initAdminAccounts() {
       alert('Password is required for a new student account.');
       return;
     }
+    if (!editing && !/@student\.uptm\.edu\.my$/i.test(payload.email)) {
+      alert('Student emails must end with @student.uptm.edu.my.');
+      return;
+    }
 
     studentSave.disabled = true;
     studentSave.innerText = 'Saving...';
@@ -276,6 +280,10 @@ function initAdminAccounts() {
     if (lecturerPass.value) payload.password = lecturerPass.value;
     if (!editing && !payload.password) {
       alert('Password is required for a new lecturer account.');
+      return;
+    }
+    if (!editing && !/@uptm\.edu\.my$/i.test(payload.email)) {
+      alert('Lecturer emails must end with @uptm.edu.my.');
       return;
     }
 

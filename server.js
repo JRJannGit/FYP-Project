@@ -10,6 +10,14 @@ app.use(express.json({ limit: '50mb' }));
 const ok = (res, data) => res.json({ success: true, data });
 const fail = (res, msg, code = 500) => res.status(code).json({ success: false, error: msg });
 
+function isUptmEmail(email, kind) {
+  if (!email || typeof email !== 'string') return false;
+  const e = email.trim().toLowerCase();
+  if (kind === 'student') return /@student\.uptm\.edu\.my$/.test(e);
+  if (kind === 'staff')   return /@uptm\.edu\.my$/.test(e);
+  return /@(student\.)?uptm\.edu\.my$/.test(e);
+}
+
 /* ================= [R7] MINIMAL AUTH HELPERS =================
    The client (src/api.js) already sends x-user-role / x-user-id on every
    call. These are self-declared headers (signed-token auth is planned as a
@@ -128,6 +136,9 @@ app.post('/api/auth/student/signup', async (req, res) => {
   try {
     if (!student_id || !full_name || !email || !password) return fail(res, 'All fields are required', 400);
     if (!email.includes('@')) return fail(res, 'Invalid email format', 400);
+    if (!isUptmEmail(email, 'student')) {
+      return fail(res, 'Only @student.uptm.edu.my emails are accepted.', 400);
+    }
     if (password.length < 6) return fail(res, 'Password must be at least 6 characters', 400);
 
     const [result] = await db.query(
@@ -1514,6 +1525,9 @@ app.post('/api/accounts/students', async (req, res) => {
       return fail(res, 'Student ID, full name, email and password are required', 400);
     }
     if (!email.includes('@')) return fail(res, 'Invalid email format', 400);
+    if (!isUptmEmail(email, 'student')) {
+      return fail(res, 'Only @student.uptm.edu.my emails are accepted.', 400);
+    }
     if (password.length < 6) return fail(res, 'Password must be at least 6 characters', 400);
 
     const [result] = await db.query(
@@ -1598,6 +1612,9 @@ app.post('/api/accounts/lecturers', async (req, res) => {
       return fail(res, 'Lecturer ID, full name, email and password are required', 400);
     }
     if (!email.includes('@')) return fail(res, 'Invalid email format', 400);
+    if (!isUptmEmail(email, 'staff')) {
+      return fail(res, 'Only @uptm.edu.my emails are accepted.', 400);
+    }
     if (password.length < 6) return fail(res, 'Password must be at least 6 characters', 400);
 
     const [result] = await db.query(
